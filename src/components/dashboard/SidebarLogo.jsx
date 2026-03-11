@@ -9,7 +9,7 @@ const SidebarLogo = () => {
       />
       <div>
         <h1 className="text-brown font-semibold text-2xl">
-          LMS Software Technology Park
+          LMS Codelab
         </h1>
         <p className="text-xs text-beige">Rohi eSkills Learning Hub</p>
       </div>
