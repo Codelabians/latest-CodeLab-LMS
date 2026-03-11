@@ -10,7 +10,7 @@
   background: linear-gradient(90deg, #014376 0%, #31918D 100%,  #3E2C23 30.17%);
 }
 .custom-Sidebar {
-  background: linear-gradient(180deg, #014376 0%, #014376 30.17%, #31918D 100%);
+  background: linear-gradient(180deg, #d61111 0%, #aa0e0e 30.17%, #100F0F 100%);
 }
 .custom-Delete {
   background: linear-gradient(90deg, #014376 0%, #014376 20.17%, #31918D 100%);
@@ -21,8 +21,11 @@
 .custom-SwitchButton {
   background: linear-gradient(90deg, #008000 0%, #008000 20.17%, #000001 100%);
 }
-.custom-Navbar {
+/* .custom-Navbar {
   background: linear-gradient(90deg, #014376 0%, #014376 50.17%, #31918D 100%);
+} */
+.custom-Navbar {
+  background: linear-gradient(90deg, #d61111 0%, #aa0e0e 50.17%, #100F0F 100%);
 }
 .custom-Update {
   background: linear-gradient(180deg, #014376 0%, #014376 60.17%, #31918D 100%);

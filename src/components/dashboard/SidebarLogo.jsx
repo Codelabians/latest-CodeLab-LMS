@@ -8,10 +8,10 @@ const SidebarLogo = () => {
         className="object-cover h-28 rounded-lg"
       />
       <div>
-        <h1 className="text-brown font-semibold text-2xl">
+        <h1 className="text-red font-semibold text-2xl">
           LMS Codelab
         </h1>
-        <p className="text-xs text-beige">Rohi eSkills Learning Hub</p>
+        {/* <p className="text-xs text-beige">Rohi eSkills Learning Hub</p> */}
       </div>
     </div>
   );

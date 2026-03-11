@@ -334,7 +334,7 @@ const SidebarComponent = () => {
   };
 
   const getIconClasses = (label) => {
-    const baseClasses = "text-brown group-hover:text-white";
+    const baseClasses = "text-red group-hover:text-white";
     const activeClasses =
       hovered === label || selectedMenu === label ? "text-white" : "";
     return `${baseClasses} ${activeClasses}`;
@@ -402,9 +402,9 @@ const SidebarComponent = () => {
                         {item.expandable && (
                           <div className="mr-3">
                             {expandedMenu === item.label ? (
-                              <ArrowDown className="text-brown group-hover:text-white" />
+                              <ArrowDown className="text-red group-hover:text-white" />
                             ) : (
-                              <ArrowUp className="text-brown group-hover:text-white" />
+                              <ArrowUp className="text-red group-hover:text-white" />
                             )}
                           </div>
                         )}
@@ -445,9 +445,9 @@ const SidebarComponent = () => {
                                 {subItem.expandable && (
                                   <div className="mr-3">
                                     {expandedSubMenu === subItem.label ? (
-                                      <ArrowDown className="text-brown group-hover:text-white" />
+                                      <ArrowDown className="text-red group-hover:text-white" />
                                     ) : (
-                                      <ArrowUp className="text-brown group-hover:text-white" />
+                                      <ArrowUp className="text-red group-hover:text-white" />
                                     )}
                                   </div>
                                 )}
