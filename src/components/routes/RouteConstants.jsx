@@ -1,0 +1,86 @@
+export const DASHBOARD = "/dashboard";
+export const ADMINDASHBOARD = "/dashboard";
+export const STUDENTS = "/dashboard/students";
+export const STUDENT = "/dashboard/students";
+export const DROPOUT_STUDENTS = "/dashboard/dropout-students";
+export const PROFILE = "/dashboard/profile";
+export const WORKINGSPACE = "/dashboard/working-space";
+export const INCOME = "/dashboard/income";
+export const COURSE = "/dashboard/course";
+export const EXPENSES = "/dashboard/expenses";
+export const WS_EXPENSE_DETAILS = "/dashboard/workspace-expenses/:uuid";
+export const Course_EXPENSE_DETAILS = "/dashboard/courses-expenses/:uuid";
+export const INSTRUCTORS = "/dashboard/smes";
+export const INSTRUCTORSID = "/dashboard/smes";
+export const EMPLOYEE = "/dashboard/employees";
+export const EMPLOYEEID = "/dashboard/employees";
+export const WORKSPACES = "/dashboard/workspaces/:uuid";
+export const MANAGE_WORKINGSPACE = "/dashboard/manage-workspaces";
+export const COMPANY = "/dashboard/working-spaces/company";
+export const COMPANY_INDIVIDUAL =
+  "/dashboard/working-spaces/company-individual";
+export const COMPANY_DETAIL = "/dashboard/working-spaces/company/:uuid";
+export const INDIVIDUAL = "/dashboard/working-spaces/individual";
+export const INDIVIDUAL_DETAIL = "/dashboard/working-spaces/individual/:uuid";
+export const INDIVIDUAL_STARTUP_REGISTRATION =
+  "/dashboard/working-spaces/individual/register";
+export const INDIVIDUAL_WORKSPACE_EDIT =
+  "/dashboard/working-spaces/individual/edit/:uuid";
+export const COMPANY_STARTUP_REGISTRATION =
+  "/dashboard/working-spaces/company/register";
+export const COMPANY_WORKSPACE_EDIT =
+  "/dashboard/working-spaces/company/edit/:uuid";
+export const INDIVIDUAL_COMPANY_REGISTER =
+  "/dashboard/working-spaces/company-individual/register";
+export const INDIVIDUAL_COMPANY_DETAILS =
+  "/dashboard/working-spaces/company-individual/details/:uuid";
+export const CATEGORIES = "/dashboard/categories";
+export const COURSES = "/dashboard/courses";
+export const CATEGORY_COURSES = "/dashboard/courses";
+export const COURSE_STUDENTS = "/dashboard/courses/:uuid/students";
+export const BATCHES = "/dashboard/classes";
+export const ALLBATCHES = "/dashboard/batches";
+export const BATCH_CREATE = "/dashboard/batches/create";
+export const BATCH_EDIT = "/dashboard/classes/edit/:uuid";
+export const FEES = "/dashboard/fees";
+export const ANNOUNCEMENTS = "/dashboard/announcements";
+export const ATTENDANCE = "/dashboard/attendance";
+export const PROJECTS = "/dashboard/projects";
+export const SIGNIN = "/signin";
+export const SIGNUP = "/signup";
+export const LOGOUT = "/logout";
+export const FORGET = "/forget";
+export const RESET = "/reset";
+export const OTP = "/otpcode";
+export const NEWPASSWORD = "/newpassword";
+export const INVENTORY = "/dashboard/inventory";
+export const INVENTORYASSIGN = "/dashboard/inventory/assign";
+export const INVENTORY_ITEMS = "/dashboard/inventory/items/:uuid?";
+export const INVENTORY_SUMMARY = "/dashboard/inventory-summary";
+export const STUDENT_SUMMARY = "/dashboard/student-summary";
+export const COURSE_SUMMARY = "/dashboard/course-summary";
+export const TOTAL_STATS = "/dashboard/summary";
+export const STARTUP_SUMMARY = "/dashboard/startup-summary";
+export const EMPLOYEE_SUMMARY = "/dashboard/employee-summary";
+export const FINANCE_SUMMARY = "/dashboard/finance-summary";
+export const USER_MANAGEMENT = "/dashboard/user-management";
+export const REPORTS = "/dashboard/reports";
+export const ENROLL_STUDENT = "/dashboard/students/enroll";
+export const STUDENTS_EDIT = "/dashboard/students/edit/:studentUuid";
+export const TRAINING_INQUIRY = "/dashboard/training-inquiries";
+export const TRAINING_INQUIRY_ENROLL = "/dashboard/training-inquiries/enroll";
+export const TRAINING_INQUIRY_COURSE = "/dashboard/training-inquiries/course";
+export const TRAINING_INQUIRY_DETAILS = "/dashboard/training-inquiries/details";
+export const STARTUP_INQUIRY = "/dashboard/startup-inquiry";
+export const INSTRUCTORS_ADD = "/dashboard/smes/add";
+export const INSTRUCTORS_EDIT = "/dashboard/smes/edit/:uuid";
+export const EMPLOYEES_ADD = "/dashboard/employees/add";
+export const EMPLOYEES_EDIT = "/dashboard/employees/edit/:uuid";
+export const COURSE_CLASS = "/dashboard/courses/:courseUuid/classes";
+export const CLASS_STUDENTS = "/dashboard/classes/:classUuid";
+export const CLASS_STUDENT_EDIT = "/dashboard/classes/student/edit/:uuid?";
+export const NOTIFICATIONS = "/dashboard/notifications";
+export const MEMBERS = "/dashboard/working-spaces/company/members/add";
+export const REFUND = "/dashboard/refund";
+export const STUDENT_MANAGEMENT = "/dashboard/student-management";
+export const SETTINGS = "/dashboard/settings";
