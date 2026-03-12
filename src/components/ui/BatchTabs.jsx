@@ -11,7 +11,7 @@ const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
         onClick={() => setActiveBatchTab("all")}
         className={`px-6 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
           activeBatchTab === "all"
-            ? "bg-gradient-to-r from-[#014376] to-[#31918D] text-white shadow-lg"
+            ? "bg-gradient-to-r from-[#aa0e0e] to-[#100F0F] text-white shadow-lg"
             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
         }`}
       >
