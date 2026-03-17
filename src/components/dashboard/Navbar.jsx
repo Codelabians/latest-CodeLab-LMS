@@ -29,7 +29,7 @@ const Navbar = () => {
           <Settings className="text-brown w-6 h-6" />
         </div>
         <div onClick={toggleNotification} className="cursor-pointer relative">
-          <Bell fill="#014376" className="text-brown w-6 h-6" />
+          <Bell fill="#aa0e0e" className="text-brown w-6 h-6" />
 
           {/* Unread Badge */}
           {!isLoading && unreadCount > 0 && (

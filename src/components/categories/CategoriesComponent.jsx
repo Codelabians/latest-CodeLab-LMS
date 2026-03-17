@@ -166,7 +166,7 @@ const CategoriesComponent = () => {
                     <BookOpen className="w-6 h-6 text-white" />
                   </div>
                   <div className="bg-white rounded-full px-3 py-1">
-                    <span className="text-sm font-bold text-[#014376]">
+                    <span className="text-sm font-bold text-[#aa0e0e]">
                       {category.courses} Courses
                     </span>
                   </div>
@@ -174,7 +174,7 @@ const CategoriesComponent = () => {
               </div>
 
               <div className="p-6">
-                <h3 className="text-xl font-bold text-[#014376] mb-4">
+                <h3 className="text-xl font-bold text-[#aa0e0e] mb-4">
                   {category.name}
                 </h3>
 

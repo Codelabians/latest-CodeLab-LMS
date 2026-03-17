@@ -94,9 +94,9 @@ const StudentSummaryPage = () => {
     {
       name: "Military Students",
       value: studentsData.military,
-      color: "#31918D",
+      color: "#d61111",
     },
-    { name: "Civil Students", value: studentsData.civil, color: "#014376" },
+    { name: "Civil Students", value: studentsData.civil, color: "#aa0e0e" },
   ];
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -188,7 +188,7 @@ const StudentSummaryPage = () => {
             </div>
 
             <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm">
-              <Activity className="w-5 h-5" style={{ color: "#31918D" }} />
+              <Activity className="w-5 h-5" style={{ color: "#d61111" }} />
               <span className="text-sm text-gray-600">Live Data</span>
             </div>
           </div>
@@ -205,13 +205,13 @@ const StudentSummaryPage = () => {
           {/* Currently Enrolled Students Card */}
           <div
             className="bg-white rounded-xl shadow-lg p-6 border-t-4 md:col-span-2 lg:col-span-1 hover:shadow-xl transition-shadow duration-300"
-            style={{ borderTopColor: "#014376" }}
+            style={{ borderTopColor: "#aa0e0e" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div
                   className="p-4 rounded-xl shadow-md"
-                  style={{ backgroundColor: "#014376" }}
+                  style={{ backgroundColor: "#aa0e0e" }}
                 >
                   <Users className="w-7 h-7 text-white" />
                 </div>
@@ -221,7 +221,7 @@ const StudentSummaryPage = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Currently Enrolled
               </h3>
-              <span className="text-4xl font-bold" style={{ color: "#014376" }}>
+              <span className="text-4xl font-bold" style={{ color: "#aa0e0e" }}>
                 {studentsData.currentEnrolled.toLocaleString()}
               </span>
               <p className="text-sm text-gray-500 mt-2">Active Students</p>
@@ -231,13 +231,13 @@ const StudentSummaryPage = () => {
           {/* Military Students Card */}
           <div
             className="bg-white rounded-xl shadow-lg p-6 border-t-4 hover:shadow-xl transition-shadow duration-300"
-            style={{ borderTopColor: "#31918D" }}
+            style={{ borderTopColor: "#d61111" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div
                   className="p-4 rounded-xl shadow-md"
-                  style={{ backgroundColor: "#31918D" }}
+                  style={{ backgroundColor: "#d61111" }}
                 >
                   <Shield className="w-6 h-6 text-white" />
                 </div>
@@ -247,7 +247,7 @@ const StudentSummaryPage = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Military Students
               </h3>
-              <span className="text-3xl font-bold" style={{ color: "#31918D" }}>
+              <span className="text-3xl font-bold" style={{ color: "#d61111" }}>
                 {studentsData.military}
               </span>
               <p className="text-sm text-gray-500 mt-2">
@@ -259,13 +259,13 @@ const StudentSummaryPage = () => {
           {/* Civil Students Card */}
           <div
             className="bg-white rounded-xl shadow-lg p-6 border-t-4 hover:shadow-xl transition-shadow duration-300"
-            style={{ borderTopColor: "#014376" }}
+            style={{ borderTopColor: "#aa0e0e" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div
                   className="p-4 rounded-xl shadow-md"
-                  style={{ backgroundColor: "#014376" }}
+                  style={{ backgroundColor: "#aa0e0e" }}
                 >
                   <User className="w-6 h-6 text-white" />
                 </div>
@@ -275,7 +275,7 @@ const StudentSummaryPage = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Civil Students
               </h3>
-              <span className="text-3xl font-bold" style={{ color: "#014376" }}>
+              <span className="text-3xl font-bold" style={{ color: "#aa0e0e" }}>
                 {studentsData.civil}
               </span>
               <p className="text-sm text-gray-500 mt-2">
@@ -287,13 +287,13 @@ const StudentSummaryPage = () => {
           {/* Male Students Card */}
           <div
             className="bg-white rounded-xl shadow-lg p-6 border-t-4 hover:shadow-xl transition-shadow duration-300"
-            style={{ borderTopColor: "#31918D" }}
+            style={{ borderTopColor: "#d61111" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div
                   className="p-4 rounded-xl shadow-md"
-                  style={{ backgroundColor: "#31918D" }}
+                  style={{ backgroundColor: "#d61111" }}
                 >
                   <UserCheck className="w-6 h-6 text-white" />
                 </div>
@@ -303,7 +303,7 @@ const StudentSummaryPage = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Male Students
               </h3>
-              <span className="text-3xl font-bold" style={{ color: "#31918D" }}>
+              <span className="text-3xl font-bold" style={{ color: "#d61111" }}>
                 {studentsData.male}
               </span>
               <p className="text-sm text-gray-500 mt-2">
@@ -315,13 +315,13 @@ const StudentSummaryPage = () => {
           {/* Female Students Card */}
           <div
             className="bg-white rounded-xl shadow-lg p-6 border-t-4 hover:shadow-xl transition-shadow duration-300"
-            style={{ borderTopColor: "#014376" }}
+            style={{ borderTopColor: "#aa0e0e" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div
                   className="p-4 rounded-xl shadow-md"
-                  style={{ backgroundColor: "#014376" }}
+                  style={{ backgroundColor: "#aa0e0e" }}
                 >
                   <Users2 className="w-6 h-6 text-white" />
                 </div>
@@ -331,7 +331,7 @@ const StudentSummaryPage = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Female Students
               </h3>
-              <span className="text-3xl font-bold" style={{ color: "#014376" }}>
+              <span className="text-3xl font-bold" style={{ color: "#aa0e0e" }}>
                 {studentsData.female}
               </span>
               <p className="text-sm text-gray-500 mt-2">
@@ -370,7 +370,7 @@ const StudentSummaryPage = () => {
               <div className="flex items-center">
                 <div
                   className="w-3 h-3 rounded-full mr-2"
-                  style={{ backgroundColor: "#31918D" }}
+                  style={{ backgroundColor: "#d61111" }}
                 ></div>
                 <span className="text-sm text-gray-600">
                   Military ({getMilitaryPercentage()}%)
@@ -379,7 +379,7 @@ const StudentSummaryPage = () => {
               <div className="flex items-center">
                 <div
                   className="w-3 h-3 rounded-full mr-2"
-                  style={{ backgroundColor: "#014376" }}
+                  style={{ backgroundColor: "#aa0e0e"}}
                 ></div>
                 <span className="text-sm text-gray-600">
                   Civil ({getCivilPercentage()}%)
@@ -417,7 +417,7 @@ const StudentSummaryPage = () => {
                     <Tooltip content={<CustomTooltip />} />
                     <Bar
                       dataKey="students"
-                      fill="#31918D"
+                      fill="#d61111"
                       radius={[0, 4, 4, 0]}
                     >
                       <LabelList
@@ -488,7 +488,7 @@ const StudentSummaryPage = () => {
           {/* Military Students Breakdown */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-              <Shield className="w-6 h-6 mr-2" style={{ color: "#31918D" }} />
+              <Shield className="w-6 h-6 mr-2" style={{ color: "#d61111" }} />
               Military Students Breakdown
             </h3>
             <div className="space-y-4">
@@ -498,7 +498,7 @@ const StudentSummaryPage = () => {
                 </span>
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: "#31918D" }}
+                  style={{ color: "#d61111" }}
                 >
                   {students.total_military_students}
                 </span>
@@ -525,7 +525,7 @@ const StudentSummaryPage = () => {
           {/* Civilian Students Breakdown */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-              <User className="w-6 h-6 mr-2" style={{ color: "#014376" }} />
+              <User className="w-6 h-6 mr-2" style={{ color: "#aa0e0e" }} />
               Civilian Students Breakdown
             </h3>
             <div className="space-y-4">
@@ -535,7 +535,7 @@ const StudentSummaryPage = () => {
                 </span>
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: "#014376" }}
+                  style={{ color: "#aa0e0e" }}
                 >
                   {students.total_civilian_students}
                 </span>
@@ -563,13 +563,13 @@ const StudentSummaryPage = () => {
         {/* Overall Statistics */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-            <Activity className="w-6 h-6 mr-2" style={{ color: "#31918D" }} />
+            <Activity className="w-6 h-6 mr-2" style={{ color: "#d61111" }} />
             Overall Student Statistics
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <p className="text-gray-600 text-sm mb-2">Total Students</p>
-              <p className="text-3xl font-bold" style={{ color: "#014376" }}>
+              <p className="text-3xl font-bold" style={{ color: "#aa0e0e" }}>
                 {students.total_students}
               </p>
             </div>

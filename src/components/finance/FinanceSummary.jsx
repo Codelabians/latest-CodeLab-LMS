@@ -64,7 +64,7 @@ const FinanceSummary = () => {
           totalIncome > 0
             ? ((parseFloat(item.total) / totalIncome) * 100).toFixed(1)
             : 0,
-        color: ["#014376", "#31918D", "#F59E0B", "#8B5CF6", "#EC4899"][
+        color: ["#aa0e0e", "#d61111", "#F59E0B", "#8B5CF6", "#EC4899"][
           index % 5
         ],
       }),
@@ -79,7 +79,7 @@ const FinanceSummary = () => {
           totalExpense > 0
             ? ((parseFloat(item.total) / totalExpense) * 100).toFixed(1)
             : 0,
-        color: ["#EF4444", "#F97316", "#EAB308", "#06B6D4", "#84CC16"][
+        color: ["#EF4444", "#F97316", "#EAB308", "#06B6D4", "#aa0e0e"][
           index % 5
         ],
       }),
@@ -127,7 +127,7 @@ const FinanceSummary = () => {
     return value;
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload, label}) => {
     if (active && payload && payload.length) {
       return (
         <div className="p-3 bg-white border border-gray-200 rounded-lg shadow-lg">
@@ -246,7 +246,7 @@ const FinanceSummary = () => {
           icon={Coins}
           label="Total Income"
           value={formatCurrency(financeData.totalIncome)}
-          isPositive={true}
+          isPositive={true}finance
         />
         <StatsCard
           icon={TrendingDown}
@@ -582,7 +582,7 @@ const FinanceSummary = () => {
                   />
                   <Bar
                     dataKey="profit"
-                    fill="#3B82F6"
+                    fill="#d61111"
                     name="Net Profit"
                     radius={[4, 4, 0, 0]}
                   />
@@ -632,7 +632,7 @@ const FinanceSummary = () => {
                         <td className="px-6 py-4 text-sm text-green-600 font-semibold">
                           {formatCurrency(row.income)}
                         </td>
-                        <td className="px-6 py-4 text-sm text-red-600 font-semibold">
+                        <td className="px-6 py-4 text-sm text-green-600 font-semibold">
                           {formatCurrency(row.expense)}
                         </td>
                         <td className="px-6 py-4 text-sm text-orange-600 font-semibold">
@@ -641,7 +641,7 @@ const FinanceSummary = () => {
                         <td
                           className="px-6 py-4 text-sm font-bold"
                           style={{
-                            color: row.profit >= 0 ? "#3B82F6" : "#EF4444",
+                            color: row.profit >= 0 ? "#d61111" : "#EF4444",
                           }}
                         >
                           {formatCurrency(row.profit)}
@@ -672,21 +672,21 @@ const FinanceSummary = () => {
                   <Tooltip content={<CustomTooltip />} />
                   <Bar
                     dataKey="civilianTotal"
-                    fill="#3B82F6"
+                    fill="#d61111"
                     name="Civilian"
                     radius={[4, 4, 0, 0]}
                     stackId="a"
                   />
                   <Bar
                     dataKey="militaryTotal"
-                    fill="#10B981"
+                    fill="#100F0F"
                     name="Military"
                     radius={[4, 4, 0, 0]}
                     stackId="a"
                   />
                   <Bar
                     dataKey="value"
-                    fill="#014376"
+                    fill="#aa0e0e"
                     name="Other Income"
                     radius={[4, 4, 0, 0]}
                   />
@@ -824,7 +824,7 @@ const FinanceSummary = () => {
                     <Tooltip content={<CustomTooltip />} />
                     <Bar
                       dataKey="amount"
-                      fill="#EF4444"
+                      fill="#aa0e0e"
                       radius={[0, 4, 4, 0]}
                     />
                   </BarChart>
@@ -855,7 +855,7 @@ const FinanceSummary = () => {
                 </div>
                 <div
                   className={`text-center p-4 rounded-lg ${
-                    financeData.netProfit >= 0 ? "bg-blue-50" : "bg-orange-50"
+                    financeData.netProfit >= 0 ? "bg-black-50" : "bg-red-100"
                   }`}
                 >
                   <div

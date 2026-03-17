@@ -102,13 +102,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
         <div
           onClick={() => handleNavigation("/dashboard/student-summary")}
           className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#31918D" }}
+          style={{ borderTopColor: "#d61111" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div
                 className="p-3 rounded-lg"
-                style={{ backgroundColor: "#31918D" }}
+                style={{ backgroundColor: "#d61111" }}
               >
                 <Users className="w-6 h-6 text-white" />
               </div>
@@ -121,13 +121,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Student Inquiries</span>
-              <span className="text-2xl font-bold" style={{ color: "#31918D" }}>
+              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
                 {students.total_students.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Currently Enrolled</span>
-              <span className="text-2xl font-bold" style={{ color: "#31918D" }}>
+              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
                 {students.current_enrolled_students.toLocaleString()}
               </span>
             </div>
@@ -164,13 +164,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
         <div
           onClick={() => handleNavigation("/dashboard/course-summary")}
           className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#014376" }}
+          style={{ borderTopColor: "#aa0e0e" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div
                 className="p-3 rounded-lg"
-                style={{ backgroundColor: "#014376" }}
+                style={{ backgroundColor: "#aa0e0e" }}
               >
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
@@ -183,7 +183,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Classes</span>
-              <span className="text-2xl font-bold" style={{ color: "#014376" }}>
+              <span className="text-2xl font-bold" style={{ color: "#aa0e0e" }}>
                 {classes?.total_classes}
               </span>
             </div>
@@ -196,19 +196,19 @@ const TotalStats = ({ dashboardData, financeData }) => {
               </div>
               <div className="p-3 text-center rounded-lg bg-gray-50">
                 <div className="mb-1 text-sm text-gray-500">Inactive</div>
-                <div className="text-xl font-bold" style={{ color: "#31918D" }}>
+                <div className="text-xl font-bold" style={{ color: "#d61111" }}>
                   {classes.inactive_classes}
                 </div>
               </div>
               <div className="flex justify-between text-sm pt-1">
                 <span className="text-gray-500">Full Classes</span>
-                <span className="font-semibold" style={{ color: "#31918D" }}>
+                <span className="font-semibold" style={{ color: "#d61111" }}>
                   {classes.full_classes}
                 </span>
               </div>
               <div className="flex justify-between text-sm pt-1">
                 <span className="text-gray-500">Available Classes</span>
-                <span className="font-semibold" style={{ color: "#31918D" }}>
+                <span className="font-semibold" style={{ color: "#d61111" }}>
                   {classes.available_classes}
                 </span>
               </div>
@@ -220,13 +220,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
         <div
           onClick={() => handleNavigation("/dashboard/startup-summary")}
           className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#31918D" }}
+          style={{ borderTopColor: "#d61111" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div
                 className="p-3 rounded-lg"
-                style={{ backgroundColor: "#31918D" }}
+                style={{ backgroundColor: "#d61111" }}
               >
                 <Building className="w-6 h-6 text-white" />
               </div>
@@ -239,7 +239,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Spaces</span>
-              <span className="text-2xl font-bold" style={{ color: "#31918D" }}>
+              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
                 {workspaceStats.totalSpaces}
               </span>
             </div>
@@ -270,13 +270,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
         <div
           onClick={() => handleNavigation("/dashboard/employee-summary")}
           className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#014376" }}
+          style={{ borderTopColor: "#aa0e0e" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div
                 className="p-3 rounded-lg"
-                style={{ backgroundColor: "#014376" }}
+                style={{ backgroundColor: "#aa0e0e" }}
               >
                 <Users2 className="w-6 h-6 text-white" />
               </div>
@@ -289,7 +289,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Employees</span>
-              <span className="text-2xl font-bold" style={{ color: "#014376" }}>
+              <span className="text-2xl font-bold" style={{ color: "#aa0e0e" }}>
                 {employees.total_employees}
               </span>
             </div>
@@ -314,13 +314,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
         <div
           onClick={() => handleNavigation("/dashboard/inventory-summary")}
           className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#31918D" }}
+          style={{ borderTopColor: "#d61111" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div
                 className="p-3 rounded-lg"
-                style={{ backgroundColor: "#31918D" }}
+                style={{ backgroundColor: "#d61111" }}
               >
                 <Package className="w-6 h-6 text-white" />
               </div>
@@ -333,7 +333,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Assets</span>
-              <span className="text-2xl font-bold" style={{ color: "#31918D" }}>
+              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
                 {inventoryStats.totalAssets}
               </span>
             </div>
@@ -354,7 +354,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
             {inventoryStats.totalAssets > 0 && (
               <div className="flex justify-between text-sm pt-1">
                 <span className="text-gray-500">Utilization</span>
-                <span className="font-semibold" style={{ color: "#31918D" }}>
+                <span className="font-semibold" style={{ color: "#d61111" }}>
                   {Math.round(
                     (inventoryStats.totalInUse / inventoryStats.totalAssets) *
                       100
@@ -370,13 +370,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
         <div
           onClick={() => handleNavigation("/dashboard/finance-summary")}
           className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#014376" }}
+          style={{ borderTopColor: "#aa0e0e" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div
                 className="p-3 rounded-lg"
-                style={{ backgroundColor: "#014376" }}
+                style={{ backgroundColor: "#aa0e0e" }}
               >
                 <Users2 className="w-6 h-6 text-white" />
               </div>

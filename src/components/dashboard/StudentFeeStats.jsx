@@ -2,8 +2,8 @@ import React from "react";
 
 // Modern Color Scheme
 const COLORS = {
-  primary: "#014376",
-  secondary: "#31918D",
+  primary: "#aa0e0e",
+  secondary: "#d61111",
   accent: "#ec4899",
   success: "#10b981",
   warning: "#f59e0b",

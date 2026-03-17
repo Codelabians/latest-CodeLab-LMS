@@ -226,7 +226,7 @@ const ManageSpaces = () => {
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#014376] transition-colors line-clamp-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#aa0e0e] transition-colors line-clamp-2">
                   {workspaceType.name}
                 </h3>
 

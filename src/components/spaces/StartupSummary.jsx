@@ -171,7 +171,7 @@ const StartupSummary = () => {
     return data;
   }, [workspaceStats]);
 
-  const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444"];
+  const COLORS = ["#d61111", "#10B981", "#F59E0B", "#EF4444"];
 
   if (isLoading) {
     return (
@@ -303,7 +303,7 @@ const StartupSummary = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="occupied" fill="#3B82F6" name="Occupied" />
+                  <Bar dataKey="occupied" fill="#d61111" name="Occupied" />
                   <Bar dataKey="available" fill="#10B981" name="Available" />
                 </BarChart>
               </ResponsiveContainer>
@@ -362,7 +362,7 @@ const StartupSummary = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="occupied" fill="#3B82F6" name="Occupied" />
+                <Bar dataKey="occupied" fill="#d61111" name="Occupied" />
                 <Bar dataKey="available" fill="#10B981" name="Available" />
               </BarChart>
             </ResponsiveContainer>

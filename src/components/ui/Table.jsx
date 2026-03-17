@@ -622,7 +622,7 @@ const Table = ({
                 onClick={() => handleClick(number)}
                 className={`min-w-[36px] px-3 py-2 text-sm font-medium rounded transition-all ms-1 mb-1 duration-200 ${
                   currentPage === number
-                    ? "bg-[#1E5A7D] text-white hover:bg-[#16455E]"
+                    ? "bg-[#d61111] text-white hover:bg-[#aa0e0e]"
                     : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                 }`}
               >
@@ -714,7 +714,7 @@ const Table = ({
           />
 
           <button
-            className="px-4 py-2 h-[38px] text-sm font-medium text-white bg-[#1E5A7D] rounded hover:bg-[#16455E] active:bg-[#0F3546] transition-all duration-200"
+            className="px-4 py-2 h-[38px] text-sm font-medium text-white bg-[#d61111] rounded hover:bg-[#aa0e0e] active:bg-[#aa0e0e] transition-all duration-200"
             onClick={handlePage}
           >
             Go

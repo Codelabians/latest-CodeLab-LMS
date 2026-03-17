@@ -30,7 +30,7 @@ const tabs = [
   { id: "all", label: "All", param: null },
   { id: "military", label: "Military", param: 0 },
   { id: "civilian", label: "Civilian", param: 1 },
-];
+];                                          
 
 // Category Card Component
 const CategoryCard = ({ category, onClick }) => {

@@ -316,7 +316,7 @@ const CoursesComponent = () => {
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-[#014376] to-[#31918D] rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-[#aa0e0e] to-[#d61111] rounded-xl shadow-lg">
               <GraduationCap className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
@@ -326,7 +326,7 @@ const CoursesComponent = () => {
 
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#014376] to-[#31918D] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#aa0e0e] to-[#d61111] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition"
           >
             <Plus size={20} />
             Add Course

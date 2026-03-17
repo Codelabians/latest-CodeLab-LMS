@@ -5,7 +5,7 @@ import { Building2, Users } from 'lucide-react';
 const StartupStats = () => {
   // Overall occupancy data for pie chart
   const occupancyData = [
-    { name: 'Occupied', value: 0, color: '#10B981' },
+    { name: 'Occupied', value: 0, color: '#aa0e0e' },
     { name: 'Available', value: 0, color: '#E5E7EB' },
   ];
 
@@ -94,7 +94,7 @@ const StartupStats = () => {
               <XAxis dataKey="name" fontSize={12} />
               <YAxis fontSize={12} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="occupied" fill="#3B82F6" name="Occupied" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="occupied" fill="#d61111" name="Occupied" radius={[2, 2, 0, 0]} />
               <Bar dataKey="total" fill="#E5E7EB" name="Total Capacity" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

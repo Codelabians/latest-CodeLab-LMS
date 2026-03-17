@@ -127,27 +127,27 @@ const StudentManagement = () => {
               label: "Total",
               value: meta?.total_count ?? students.length,
               icon: Users2,
-              color: "#014376",
+              color: "#aa0e0e",
             },
             {
               label: "Enrolled",
               value: students.filter((s) => s.status === "enrolled").length,
               icon: UserCheck,
-              color: "#31918D",
+              color: "#d61111",
             },
             {
               label: "Military",
               value: students.filter((s) => s.student_type === "military")
                 .length,
               icon: Shield,
-              color: "#014376",
+              color: "#aa0e0e",
             },
             {
               label: "Civilian",
               value: students.filter((s) => s.student_type === "civilian")
                 .length,
               icon: Shield,
-              color: "#31918D",
+              color: "#d61111",
             },
           ].map((stat, i) => (
             <div key={i} className="bg-white p-6 rounded-xl shadow-sm border">
@@ -256,7 +256,7 @@ const StudentManagement = () => {
               {!resetSuccess ? (
                 <>
                   <div className="flex items-center gap-3 mb-4">
-                    <Key className="w-6 h-6" style={{ color: "#31918D" }} />
+                    <Key className="w-6 h-6" style={{ color: "#d61111" }} />
                     <h3 className="text-xl font-bold">Reset Password</h3>
                   </div>
                   <p className="text-gray-600 mb-6">

@@ -24,8 +24,8 @@ import UpdateAssignInventory from "./UpdateAssignInventory";
 // Professional Header Component
 const Header = ({ title, icon, subtitle }) => (
   <div className="mb-8">
-    <div className="flex items-center gap-4 mb-2">
-      <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+    <div className="flex items-center gap-4 mb-2      ">
+      <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
         <div className="text-white">{icon}</div>
       </div>
       <div>

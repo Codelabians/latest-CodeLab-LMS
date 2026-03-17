@@ -328,7 +328,7 @@ const Inventory = () => {
 
   // Professional color palette
   const colors = [
-    "#3B82F6",
+    "#d61111",
     "#10B981",
     "#F59E0B",
     "#EF4444",
@@ -528,7 +528,7 @@ const Inventory = () => {
                     key={item.uuid}
                     item={item}
                     icon={<Package className="w-6 h-6" />}
-                    color="#014376"
+                    color="#aa0e0e"
                     count={
                       item.inventories_count || item.inventories?.length || 0
                     }
@@ -583,7 +583,7 @@ const Inventory = () => {
                   name: item.sub_category.name,
                   description: item.sub_category.description,
                 }}
-                icon={<FolderOpen className="w-8 h-8" />}
+                icon={<FolderOpen className="w-8 h-8"/>}
                 color={colors[index % colors.length]}
                 count={item.types?.length || 0}
                 onClick={() => {

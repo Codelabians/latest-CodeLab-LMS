@@ -74,15 +74,15 @@ const CourseSummary = () => {
 
   // Prepare chart data for course status distribution
   const courseStatusData = [
-    { name: "Running", value: summary.running_courses, color: "#014376" },
-    { name: "Scheduled", value: summary.scheduled_courses, color: "#31918D" },
+    { name: "Running", value: summary.running_courses, color: "#aa0e0e" },
+    { name: "Scheduled", value: summary.scheduled_courses, color: "#d61111" },
   ].filter((item) => item.value > 0); // Only show non-zero values
 
   // Prepare chart data for courses by category
   const categoryData = coursesByCategory.map((cat, index) => ({
     name: cat.category_name,
     count: cat.course_count,
-    color: index % 2 === 0 ? "#014376" : "#31918D",
+    color: index % 2 === 0 ? "#aa0e0e" : "#d61111",
   }));
 
   const StatCard = ({
@@ -90,7 +90,7 @@ const CourseSummary = () => {
     value,
     subtitle,
     IconComponent,
-    color = "#014376",
+    color = "#aa0e0e",
   }) => (
     <div
       className="bg-white rounded-lg shadow-md p-6 border-l-4"
@@ -139,42 +139,42 @@ const CourseSummary = () => {
             title="Total Courses"
             value={summary.total_courses}
             IconComponent={BookOpen}
-            color="#014376"
+            color="#aa0e0e"
           />
           <StatCard
             title="Running Courses"
             value={summary.running_courses}
             subtitle="Currently active"
             IconComponent={Users}
-            color="#31918D"
+            color="#d61111"
           />
           <StatCard
             title="Scheduled Courses"
             value={summary.scheduled_courses}
             subtitle="Upcoming"
             IconComponent={Clock}
-            color="#014376"
+            color="#aa0e0e"
           />
           <StatCard
             title="Seats Occupied"
             value={summary.seats_occupied.toLocaleString()}
             subtitle={`${summary.percentage_occupied.toFixed(1)}% occupied`}
             IconComponent={UserCheck}
-            color="#31918D"
+            color="#d61111"
           />
           <StatCard
             title="Available Seats"
             value={summary.available_seats.toLocaleString()}
             subtitle="Ready for enrollment"
             IconComponent={Armchair}
-            color="#014376"
+            color="#aa0e0e"
           />
           <StatCard
             title="Course Categories"
             value={summary.course_categories}
             subtitle="Different fields"
             IconComponent={FolderOpen}
-            color="#31918D"
+            color="#d61111"
           />
         </div>
 
@@ -189,7 +189,7 @@ const CourseSummary = () => {
                 <span className="text-gray-600">Occupied</span>
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: "#014376" }}
+                  style={{ color: "#aa0e0e" }}
                 >
                   {quotaSummary.civilian.occupied}
                 </span>
@@ -198,7 +198,7 @@ const CourseSummary = () => {
                 <span className="text-gray-600">Available</span>
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: "#31918D" }}
+                  style={{ color: "#d61111" }}
                 >
                   {quotaSummary.civilian.available}
                 </span>
@@ -208,7 +208,7 @@ const CourseSummary = () => {
                   <span className="text-sm text-gray-500">Occupation Rate</span>
                   <span
                     className="text-lg font-semibold"
-                    style={{ color: "#014376" }}
+                    style={{ color: "#aa0e0e" }}
                   >
                     {quotaSummary.total_quota.civilian_percent.toFixed(1)}%
                   </span>
@@ -218,7 +218,7 @@ const CourseSummary = () => {
                     className="h-2 rounded-full transition-all"
                     style={{
                       width: `${quotaSummary.total_quota.civilian_percent}%`,
-                      backgroundColor: "#014376",
+                      backgroundColor: "#aa0e0e",
                     }}
                   ></div>
                 </div>
@@ -235,7 +235,7 @@ const CourseSummary = () => {
                 <span className="text-gray-600">Occupied</span>
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: "#014376" }}
+                  style={{ color: "#aa0e0e" }}
                 >
                   {quotaSummary.military.occupied}
                 </span>
@@ -244,7 +244,7 @@ const CourseSummary = () => {
                 <span className="text-gray-600">Available</span>
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: "#31918D" }}
+                  style={{ color: "#d61111" }}
                 >
                   {quotaSummary.military.available}
                 </span>
@@ -254,7 +254,7 @@ const CourseSummary = () => {
                   <span className="text-sm text-gray-500">Occupation Rate</span>
                   <span
                     className="text-lg font-semibold"
-                    style={{ color: "#014376" }}
+                    style={{ color: "#aa0e0e" }}
                   >
                     {quotaSummary.total_quota.military_percent.toFixed(1)}%
                   </span>
@@ -264,7 +264,7 @@ const CourseSummary = () => {
                     className="h-2 rounded-full transition-all"
                     style={{
                       width: `${quotaSummary.total_quota.military_percent}%`,
-                      backgroundColor: "#31918D",
+                      backgroundColor: "#d61111",
                     }}
                   ></div>
                 </div>
@@ -292,21 +292,21 @@ const CourseSummary = () => {
                   value={item.total_seats}
                   subtitle={item.batch_name}
                   IconComponent={Armchair}
-                  color="#014376"
+                  color="#aa0e0e"
                 />
                 <StatCard
                   title="Total Classes"
                   value={item.total_classes}
                   subtitle="In this batch"
                   IconComponent={BookOpen}
-                  color="#31918D"
+                  color="#d61111"
                 />
                 <StatCard
                   title="Batch ID"
                   value={item.batch_id}
                   subtitle="Unique identifier"
                   IconComponent={FolderOpen}
-                  color="#014376"
+                  color="#aa0e0e"
                 />
               </div>
             ))
@@ -365,7 +365,7 @@ const CourseSummary = () => {
                   <XAxis dataKey="name" fontSize={12} />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#014376" />
+                  <Bar dataKey="count" fill="#aa0e0e" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

@@ -252,7 +252,7 @@ const IndividualCompanyForm = () => {
             />
           </div>
 
-          <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-[#014376] to-[#31918D] bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-[#aa0e0e] to-[#d61111] bg-clip-text text-transparent">
             {isEditMode ? "Edit Startup Registration" : "Startup Registration"}
           </h1>
 
@@ -446,7 +446,7 @@ const IndividualCompanyForm = () => {
                 className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl ${
                   isSubmitting
                     ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#014376] to-[#31918D] text-white hover:from-[#31918D] hover:to-[#014376]"
+                    : "bg-gradient-to-r from-[#aa0e0e] to-[#d61111] text-white hover:from-[#31918D] hover:to-[#014376]"
                 }`}
               >
                 {isSubmitting

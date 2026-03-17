@@ -15903,7 +15903,7 @@ Error generating stack: ` +
             ],
           }),
           y.jsx("div", {
-            className: `transition-all duration-700  ${
+            className: `duration-700  ${
               i
                 ? "max-w-0 opacity-0 invisible"
                 : "max-w-[240px] opacity-100 visible"

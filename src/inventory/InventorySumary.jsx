@@ -143,12 +143,12 @@ const InventorySummary = () => {
   // Prepare data for pie chart
   const pieData = [
     { name: "Available", value: totalAvailable, color: "#10B981" },
-    { name: "In Use", value: totalInUse, color: "#3B82F6" },
+    { name: "In Use", value: totalInUse, color: "#d61111" },
   ];
 
   // Color palette for charts
   const COLORS = [
-    "#3B82F6",
+    "#d61111",
     "#10B981",
     "#F59E0B",
     "#EF4444",
@@ -371,7 +371,7 @@ const InventorySummary = () => {
                     <Bar
                       dataKey="inUse"
                       stackId="stock"
-                      fill="#3B82F6"
+                      fill="#d61111"
                       name="In Use"
                       radius={[4, 4, 0, 0]}
                     />
@@ -434,7 +434,7 @@ const InventorySummary = () => {
                 <Bar
                   dataKey="inUse"
                   stackId="category"
-                  fill="#3B82F6"
+                  fill="#d61111"
                   name="In Use"
                   radius={[4, 4, 0, 0]}
                 />
