@@ -478,7 +478,7 @@ const Table = ({
 
                         {sourceComponent === "UsersComponents" && (
                           <button
-                            className="bg-[#31918D] text-white w-[45px] h-[35px] rounded mx-1 flex items-center justify-center hover:bg-[#2a7d7a] transition-colors"
+                            className="bg-[#A9A9A9] text-white w-[45px] h-[35px] rounded mx-1 flex items-center justify-center hover:bg-[#2a7d7a] transition-colors"
                             onClick={() => {
                               setSelectedID(item.raw || item); // Set the selected user
                               setIsEditModalOpen(false); // Make sure edit modal is closed
@@ -492,7 +492,7 @@ const Table = ({
                         )}
                         {sourceComponent === "UsersComponents" && (
                           <button
-                            className="bg-[#014376] text-white w-[45px] h-[35px] rounded mx-1 flex items-center justify-center hover:bg-[#013261] transition-colors"
+                            className="bg-[#333333] text-white w-[45px] h-[35px] rounded mx-1 flex items-center justify-center hover:bg-[#013261] transition-colors"
                             onClick={() => {
                               setSelectedID(item.raw || item);
                               setIsEditModalOpen(false);

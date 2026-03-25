@@ -6,7 +6,7 @@ const statusOptions = [
     value: 1,
     label: "Active",
   },
-  {
+  { 
     value: 0,
     label: "InActive",
   },
@@ -18,7 +18,7 @@ const customStyles = {
     backgroundColor: state.isSelected ? "#FF0000" : provided.backgroundColor,
     color: state.isSelected ? "white" : provided.color,
     "&:hover": {
-      backgroundColor: state.isSelected ? "" : "#24A0ED",
+      backgroundColor: state.isSelected ? "" : "#DB0000",
       color: "white",
     },
   }),

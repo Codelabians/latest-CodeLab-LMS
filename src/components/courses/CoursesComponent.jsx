@@ -364,12 +364,12 @@ const CoursesComponent = () => {
                   <Edit size={16} />
                 </button>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-gradient-to-br from-[#014376] to-[#31918D] rounded-xl shadow">
+                  <div className="p-3 bg-gradient-to-br from-[#100F0F] to-[#100F0F] rounded-xl shadow">
                     <BookOpen className="w-6 h-6 text-white" />
                   </div>
 
                   <div className="flex flex-col items-end gap-2">
-                    <span className="px-3 py-1 bg-gradient-to-r from-[#014376] to-[#31918D] text-white text-xs font-bold rounded-full">
+                    <span className="px-3 py-1 bg-gradient-to-r from-[#100F0F] to-[#100F0F] text-white text-xs font-bold rounded-full">
                       {course.category}
                     </span>
                     {course.is_scheduled === 1 && (
@@ -380,21 +380,21 @@ const CoursesComponent = () => {
                   </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-4 group-hover:text-[#014376] transition-colors line-clamp-2 min-h-[2.75rem]">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 group-hover:text-[#100F0F] transition-colors line-clamp-2 min-h-[2.75rem]">
                   {course.name}
                 </h3>
 
                 <div className="space-y-2 mb-5 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600 flex items-center gap-1.5">
-                      <Users size={16} className="text-[#31918D]" />
+                      <Users size={16} className="text-[#d61111]" />
                       Classes
                     </span>
                     <span className="font-semibold">{course.classes || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Fee</span>
-                    <span className="font-bold text-[#014376]">
+                    <span className="font-bold text-[#100F0F]">
                       Rs. {course.fee}
                     </span>
                   </div>
@@ -404,7 +404,7 @@ const CoursesComponent = () => {
                   <span className="text-sm font-medium text-gray-600 group-hover:text-[#014376] transition">
                     View Classes
                   </span>
-                  <div className="w-8 h-8 bg-gradient-to-r from-[#014376] to-[#31918D] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                  <div className="w-8 h-8 bg-gradient-to-r from-[#100F0F] to-[#100F0F] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                     <ChevronRight className="w-5 h-5 text-white" />
                   </div>
                 </div>
@@ -412,7 +412,7 @@ const CoursesComponent = () => {
             ))
           ) : (
             <div className="col-span-full bg-white rounded-2xl shadow border p-12 text-center">
-              <BookOpen className="w-20 h-20 text-[#014376]/30 mx-auto mb-6" />
+              <BookOpen className="w-20 h-20 text-[#100F0F]/30 mx-auto mb-6" />
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
                 No {currentCategory?.name || activeTab} courses found
               </h3>
@@ -430,7 +430,7 @@ const CoursesComponent = () => {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-lg ${currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-[#014376] hover:bg-gray-100"}`}
+                className={`p-2 rounded-lg ${currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-[#100F0F] hover:bg-gray-100"}`}
               >
                 <ChevronLeft size={20} />
               </button>
@@ -442,7 +442,7 @@ const CoursesComponent = () => {
                     onClick={() => handlePageChange(page)}
                     className={`px-4 py-2 rounded-lg font-medium transition ${
                       currentPage === page
-                        ? "bg-gradient-to-r from-[#014376] to-[#31918D] text-white shadow"
+                        ? "bg-gradient-to-r from-[#100F0F] to-[#100F0F] text-white shadow"
                         : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
@@ -454,7 +454,7 @@ const CoursesComponent = () => {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-lg ${currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : "text-[#014376] hover:bg-gray-100"}`}
+                className={`p-2 rounded-lg ${currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : "text-[#100F0F] hover:bg-gray-100"}`}
               >
                 <ChevronRight size={20} />
               </button>

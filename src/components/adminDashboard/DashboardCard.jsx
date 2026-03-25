@@ -99,27 +99,47 @@ const DashboardCard = ({ image, title, stats, section }) => {
   };
 
   return (
-    <div className="bg-white rounded-[15px] flex flex-col w-full p-4 mb-4 shadow-sm">
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start grow">
-        <img src={image} alt="icon" className="object-contain w-16 h-16" />
+    <div className="bg-white rounded-[15px] flex flex-col w-full p-3 sm:p-4 md:p-5 mb-4 shadow-sm">
+      <div className="flex flex-col items-center gap-3 sm:gap-4 sm:flex-row sm:items-start grow">
+        
+        {/* Image */}
+        <img
+          src={image}
+          alt="icon"
+          className="object-contain w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16"
+        />
+
         <div className="flex-1 w-full">
-          <div className="text-base font-medium text-center sm:text-lg text-heading font-poppins sm:text-left">
+          
+          {/* Title */}
+          <div className="text-sm sm:text-base md:text-lg font-medium text-center sm:text-left text-heading font-poppins">
             {title}
           </div>
-          <div className="bg-lightGray h-[1px] my-3 w-full" />
-          <div className="flex flex-wrap justify-between gap-4 text-sm font-light">
+
+          {/* Divider */}
+          <div className="bg-lightGray h-[1px] my-2 sm:my-3 w-full" />
+
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center sm:justify-between gap-3 sm:gap-4 text-xs sm:text-sm font-light">
             {stats.map((stat, index) => (
-              <div key={index} className="flex flex-col items-center flex-1 min-w-[80px]">
+              <div
+                key={index}
+                className="flex flex-col items-center flex-1 min-w-[70px] sm:min-w-[80px]"
+              >
                 <div
-                  className="text-base font-medium text-center cursor-pointer"
+                  className="text-sm sm:text-base font-medium text-center cursor-pointer"
                   onClick={() => handleNavigate(stat.label)}
                 >
                   {stat.label}
                 </div>
-                <div className="text-center">{stat.value}</div>
+
+                <div className="text-center text-xs sm:text-sm">
+                  {stat.value}
+                </div>
               </div>
             ))}
           </div>
+
         </div>
       </div>
     </div>

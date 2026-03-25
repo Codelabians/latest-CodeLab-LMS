@@ -321,7 +321,7 @@ const ClassesComponent = () => {
         <div className="mb-6">
           <button
             onClick={handleBackToCourses}
-            className="flex items-center gap-2 text-[#014376] hover:text-[#31918D] transition-colors font-medium"
+            className="flex items-center gap-2 text-[#aa0e0e] hover:text-[#d61111] transition-colors font-medium"
           >
             <ChevronLeft className="w-5 h-5" />
             <span>Back to Courses</span>
@@ -340,7 +340,7 @@ const ClassesComponent = () => {
                       e.stopPropagation();
                       handleDownloadCourseDocument({ course }, "basic");
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     title="Download Basic Course Outline"
                   >
                     <Download className="w-5 h-5" />
@@ -399,7 +399,7 @@ const ClassesComponent = () => {
                 onClick={() => setActiveTimeTab(tab)}
                 className={`px-6 py-2 rounded-lg font-semibold transition-all ${
                   activeTimeTab === tab
-                    ? "bg-[#014376] text-white"
+                    ? "bg-[#aa0e0e] text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
@@ -427,11 +427,11 @@ const ClassesComponent = () => {
                   className="group p-6 transition-all bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:scale-105 cursor-pointer relative"
                   onClick={() => handleClassClick(cls)}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#014376]/5 to-[#31918D]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#aa0e0e]/5 to-[#d61111]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
 
                   <div className="relative z-10">
                     <div className="flex items-start justify-between mb-4">
-                      <h3 className="text-lg font-bold text-[#014376] group-hover:text-[#31918D] transition-colors">
+                      <h3 className="text-lg font-bold text-[#aa0e0e] group-hover:text-[#d61111] transition-colors">
                         {cls.course?.name}
                       </h3>
                       <div className="flex gap-2">
@@ -440,7 +440,7 @@ const ClassesComponent = () => {
                             e.stopPropagation();
                             handleEditClick(cls);
                           }}
-                          className="text-[#014376] hover:text-[#31918D] transition-colors"
+                          className="text-[#aa0e0e] hover:text-[#d61111] transition-colors"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -474,7 +474,7 @@ const ClassesComponent = () => {
                       </p>
                       <p className="flex items-center gap-1">
                         <span className="font-semibold">Students:</span>
-                        <span className="flex items-center gap-1 text-[#31918D] font-bold">
+                        <span className="flex items-center gap-1 text-[#d61111] font-bold">
                           <Users className="w-4 h-4" />
                           {cls.student_count || 0}
                         </span>
@@ -502,10 +502,10 @@ const ClassesComponent = () => {
                     </div>
 
                     <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
-                      <span className="text-sm text-gray-600 group-hover:text-[#014376] transition-colors font-medium">
+                      <span className="text-sm text-gray-600 group-hover:text-[#aa0e0e] transition-colors font-medium">
                         View Students
                       </span>
-                      <div className="w-8 h-8 bg-gradient-to-r from-[#014376] to-[#31918D] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-8 h-8 bg-gradient-to-r from-[#aa0e0e] to-[#d61111] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <ChevronRight className="w-4 h-4 text-white" />
                       </div>
                     </div>

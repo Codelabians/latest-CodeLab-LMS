@@ -13,8 +13,8 @@ const Finance = () => {
         <defs>
           {/* Define gradient */}
           <linearGradient id="financeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#014376" />
-            <stop offset="100%" stopColor="#31918D" />
+            <stop offset="0%" stopColor="#aa0e0e" />
+            <stop offset="100%" stopColor="#d61111" />
           </linearGradient>
         </defs>
 

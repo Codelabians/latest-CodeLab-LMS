@@ -171,7 +171,7 @@ const StartupSummary = () => {
     return data;
   }, [workspaceStats]);
 
-  const COLORS = ["#d61111", "#10B981", "#F59E0B", "#EF4444"];
+  const COLORS = ["#d61111", "#aa0e0e", "#F59E0B", "#EF4444"];
 
   if (isLoading) {
     return (

@@ -247,6 +247,17 @@ const AssignInventory = () => {
     "#EC4899",
   ];
 
+// const colors = [
+//     "#aa0e0e",
+//     "#100F0F",
+//     "#aa0e0e",
+//     "#100F0F",
+//     "#aa0e0e",
+//     "#100F0F",
+//   ];
+
+
+
   // Inventory Tags Component
   const InventoryTags = ({ inventories }) => {
     if (!inventories || inventories.length === 0) {

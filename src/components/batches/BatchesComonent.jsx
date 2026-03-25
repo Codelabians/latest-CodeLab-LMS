@@ -102,7 +102,7 @@ const BatchesComponent = () => {
         <div className="flex items-start sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-br from-[#014376] to-[#31918D] rounded-2xl shadow-lg shadow-teal-200/50">
+              <div className="p-2.5 bg-gradient-to-br from-[#100F0F] to-[#100F0F] rounded-2xl shadow-lg shadow-teal-200/50">
                 <FiLayers className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -150,8 +150,8 @@ const BatchesComponent = () => {
             value={isLoading ? "—" : batches.length}
             icon={FiLayers}
             gradient="bg-gradient-to-br from-white to-blue-50/60 border-blue-100/60"
-            textColor="text-[#014376]"
-            iconBg="bg-blue-100/50"
+            textColor="text-[#aa0e0e]"
+            iconBg="bg-red-100/50"
           />
           <StatCard
             label="Active"
@@ -184,7 +184,7 @@ const BatchesComponent = () => {
                 w-full pl-11 pr-10 py-3 rounded-xl bg-white
                 border-2 border-gray-100 text-sm font-semibold text-gray-700
                 outline-none transition-all duration-200
-                focus:border-[#014376] focus:shadow-sm
+                focus:border-[#aa0e0e] focus:shadow-sm
                 placeholder:text-gray-300 placeholder:font-normal
               "
             />
@@ -216,7 +216,7 @@ const BatchesComponent = () => {
                   transition-all duration-200
                   ${
                     filter === key
-                      ? "bg-gradient-to-r from-[#014376] to-[#31918D] text-white shadow-sm"
+                      ? "bg-gradient-to-r from-[#aa0e0e] to-[#d61111] text-white shadow-sm"
                       : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                   }
                 `}
@@ -302,7 +302,7 @@ const BatchesComponent = () => {
             {filter !== "all" && (
               <button
                 onClick={() => setFilter("all")}
-                className="text-xs text-[#31918D] font-bold hover:underline flex items-center gap-1"
+                className="text-xs text-[#d61111] font-bold hover:underline flex items-center gap-1"
               >
                 View all
                 <FiChevronRight className="w-3 h-3" />

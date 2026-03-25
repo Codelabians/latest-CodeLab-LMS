@@ -1,90 +1,67 @@
 import { useGetQuery } from "../../api/apiSlice";
-import colors from "../../assets/theme/colors"; // adjust path as needed
+import { useState, useEffect, useRef } from "react";
 
 const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
-  const { data: allbatches } = useGetQuery({
-    path: "/admin/batches",
-  });
+  const { data: allbatches } = useGetQuery({ path: "/admin/batches" });
 
-  const tabStyle = (isActive) => ({
-    padding: "8px 20px",
-    borderRadius: "8px",
-    fontWeight: 600,
-    fontSize: "14px",
-    whiteSpace: "nowrap",
-    cursor: "pointer",
-    border: `1.5px solid ${isActive ? colors.tabActiveBorder : colors.tabInactiveBorder}`,
-    background: isActive ? colors.tabActiveBg : colors.tabInactiveBg,
-    color: isActive ? colors.tabActiveText : colors.tabInactiveText,
-    boxShadow: isActive ? colors.tabActiveShadow : "none",
-    transition: "all 0.2s ease",
-    outline: "none",
-  });
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const handleMouseEnter = (e, isActive) => {
-    if (!isActive) {
-      e.currentTarget.style.background = colors.tabInactiveHoverBg;
-      e.currentTarget.style.borderColor = colors.tabInactiveHoverBorder;
-    }
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const batches = allbatches?.data || [];
+  const options = [{ id: "all", name: "All Batches" }, ...batches];
+
+  const handleSelect = (id) => {
+    setActiveBatchTab(id.toString());
+    setIsOpen(false);
   };
 
-  const handleMouseLeave = (e, isActive) => {
-    if (!isActive) {
-      e.currentTarget.style.background = colors.tabInactiveBg;
-      e.currentTarget.style.borderColor = colors.tabInactiveBorder;
-    }
-  };
+  const selectedBatch = options.find(
+    (batch) => batch.id.toString() === activeBatchTab
+  );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        marginBottom: "24px",
-        overflowX: "auto",
-        paddingBottom: "8px",
-        paddingTop: "4px",
-        paddingLeft: "2px",
-      }}
-    >
-      {/* All Batches tab */}
-      <button
-        onClick={() => setActiveBatchTab("all")}
-        style={tabStyle(activeBatchTab === "all")}
-        onMouseEnter={(e) => handleMouseEnter(e, activeBatchTab === "all")}
-        onMouseLeave={(e) => handleMouseLeave(e, activeBatchTab === "all")}
+    <div className="relative w-full" ref={dropdownRef}>
+      {/* Selected Value */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="cursor-pointer border-[1.5px] border-[#d61111] rounded-md px-4 py-2 flex justify-between items-center text-[#d61111] font-medium w-full"
       >
-        All Batches
-      </button>
+        <span>{selectedBatch?.name || "Select Batch"}</span>
+        <span>{isOpen ? "▲" : "▼"}</span>
+      </div>
 
-      {/* Divider */}
-      {allbatches?.data?.length > 0 && (
-        <div
-          style={{
-            width: "1px",
-            height: "28px",
-            background: colors.divider,
-            flexShrink: 0,
-          }}
-        />
+      {/* Dropdown Options */}
+      {isOpen && (
+        <ul className="absolute z-50 w-full bg-white border-[1.5px] border-[#d61111] rounded-md mt-1 max-h-[400px] overflow-y-auto shadow-lg">
+          {options.map((batch) => {
+            const isActive = activeBatchTab === batch.id.toString();
+            return (
+              <li
+                key={batch.id}
+                onClick={() => handleSelect(batch.id)}
+                className={`px-4 py-2 cursor-pointer ${
+                  isActive
+                    ? "bg-[#d61111] text-white"
+                    : "hover:bg-[#d61111] hover:text-white"
+                }`}
+              >
+                {batch.name}
+              </li>
+            );
+          })}
+        </ul>
       )}
-
-      {/* Batch tabs */}
-      {allbatches?.data?.map((batch) => {
-        const isActive = activeBatchTab === batch.id.toString();
-        return (
-          <button
-            key={batch.id}
-            onClick={() => setActiveBatchTab(batch.id.toString())}
-            style={tabStyle(isActive)}
-            onMouseEnter={(e) => handleMouseEnter(e, isActive)}
-            onMouseLeave={(e) => handleMouseLeave(e, isActive)}
-          >
-            {batch.name}
-          </button>
-        );
-      })}
     </div>
   );
 };

@@ -11,7 +11,7 @@ const HallsTabs = ({ setActiveHallTab, activeHallTab }) => {
           onClick={() => setActiveHallTab("all")}
           className={`px-6 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
             activeHallTab === "all"
-              ? "bg-[#31918D] text-white"
+              ? "bg-[#100F0F] text-white"
               : "bg-gray-200 text-gray-700 hover:bg-gray-300"
           }`}
         >
@@ -23,7 +23,7 @@ const HallsTabs = ({ setActiveHallTab, activeHallTab }) => {
             onClick={() => setActiveHallTab(hall.id.toString())}
             className={`px-6 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
               activeHallTab === hall.id.toString()
-                ? "bg-[#31918D] text-white"
+                ? "bg-[#100F0F] text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >

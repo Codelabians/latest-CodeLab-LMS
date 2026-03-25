@@ -79,7 +79,7 @@ const FinanceSummary = () => {
           totalExpense > 0
             ? ((parseFloat(item.total) / totalExpense) * 100).toFixed(1)
             : 0,
-        color: ["#EF4444", "#F97316", "#EAB308", "#06B6D4", "#aa0e0e"][
+        color: ["#EF4444", "#F97316", "#EAB308", "#100F0F", "#aa0e0e"][
           index % 5
         ],
       }),
@@ -170,7 +170,7 @@ const FinanceSummary = () => {
           >
             <Icon
               className={`h-6 w-6 ${
-                isPositive ? "text-green-600" : "text-red-600"
+                isPositive ? "text-red-600" : "text-red-600"
               }`}
             />
           </div>

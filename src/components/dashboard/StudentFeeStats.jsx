@@ -322,7 +322,7 @@ const StudentFeeStats = ({ dashboardData }) => {
           icon={
             <svg
               className="w-6 h-6"
-              style={{ color: COLORS.secondary }}
+              style={{ color: COLORS.secondary}}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -363,4 +363,4 @@ const StudentFeeStats = ({ dashboardData }) => {
   );
 };
 
-export default StudentFeeStats;
+export default StudentFeeStats
