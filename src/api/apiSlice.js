@@ -3,8 +3,8 @@ import { clearCredentials } from "../features/auth/authSlice";
 
 // const REACT_APP_API_URL = "https://api-rohi.codelab.pk/public/api";
 
-const REACT_APP_API_URL = "https://dev-rohi-backend.codelab.pk/public/api";
-// const REACT_APP_API_URL = "http://192.168.1.21:8000/api";
+// const REACT_APP_API_URL = "https://dev-rohi-backend.codelab.pk/public/api";
+const REACT_APP_API_URL = "http://192.168.1.23:5173/api";
 
 const API_URL = REACT_APP_API_URL;
 

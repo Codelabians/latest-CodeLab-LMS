@@ -123,7 +123,7 @@ const Roles = () => {
       refetchRoles();
     } catch (error) {
       console.error("Error assigning permissions:", error);
-      toast.error("Failed to assign permissions");
+      toast.error("Failed to  permissions");
     }
   };
 
