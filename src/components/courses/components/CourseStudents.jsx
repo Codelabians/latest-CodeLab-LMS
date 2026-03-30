@@ -98,7 +98,7 @@ export default function CourseStudentsPage() {
           <p className="text-gray-700 font-semibold mb-4">Course not found</p>
           <button
             onClick={() => navigate("/dashboard/courses")}
-            className="px-6 py-3 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg font-medium hover:shadow-lg transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white rounded-lg font-medium hover:shadow-lg transition-all"
           >
             Go Back to Courses
           </button>
@@ -111,7 +111,7 @@ export default function CourseStudentsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#014376] border-t-transparent mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#aa0e0e] border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-700 font-medium">Loading students...</p>
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function CourseStudentsPage() {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-2 text-[#014376] hover:text-[#31918D] mb-6 font-medium transition-colors"
+          className="group flex items-center gap-2 text-[#aa0e0e] hover:text-[#d61111] mb-6 font-medium transition-colors"
         >
           <div className="p-2 bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
             <ArrowLeft className="w-5 h-5" />
@@ -173,7 +173,7 @@ export default function CourseStudentsPage() {
         {/* Filters */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <Filter className="w-5 h-5 text-[#014376]" />
+            <Filter className="w-5 h-5 text-[#aa0e0e]" />
             <h3 className="text-lg font-bold text-gray-900">Filters</h3>
             {hasActiveFilters && (
               <button
@@ -195,7 +195,7 @@ export default function CourseStudentsPage() {
                 placeholder="Search students..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#014376] transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#aa0e0e] transition-all"
               />
             </div>
 
@@ -205,7 +205,7 @@ export default function CourseStudentsPage() {
               <select
                 value={selectedTimeSlot}
                 onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#014376] appearance-none bg-white transition-all cursor-pointer"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#aa0e0e] appearance-none bg-white transition-all cursor-pointer"
               >
                 {timeSlots.map((slot) => (
                   <option key={slot} value={slot}>
@@ -221,7 +221,7 @@ export default function CourseStudentsPage() {
               <select
                 value={selectedHall}
                 onChange={(e) => setSelectedHall(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#014376] appearance-none bg-white transition-all cursor-pointer"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#aa0e0e] appearance-none bg-white transition-all cursor-pointer"
               >
                 {halls.map((hall) => (
                   <option key={hall} value={hall}>
@@ -248,8 +248,8 @@ export default function CourseStudentsPage() {
             />
           ) : (
             <div className="p-16 text-center">
-              <div className="inline-block p-6 bg-gradient-to-br from-[#014376]/10 to-[#31918D]/10 rounded-full mb-6">
-                <Users className="w-16 h-16 text-[#014376]" />
+              <div className="inline-block p-6 bg-gradient-to-br from-[#aa0e0e]/10 to-[#aa0e0e]/10 rounded-full mb-6">
+                <Users className="w-16 h-16 text-[#d61111]" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 No students found

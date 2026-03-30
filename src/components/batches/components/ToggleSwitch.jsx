@@ -9,12 +9,12 @@ const ToggleSwitch = ({ isActive, isLoading, onChange }) => (
     className={`
       relative inline-flex items-center w-14 h-7 rounded-full
       transition-all duration-300 flex-shrink-0
-      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#31918D]
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#d61111]
       ${
         isLoading
           ? "cursor-not-allowed opacity-50 bg-gray-200"
           : isActive
-            ? "bg-gradient-to-r from-[#014376] to-[#31918D] shadow-lg shadow-teal-200/60 cursor-pointer"
+            ? "bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] shadow-lg shadow-teal-200/60 cursor-pointer"
             : "bg-gray-200 hover:bg-gray-300 cursor-pointer"
       }
     `}
@@ -30,7 +30,7 @@ const ToggleSwitch = ({ isActive, isLoading, onChange }) => (
       {isLoading ? (
         <FiRefreshCw className="w-2.5 h-2.5 text-gray-400 animate-spin" />
       ) : isActive ? (
-        <FiCheckCircle className="w-2.5 h-2.5 text-[#31918D]" />
+        <FiCheckCircle className="w-2.5 h-2.5 text-[#d61111]" />
       ) : (
         <FiXCircle className="w-2.5 h-2.5 text-gray-300" />
       )}

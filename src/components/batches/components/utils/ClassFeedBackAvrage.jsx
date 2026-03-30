@@ -106,7 +106,7 @@ const ClassFeedBackAverage = ({ feedbackData, classData, onBack }) => {
       {/* Monthly Comparison Section */}
       {monthly_averages && monthly_averages.length > 0 && (
         <div className="mb-8 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-[#014376] to-[#31918D] px-6 py-4">
+          <div className="bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] px-6 py-4">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <Calendar className="w-5 h-5" />
               Monthly Teacher Average Comparison
@@ -202,10 +202,10 @@ const ClassFeedBackAverage = ({ feedbackData, classData, onBack }) => {
       )}
 
       {/* Overall Average Card */}
-      <div className="mb-8 bg-gradient-to-br from-[#31918D]/10 to-[#31918D]/20 p-6 rounded-xl border-2 border-[#31918D] shadow-lg">
+      <div className="mb-8 bg-gradient-to-br from-[#d61111]/10 to-[#d61111]/20 p-6 rounded-xl border-2 border-[#d61111] shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="bg-[#014376] p-4 rounded-full">
+            <div className="bg-[#aa0e0e] p-4 rounded-full">
               <BarChart3 className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -219,7 +219,7 @@ const ClassFeedBackAverage = ({ feedbackData, classData, onBack }) => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-5xl font-bold text-[#014376]">
+            <div className="text-5xl font-bold text-[#aa0e0e]">
               {parseFloat(overall_average).toFixed(2)}
             </div>
             <div className="text-sm text-gray-600 mt-1">out of 10</div>
@@ -245,7 +245,7 @@ const ClassFeedBackAverage = ({ feedbackData, classData, onBack }) => {
 
       {/* Questions Breakdown */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#014376] to-[#31918D] px-6 py-4">
+        <div className="bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] px-6 py-4">
           <h3 className="text-xl font-bold text-white">
             Detailed Feedback Breakdown
           </h3>

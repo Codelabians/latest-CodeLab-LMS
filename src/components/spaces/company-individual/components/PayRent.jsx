@@ -106,7 +106,7 @@ const PayRentModal = ({ isOpen, onClose, companyUuid, rentAmount }) => {
           <X className="w-6 h-6" />
         </button>
 
-        <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-[#014376] to-[#31918D] bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] bg-clip-text text-transparent">
           Pay Rent
         </h2>
 
@@ -168,7 +168,7 @@ const PayRentModal = ({ isOpen, onClose, companyUuid, rentAmount }) => {
               className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl ${
                 isSubmitting
                   ? "bg-gray-400 text-white cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#014376] to-[#31918D] text-white hover:from-[#31918D] hover:to-[#014376]"
+                  : "bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white hover:from-[#d61111] hover:to-[#d61111]"
               }`}
             >
               {isSubmitting ? "Processing..." : "Pay Rent"}

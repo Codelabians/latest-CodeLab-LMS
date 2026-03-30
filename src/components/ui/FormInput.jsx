@@ -62,7 +62,7 @@ const FormInput = ({
                 }),
                 multiValue: (base) => ({
                   ...base,
-                  backgroundColor: '#014376',
+                  backgroundColor: '#aa0e0e',
                 }),
                 multiValueLabel: (base) => ({
                   ...base,
@@ -72,7 +72,7 @@ const FormInput = ({
                   ...base,
                   color: 'white',
                   ':hover': {
-                    backgroundColor: '#31918D',
+                    backgroundColor: '#aa0e0e',
                     color: 'white',
                   },
                 }),
@@ -127,7 +127,7 @@ const FormInput = ({
             name={name}
             onChange={onChange}
             accept={accept}
-            className={`${baseClasses} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-[#014376] file:to-[#31918D] file:text-white file:font-medium hover:file:from-[#31918D] hover:file:to-[#014376]`}
+            className={`${baseClasses} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-[#aa0e0e] file:to-[#aa0e0e] file:text-white file:font-medium hover:file:from-[#d61111] hover:file:to-[#d61111]`}
             required={required}
             {...props}
           />

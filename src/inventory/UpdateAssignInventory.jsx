@@ -137,7 +137,7 @@
 //             <button
 //               type="submit"
 //               disabled={isLoading}
-//               className="flex-1 px-4 py-2 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg hover:from-[#31918D] hover:to-[#014376] transition-all disabled:opacity-50"
+//               className="flex-1 px-4 py-2 bg-gradient-to-r from-[#d61111] to-[#d61111] text-white rounded-lg hover:from-[#aa0e0e] hover:to-[#aa0e0e] transition-all disabled:opacity-50"
 //             >
 //               {isLoading ? "Saving..." : "Save Changes"}
 //             </button>
@@ -276,7 +276,7 @@ const UpdateAssignInventory = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg hover:from-[#31918D] hover:to-[#014376] transition-all disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white rounded-lg hover:from-[#d61111] hover:to-[#d61111] transition-all disabled:opacity-50"
             >
               {isLoading ? "Saving..." : "Save Changes"}
             </button>

@@ -115,7 +115,7 @@ const StudentBatchTab = ({ setIsCreateModalOpen, isCreateModalOpen }) => {
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-[#014376] mb-2">
+                <h2 className="text-2xl font-bold text-[#aa0e0e] mb-2">
                   {classDetails.name}
                 </h2>
                 <div className="flex items-center gap-2 text-gray-600">
@@ -126,7 +126,7 @@ const StudentBatchTab = ({ setIsCreateModalOpen, isCreateModalOpen }) => {
                 </div>
               </div>
               <div
-                className="text-brown cursor-pointer hover:text-[#014376] transition-colors"
+                className="text-brown cursor-pointer hover:text-[#aa0e0e] transition-colors"
                 onClick={() => {
                   setSelectedClass(classDetails);
                   setIsEditModalOpen(true);
@@ -280,13 +280,13 @@ const StudentBatchTab = ({ setIsCreateModalOpen, isCreateModalOpen }) => {
 
             {/* Seats Information */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-[#014376] mb-4">
+              <h3 className="text-lg font-semibold text-[#aa0e0e] mb-4">
                 Class Capacity & Fee Information
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4 text-center border border-blue-200">
                   <p className="text-sm text-gray-600">Total Seats</p>
-                  <p className="text-2xl font-bold text-[#014376]">
+                  <p className="text-2xl font-bold text-[#aa0e0e]">
                     {classDetails.seats}
                   </p>
                 </div>

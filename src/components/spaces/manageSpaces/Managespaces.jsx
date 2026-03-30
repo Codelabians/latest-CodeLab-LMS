@@ -199,7 +199,7 @@ const ManageSpaces = () => {
         {isFetching && (
           <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-40">
             <div className="bg-white rounded-2xl shadow-2xl p-6 flex items-center gap-3">
-              <Loader2 className="w-6 h-6 text-[#014376] animate-spin" />
+              <Loader2 className="w-6 h-6 text-[#aa0e0e] animate-spin" />
               <span className="text-gray-700 font-medium">
                 Loading workspace types...
               </span>
@@ -220,7 +220,7 @@ const ManageSpaces = () => {
                     <Package className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className="px-3 py-1 bg-gradient-to-r from-[#014376] to-[#31918D] text-white text-xs font-bold rounded-full">
+                    <span className="px-3 py-1 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white text-xs font-bold rounded-full">
                       {workspaceType.category?.name}
                     </span>
                   </div>
@@ -235,7 +235,7 @@ const ManageSpaces = () => {
                     <span className="text-sm font-medium text-gray-700">
                       Total Workspaces
                     </span>
-                    <span className="text-lg font-bold text-[#014376]">
+                    <span className="text-lg font-bold text-[#aa0e0e]">
                       {workspaceType.workspaces_count || 0}
                     </span>
                   </div>
@@ -250,7 +250,7 @@ const ManageSpaces = () => {
             ))
           ) : (
             <div className="col-span-full bg-white rounded-2xl shadow-lg border border-gray-200 p-16 text-center">
-              <Layers className="w-20 h-20 text-[#014376] mx-auto mb-6" />
+              <Layers className="w-20 h-20 text-[#aa0e0e] mx-auto mb-6" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 No workspace types found for {currentCategory?.name}
               </h3>
@@ -271,7 +271,7 @@ const ManageSpaces = () => {
                 onClick={() => handlePageChange(page)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   currentPage === page
-                    ? "bg-gradient-to-r from-[#014376] to-[#31918D] text-white shadow-lg"
+                    ? "bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white shadow-lg"
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
               >

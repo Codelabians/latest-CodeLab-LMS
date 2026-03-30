@@ -215,7 +215,7 @@ const IndividualDetails = () => {
           </div>
           <button
             onClick={() => setIsPayRentModalOpen(true)}
-            className="bg-white text-[#014376] rounded-lg px-6 py-3 flex items-center gap-2 hover:bg-blue-50 transition-colors font-semibold shadow-lg"
+            className="bg-white text-[#aa0e0e] rounded-lg px-6 py-3 flex items-center gap-2 hover:bg-blue-50 transition-colors font-semibold shadow-lg"
           >
             <FaMoneyCheck className="w-5 h-5" />
             Pay Rent
@@ -247,7 +247,7 @@ const IndividualDetails = () => {
       {/* Rent Payment Summary */}
       <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-gradient-to-r from-[#014376] to-[#31918D] rounded-lg text-white">
+          <div className="p-3 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] rounded-lg text-white">
             <DollarSign className="w-6 h-6" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800">

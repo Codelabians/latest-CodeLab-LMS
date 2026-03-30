@@ -341,7 +341,7 @@ const EnrollClassModal = ({
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-[#014376]">
+          <h2 className="text-2xl font-bold text-[#aa0e0e]">
             Enroll in Another Class
           </h2>
           <button

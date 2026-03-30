@@ -61,7 +61,7 @@ export default function InquiryDetailView() {
           <p className="text-gray-700 font-semibold mb-4">Inquiry not found</p>
           <button
             onClick={() => navigate("/dashboard/training-inquiries")}
-            className="px-6 py-3 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg font-medium hover:shadow-lg transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white rounded-lg font-medium hover:shadow-lg transition-all"
           >
             Go Back
           </button>
@@ -79,7 +79,7 @@ export default function InquiryDetailView() {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-2 text-[#014376] hover:text-[#31918D] mb-6 font-medium transition-colors"
+          className="group flex items-center gap-2 text-[#aa0e0e] hover:text-[#d61111] mb-6 font-medium transition-colors"
         >
           <div className="p-2 bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
             <ArrowLeft className="w-5 h-5" />
@@ -152,9 +152,9 @@ export default function InquiryDetailView() {
                   <img
                     src={inquiry.profile_image}
                     alt={inquiry.name}
-                    className="w-32 h-32 rounded-full object-cover border-4 border-[#014376] shadow-lg"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-[#aa0e0e] shadow-lg"
                   />
-                  <div className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-[#014376] to-[#31918D] rounded-full">
+                  <div className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] rounded-full">
                     <User className="w-5 h-5 text-white" />
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function InquiryDetailView() {
               {/* Personal Information */}
               <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-gradient-to-r from-[#014376] to-[#31918D] rounded-lg">
+                  <div className="p-2 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] rounded-lg">
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">
@@ -397,13 +397,13 @@ function InfoField({ label, value, icon: Icon, isLink, fullWidth }) {
   return (
     <div className={fullWidth ? "col-span-full" : ""}>
       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-        {Icon && <Icon className="w-4 h-4 text-[#31918D]" />}
+        {Icon && <Icon className="w-4 h-4 text-[#d61111]" />}
         {label}
       </label>
       {isLink ? (
         <a
           href={isLink}
-          className="text-[#014376] hover:text-[#31918D] font-medium flex items-center gap-2 transition-colors"
+          className="text-[#aa0e0e] hover:text-[#aa0e0e] font-medium flex items-center gap-2 transition-colors"
         >
           {value}
         </a>
@@ -420,7 +420,7 @@ function CourseCard({ title, course, status, isPrimary }) {
     <div
       className={`p-4 rounded-lg border-2 ${
         isPrimary
-          ? "bg-white border-[#014376] shadow-md"
+          ? "bg-white border-[#aa0e0e] shadow-md"
           : "bg-white border-gray-200"
       }`}
     >

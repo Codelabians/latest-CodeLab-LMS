@@ -154,7 +154,7 @@ const EmployeeDetails = () => {
       />
 
       {/* Header Section with gradient background */}
-      <div className="bg-gradient-to-r from-[#0B5483] via-[#1a6d96] to-[#26A69A] rounded-t-2xl mt-4 lg:mt-6 p-4 lg:p-6 shadow-xl">
+      <div className="bg-gradient-to-r from-[#d61111] via-[#d61111] to-[#d61111] rounded-t-2xl mt-4 lg:mt-6 p-4 lg:p-6 shadow-xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
@@ -193,7 +193,7 @@ const EmployeeDetails = () => {
           {employeeIsLoading && (
             <div className="flex justify-center items-center h-64 bg-white rounded-b-2xl shadow-lg">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0B5483] mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d61111] mx-auto mb-4"></div>
                 <p className="text-lg text-gray-600 font-medium">
                   Loading Employee Details...
                 </p>
@@ -269,7 +269,7 @@ const EmployeeDetails = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                   {/* Personal Information */}
                   <div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <div className="bg-gradient-to-r from-[#0B5483] to-[#26A69A] px-4 sm:px-6 py-3 sm:py-4">
+                    <div className="bg-gradient-to-r from-[#d61111] to-[#d61111] px-4 sm:px-6 py-3 sm:py-4">
                       <h2 className="text-white font-bold text-base sm:text-lg flex items-center gap-2">
                         <UserCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                         Personal Information
@@ -283,7 +283,7 @@ const EmployeeDetails = () => {
                             key={index}
                             className="flex items-start gap-3 sm:gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                           >
-                            <div className="text-[#26A69A] mt-1 flex-shrink-0">
+                            <div className="text-[#d61111] mt-1 flex-shrink-0">
                               <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -302,7 +302,7 @@ const EmployeeDetails = () => {
 
                   {/* Official Information */}
                   <div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <div className="bg-gradient-to-r from-[#0B5483] to-[#26A69A] px-4 sm:px-6 py-3 sm:py-4">
+                    <div className="bg-gradient-to-r from-[#d61111] to-[#d61111] px-4 sm:px-6 py-3 sm:py-4">
                       <h2 className="text-white font-bold text-base sm:text-lg flex items-center gap-2">
                         <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
                         Official Information

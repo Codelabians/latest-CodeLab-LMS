@@ -69,7 +69,7 @@ const ForgetComponent = () => {
 
         <form className="flex flex-col gap-8 md:gap-16" onSubmit={handleSubmit}>
           <div className="flex flex-col items-center justify-center gap-2 text-center">
-            <h1 className="text-2xl font-bold sm:text-4xl text-[#014376]">
+            <h1 className="text-2xl font-bold sm:text-4xl text-[#aa0e0e]">
               Forget Password
             </h1>
             <p className="px-5 text-xs tracking-wide text-gray-500 md:text-sm max-w-sm">
@@ -83,7 +83,7 @@ const ForgetComponent = () => {
                 type="email"
                 name="email"
                 placeholder="E-Mail*"
-                className={`p-3 border rounded-lg focus:outline-none transition-all w-full focus:ring-2 focus:ring-[#31918D] ${
+                className={`p-3 border rounded-lg focus:outline-none transition-all w-full focus:ring-2 focus:ring-[#d61111] ${
                   errors.email && touched.email
                     ? "border-orange-500"
                     : "border-gray-300"
@@ -106,7 +106,7 @@ const ForgetComponent = () => {
               type="submit"
               disabled={isButtonDisabled}
               style={{
-                backgroundColor: isButtonDisabled ? "#a1b5c7" : "#014376",
+                backgroundColor: isButtonDisabled ? "#a1b5c7" : "#aa0e0e",
               }}
               className="w-full py-3 text-lg font-bold text-white transition-all duration-300 rounded-lg shadow-md active:scale-95 disabled:cursor-not-allowed"
             >
@@ -117,7 +117,7 @@ const ForgetComponent = () => {
               <img src={ArrowImage} alt="arrow" className="w-4 h-4" />
               <button
                 type="button"
-                className="font-semibold text-gray-600 border-b border-dotted border-gray-400 cursor-pointer hover:text-[#31918D] transition-colors"
+                className="font-semibold text-gray-600 border-b border-dotted border-gray-400 cursor-pointer hover:text-[#d61111] transition-colors"
                 onClick={() => navigate(SIGNIN)}
               >
                 Back to Login Page

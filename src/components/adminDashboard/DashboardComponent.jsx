@@ -92,9 +92,11 @@ const DashboardComponent = () => {
         </div>
 
         {/* Student Fee Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-4 sm:my-6">
-          <StudentFeeStats dashboardData={dashboardData} />
-        </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-4 sm:my-6">
+  <div className="col-span-1 md:col-span-2 xl:col-span-3">
+    <StudentFeeStats dashboardData={dashboardData} />
+  </div>
+</div>
 
         {/* Optional future sections (kept structure clean & responsive) */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[40%_60%] gap-4 my-4">

@@ -118,8 +118,8 @@ const FilterGroup = ({ label, type = "select", options = [], value, onChange, ..
         value={value || ''} 
         onChange={(e) => onChange?.(e.target.value)}
         className="px-3 py-2 text-sm transition-colors border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-        style={{ focusRingColor: '#31918D' }}
-        onFocus={(e) => e.target.style.borderColor = '#31918D'}
+        style={{ focusRingColor: '#d61111' }}
+        onFocus={(e) => e.target.style.borderColor = '#d61111'}
         onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
       >
         {options.map((option, idx) => (
@@ -132,8 +132,8 @@ const FilterGroup = ({ label, type = "select", options = [], value, onChange, ..
         value={value || ''}
         onChange={(e) => onChange?.(e.target.value)}
         className="px-3 py-2 text-sm transition-colors border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-        style={{ focusRingColor: '#31918D' }}
-        onFocus={(e) => e.target.style.borderColor = '#31918D'}
+        style={{ focusRingColor: '#d61111' }}
+        onFocus={(e) => e.target.style.borderColor = '#d61111'}
         onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
         {...props}
       />
@@ -144,8 +144,8 @@ const FilterGroup = ({ label, type = "select", options = [], value, onChange, ..
 // Action Buttons Component
 const ActionButtons = ({ onView, onDownloadPDF,  }) => {
   const buttons = [
-    { label: 'View Report', icon: Eye, onClick: onView, bg: '#014376' },
-    { label: 'Download PDF', icon: Download, onClick: onDownloadPDF, bg: '#31918D' }
+    { label: 'View Report', icon: Eye, onClick: onView, bg: '#aa0e0e' },
+    { label: 'Download PDF', icon: Download, onClick: onDownloadPDF, bg: '#d61111' }
   ];
   
 
@@ -175,10 +175,10 @@ const ReportItem = ({ report, onGenerate, onDownloadPDF, onDownloadExcel }) => (
   <div className="p-6 transition-all duration-200 bg-white border border-gray-200 rounded-xl hover:shadow-lg" 
        style={{ 
          borderColor: '#e5e7eb',
-         ':hover': { borderColor: '#31918D', backgroundColor: '#f0fffe' }
+         ':hover': { borderColor: '#d61111', backgroundColor: '#f0fffe' }
        }}
        onMouseEnter={(e) => {
-         e.currentTarget.style.borderColor = '#31918D';
+         e.currentTarget.style.borderColor = '#d61111';
          e.currentTarget.style.backgroundColor = '#f0fffe';
        }}
        onMouseLeave={(e) => {
@@ -213,11 +213,11 @@ const CategoryCard = ({ category, onGenerate, onDownloadPDF, onDownloadExcel }) 
   
   return (
     <div className="p-8 transition-all duration-300 border-2 border-gray-200 bg-gray-50 rounded-2xl hover:-translate-y-2 hover:shadow-xl"
-         onMouseEnter={(e) => e.currentTarget.style.borderColor = '#31918D'}
+         onMouseEnter={(e) => e.currentTarget.style.borderColor = '#d61111'}
          onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}>
       <div className="flex items-center mb-6">
         <div className="flex items-center justify-center w-8 h-8 mr-3 text-white rounded-full"
-             style={{ background: 'linear-gradient(135deg, #014376 0%, #31918D 100%)' }}>
+             style={{ background: 'linear-gradient(135deg, #aa0e0e 0%, #d61111 100%)' }}>
           <Icon size={20} />
         </div>
         <h3 className="text-xl font-semibold text-gray-800">{category.title}</h3>

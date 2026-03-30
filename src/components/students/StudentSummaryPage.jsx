@@ -461,7 +461,7 @@ const StudentSummaryPage = () => {
                     tick={{ fontSize: 12 }}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="students" fill="#014376" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="students" fill="#aa0e0e" radius={[0, 4, 4, 0]}>
                     <LabelList
                       dataKey="students"
                       position="insideRight"

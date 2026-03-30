@@ -106,7 +106,7 @@ const CategoriesComponent = () => {
             <Categories className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-[#014376]">
+            <h1 className="text-3xl font-bold text-[#aa0e0e]">
               Course Categories
             </h1>
             <p className="text-gray-600 mt-1">
@@ -157,7 +157,7 @@ const CategoriesComponent = () => {
                 onClick={(e) => handleEditClick(e, category)}
                 className="absolute top-3 right-3 z-10 bg-white p-2 rounded-full shadow-md hover:bg-blue-50 hover:shadow-lg transition-all opacity-0 group-hover:opacity-100"
               >
-                <Pencil className="w-4 h-4 text-[#014376]" />
+                <Pencil className="w-4 h-4 text-[#aa0e0e]" />
               </button> */}
 
               <div className="h-32 custom-Background relative">

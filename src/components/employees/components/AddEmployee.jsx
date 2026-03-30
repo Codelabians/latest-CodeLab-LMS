@@ -466,7 +466,7 @@ export default function AddEmployee() {
                 name="active_status"
                 checked={formData.active_status}
                 onChange={handleChange}
-                className="w-5 h-5 accent-[#014376]"
+                className="w-5 h-5 accent-[#aa0e0e]"
               />
               <span className="text-sm font-semibold text-gray-700">
                 Active Status
@@ -478,7 +478,7 @@ export default function AddEmployee() {
                 name="is_hostalize"
                 checked={formData.is_hostalize}
                 onChange={handleChange}
-                className="w-5 h-5 accent-[#014376]"
+                className="w-5 h-5 accent-[#aa0e0e]"
               />
               <span className="text-sm font-semibold text-gray-700">
                 Is Hostelite
@@ -490,7 +490,7 @@ export default function AddEmployee() {
                 name="isIntern"
                 checked={formData.isIntern}
                 onChange={handleChange}
-                className="w-5 h-5 accent-[#014376]"
+                className="w-5 h-5 accent-[#aa0e0e]"
               />
               <span className="text-sm font-semibold text-gray-700">
                 Is Intern

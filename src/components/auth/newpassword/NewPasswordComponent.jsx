@@ -62,7 +62,7 @@ const ForgetComponent = () => {
 
         <form className="flex flex-col gap-8 md:gap-14" onSubmit={handleSubmit}>
           <div className="flex flex-col items-center justify-center gap-1 text-center">
-            <h1 className="text-2xl md:text-4xl font-bold text-[#014376]">
+            <h1 className="text-2xl md:text-4xl font-bold text-[#aa0e0e]">
               New Password
             </h1>
             <p className="text-xs md:text-sm text-gray-500 px-5 tracking-wide max-w-sm">
@@ -78,7 +78,7 @@ const ForgetComponent = () => {
                 type={passicon ? "text" : "password"}
                 name="password"
                 placeholder="New Password*"
-                className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31918D] w-full transition-all ${
+                className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d61111] w-full transition-all ${
                   errors.password && touched.password
                     ? "border-orange-500"
                     : "border-gray-300"
@@ -107,7 +107,7 @@ const ForgetComponent = () => {
                 type={confirmPassIcon ? "text" : "password"}
                 name="password_confirmation"
                 placeholder="Confirm Password*"
-                className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31918D] w-full transition-all ${
+                className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d61111] w-full transition-all ${
                   errors.password_confirmation && touched.password_confirmation
                     ? "border-orange-500"
                     : "border-gray-300"
@@ -136,7 +136,7 @@ const ForgetComponent = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full md:w-64 py-3 bg-[#014376] text-white font-bold rounded-lg hover:bg-[#01355d] transition-all active:scale-95 shadow-lg disabled:opacity-50"
+              className="w-full md:w-64 py-3 bg-[#aa0e0e] text-white font-bold rounded-lg hover:bg-[#01355d] transition-all active:scale-95 shadow-lg disabled:opacity-50"
             >
               {isLoading ? "Updating..." : "Update Password"}
             </button>
@@ -145,7 +145,7 @@ const ForgetComponent = () => {
               <img src={ArrowImage} alt="back" className="w-4 h-4" />
               <Link
                 to={SIGNIN}
-                className="text-center cursor-pointer border-b border-dotted border-gray-500 font-semibold text-gray-600 hover:text-[#31918D]"
+                className="text-center cursor-pointer border-b border-dotted border-gray-500 font-semibold text-gray-600 hover:text-[#d61111]"
               >
                 Back to Login Page
               </Link>

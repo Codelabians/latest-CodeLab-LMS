@@ -64,9 +64,9 @@ const Settings = () => {
         {/* Header */}
         <div
           className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4"
-          style={{ borderLeftColor: "#014376" }}
+          style={{ borderLeftColor: "#aa0e0e" }}
         >
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "#014376" }}>
+          <h1 className="text-2xl font-bold mb-2" style={{ color: "#aa0e0e" }}>
             Admin Settings
           </h1>
           <p className="text-gray-600">
@@ -78,9 +78,9 @@ const Settings = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div
             className="border-b pb-4 mb-4"
-            style={{ borderBottomColor: "#31918D" }}
+            style={{ borderBottomColor: "#d61111" }}
           >
-            <h2 className="text-lg font-semibold" style={{ color: "#014376" }}>
+            <h2 className="text-lg font-semibold" style={{ color: "#aa0e0e" }}>
               Teacher Evaluation Form
             </h2>
             <p className="text-sm text-gray-600 mt-1">
@@ -97,14 +97,14 @@ const Settings = () => {
                 checked={showEvaluationForm}
                 onChange={handleToggleChange}
                 disabled={isToggling}
-                style={{ accentColor: "#31918D" }}
+                style={{ accentColor: "#d61111" }}
                 className="w-5 h-5 bg-gray-100 border-gray-300 rounded focus:ring-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
             <div className="flex-1">
               <label
                 htmlFor="evaluation-form-toggle"
-                style={{ color: "#014376" }}
+                style={{ color: "#aa0e0e" }}
                 className={`text-base font-medium ${
                   isToggling
                     ? "cursor-not-allowed opacity-70"
@@ -133,7 +133,7 @@ const Settings = () => {
                       : "bg-gray-100 text-gray-800"
                   }`}
                   style={
-                    showEvaluationForm ? { backgroundColor: "#31918D" } : {}
+                    showEvaluationForm ? { backgroundColor: "#d61111" } : {}
                   }
                 >
                   {showEvaluationForm
@@ -147,12 +147,12 @@ const Settings = () => {
           {/* Info Box */}
           <div
             className="mt-6 p-4 rounded-lg border-2"
-            style={{ backgroundColor: "#f0f9f9", borderColor: "#31918D" }}
+            style={{ backgroundColor: "#f0f9f9", borderColor: "#d61111" }}
           >
             <div className="flex items-start">
               <svg
                 className="w-5 h-5 mt-0.5 mr-3 flex-shrink-0"
-                style={{ color: "#31918D" }}
+                style={{ color: "#d61111" }}
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -165,7 +165,7 @@ const Settings = () => {
               <div>
                 <h3
                   className="text-sm font-medium"
-                  style={{ color: "#014376" }}
+                  style={{ color: "#aa0e0e" }}
                 >
                   How it works
                 </h3>

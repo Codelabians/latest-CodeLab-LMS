@@ -71,8 +71,8 @@ const Course = () => {
             <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <defs>
                 <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#014376" stopOpacity={0.8}/>
-                  <stop offset="100%" stopColor="#31918D" stopOpacity={0.3}/>
+                  <stop offset="0%" stopColor="#aa0e0e" stopOpacity={0.8}/>
+                  <stop offset="100%" stopColor="#d61111" stopOpacity={0.3}/>
                 </linearGradient>
               </defs>
               <XAxis 

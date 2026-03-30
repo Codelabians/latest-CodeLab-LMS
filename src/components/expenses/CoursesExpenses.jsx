@@ -237,7 +237,7 @@ const AddIncomeModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all resize-none"
               rows="3"
               placeholder="Add notes about this income..."
             />
@@ -253,7 +253,7 @@ const AddIncomeModal = ({
             <button
               onClick={handleSubmit}
               disabled={!formData.amount || !formData.transaction_date}
-              className="flex-1 px-6 py-3 custom-Background text-white rounded-lg font-medium shadow-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              className="flex-1 px-6 py-3 custom-Background text-white rounded-lg font-medium shadow-lg hover:bg-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
             >
               {isEditMode ? "Update Income" : "Add Income"}
             </button>
@@ -526,7 +526,7 @@ const IncomeCategoriesSystem = () => {
 
       {isLoading && (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
         </div>
       )}
 

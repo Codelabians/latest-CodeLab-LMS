@@ -135,13 +135,13 @@ const Users = () => {
                 placeholder="Search students..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31918D] w-64"
+                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#aa0e0e] w-64"
               />
             </div>
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31918D]"
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#aa0e0e]"
             >
               <option value="All">All Types</option>
               <option value="Military">Military</option>
@@ -208,7 +208,7 @@ const Users = () => {
             {!resetSuccess ? (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <Key className="w-6 h-6" style={{ color: "#31918D" }} />
+                  <Key className="w-6 h-6" style={{ color: "#4E5566" }} />
                   <h3 className="text-xl font-bold">Reset Password</h3>
                 </div>
                 <p className="text-gray-600 mb-6">
@@ -228,7 +228,7 @@ const Users = () => {
                   <button
                     onClick={handleResetPassword}
                     disabled={resetting}
-                    className="px-5 py-2 bg-[#31918D] text-white rounded-lg hover:opacity-90 transition disabled:opacity-70"
+                    className="px-5 py-2 bg-[#d61111] text-white rounded-lg hover:opacity-90 transition disabled:opacity-70"
                   >
                     {resetting ? "Resetting..." : "Reset Password"}
                   </button>
@@ -268,7 +268,7 @@ const Users = () => {
                 </div>
                 <button
                   onClick={() => setIsResetPassword(false)}
-                  className="w-full py-3 bg-[#31918D] text-white rounded-lg hover:opacity-90 transition"
+                  className="w-full py-3 bg-[#aa0e0e] text-white rounded-lg hover:opacity-90 transition"
                 >
                   Close
                 </button>

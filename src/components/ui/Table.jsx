@@ -466,7 +466,7 @@ const Table = ({
 
                         {sourceComponent === "RolesComponent" && (
                           <button
-                            className="bg-[#31918D] text-white w-[45px] h-[35px] rounded mx-1 flex items-center justify-center hover:bg-[#2a7d7a] transition-colors"
+                            className="bg-[#4E5566] text-white w-[45px] h-[35px] rounded mx-1 flex items-center justify-center hover:bg-[#2a7d7a] transition-colors"
                             onClick={() => {
                               handleAssignClick?.(item);
                             }}

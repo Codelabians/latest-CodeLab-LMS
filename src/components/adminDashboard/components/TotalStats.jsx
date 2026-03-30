@@ -136,7 +136,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
                 <div className="mb-1 text-sm text-gray-500">
                   Military Inquiries
                 </div>
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-xl font-bold text-pink-900">
                   {students.total_military_students}
                 </div>
               </div>
@@ -190,7 +190,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="p-3 text-center rounded-lg bg-gray-50">
                 <div className="mb-1 text-sm text-gray-500">Active</div>
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-xl font-bold text-pink-900">
                   {classes.active_classes}
                 </div>
               </div>
@@ -252,7 +252,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
               </div>
               <div className="p-3 text-center rounded-lg bg-gray-50">
                 <div className="mb-1 text-sm text-gray-500">Available</div>
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-xl font-bold text-pink-900">
                   {workspaceStats.totalAvailable}
                 </div>
               </div>
@@ -296,7 +296,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="p-3 text-center rounded-lg bg-gray-50">
                 <div className="mb-1 text-sm text-gray-500">Total STP</div>
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-xl font-bold text-pink-900">
                   {employees.stp_employees}
                 </div>
               </div>
@@ -340,13 +340,13 @@ const TotalStats = ({ dashboardData, financeData }) => {
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="p-3 text-center rounded-lg bg-gray-50">
                 <div className="mb-1 text-sm text-gray-500">Available</div>
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-xl font-bold pink-900">
                   {inventoryStats.totalAvailable}
                 </div>
               </div>
               <div className="p-3 text-center rounded-lg bg-gray-50">
                 <div className="mb-1 text-sm text-gray-500">In Use</div>
-                <div className="text-xl font-bold text-blue-600">
+                <div className="text-xl font-bold text-pink-900">
                   {inventoryStats.totalInUse}
                 </div>
               </div>
@@ -389,7 +389,7 @@ const TotalStats = ({ dashboardData, financeData }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Income</span>
-              <span className="text-2xl font-bold text-green-600">
+              <span className="text-2xl font-bold text-pink-900">
                 Rs {financeData?.total_income}
               </span>
             </div>

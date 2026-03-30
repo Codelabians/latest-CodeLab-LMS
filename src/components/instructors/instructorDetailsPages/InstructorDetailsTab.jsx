@@ -158,7 +158,7 @@ const InstructorDetailsTab = () => {
       />
 
       {/* Header Section with gradient background */}
-      <div className="bg-gradient-to-r from-[#0B5483] via-[#1a6d96] to-[#26A69A] rounded-t-2xl mt-4 lg:mt-6 p-4 lg:p-6 shadow-xl">
+      <div className="bg-gradient-to-r from-[#d61111] via-[#d61111] to-[#d61111] rounded-t-2xl mt-4 lg:mt-6 p-4 lg:p-6 shadow-xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button

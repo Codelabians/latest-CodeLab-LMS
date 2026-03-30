@@ -388,7 +388,7 @@ export default function TrainingInquiry() {
           ) : (
             <div className="col-span-full bg-white rounded-2xl shadow-lg border border-gray-200 p-16 text-center">
               <div className="inline-block p-6 bg-gradient-to-br from-[#aa0e0e]/10 to-[#d61111]/10 rounded-full mb-6">
-                <BookOpen className="w-20 h-20 text-[#014376]" />
+                <BookOpen className="w-20 h-20 text-[#aa0e0e]" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 No {activeTab} courses found

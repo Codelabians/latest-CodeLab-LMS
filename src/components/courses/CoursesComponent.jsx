@@ -159,7 +159,7 @@ const CourseModal = ({
           <button
             onClick={handleSubmit}
             disabled={loading || !name.trim() || !category}
-            className="px-6 py-2 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-60 transition disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-60 transition disabled:cursor-not-allowed"
           >
             {loading
               ? isEditMode
@@ -401,7 +401,7 @@ const CoursesComponent = () => {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-[#014376] transition">
+                  <span className="text-sm font-medium text-gray-600 group-hover:text-[#aa0e0e] transition">
                     View Classes
                   </span>
                   <div className="w-8 h-8 bg-gradient-to-r from-[#100F0F] to-[#100F0F] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">

@@ -293,7 +293,7 @@ const StudentFeeEdit = ({
               <div className="flex items-center justify-center w-10 h-10 mr-4 rounded-full custom-Background">
                 <DollarSign color="white" />
               </div>
-              <h1 className="text-3xl font-bold text-[#014376]">
+              <h1 className="text-3xl font-bold text-[#aa0e0e]">
                 Edit Fee Information
               </h1>
             </div>

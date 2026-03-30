@@ -38,9 +38,9 @@ export default function InstructorForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#014376] to-[#31918D] py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#d61111] to-[#d61111] py-12 px-4">
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
-        <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-[#014376] to-[#31918D] bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-[#d61111] to-[#d61111] bg-clip-text text-transparent">
           Instructor Registration
         </h1>
 
@@ -201,7 +201,7 @@ export default function InstructorForm() {
                 name="isHostelite"
                 checked={data.isHostelite}
                 onChange={handleChange}
-                className="w-5 h-5 accent-[#014376]"
+                className="w-5 h-5 accent-[#aa0e0e]"
               />
               <span className="text-sm font-semibold text-gray-700">
                 Is Hostelite
@@ -213,7 +213,7 @@ export default function InstructorForm() {
                 name="isIntern"
                 checked={data.isIntern}
                 onChange={handleChange}
-                className="w-5 h-5 accent-[#014376]"
+                className="w-5 h-5 accent-[#aa0e0e]"
               />
               <span className="text-sm font-semibold text-gray-700">
                 Is Intern
@@ -275,7 +275,7 @@ export default function InstructorForm() {
 
           <button
             onClick={handleSubmit}
-            className="w-full mt-6 py-4 bg-gradient-to-r from-[#014376] to-[#31918D] text-white font-bold rounded-lg hover:from-[#31918D] hover:to-[#014376] transition-all duration-300 shadow-lg"
+            className="w-full mt-6 py-4 bg-gradient-to-r from-[#d61111] to-[#d61111] text-white font-bold rounded-lg hover:from-[#aa0e0e] hover:to-[#aa0e0e] transition-all duration-300 shadow-lg"
           >
             Submit Registration
           </button>

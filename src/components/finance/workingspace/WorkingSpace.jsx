@@ -124,13 +124,13 @@ const WorkingSpace = () => {
             <Tooltip content={<CustomTooltip />} />
             <Bar
               dataKey="individual"
-              fill="#014376"
+              fill="#aa0e0e"
               name="Individual"
               radius={[4, 4, 0, 0]}
             />
             <Bar
               dataKey="company"
-              fill="#31918D"
+              fill="#d61111"
               name="Company"
               radius={[4, 4, 0, 0]}
             />
@@ -152,14 +152,14 @@ const WorkingSpace = () => {
             />
             <YAxis
               tickFormatter={formatYAxisTick}
-              tick={{ fontSize: 12, fill: "#31918D" }}
+              tick={{ fontSize: 12, fill: "#d61111" }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar
               dataKey="individual"
-              fill="#014376"
+              fill="#aa0e0e"
               name="Individual"
               radius={[4, 4, 0, 0]}
             />
@@ -188,7 +188,7 @@ const WorkingSpace = () => {
             <Tooltip content={<CustomTooltip />} />
             <Bar
               dataKey="company"
-              fill="#31918D"
+              fill="#d61111"
               name="Company"
               radius={[4, 4, 0, 0]}
             />

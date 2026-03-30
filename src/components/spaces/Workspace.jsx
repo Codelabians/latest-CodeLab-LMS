@@ -134,7 +134,7 @@ const WorkspaceDetail = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 hover:text-[#014376] mb-4 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-[#aa0e0e] mb-4 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back to Workspace Types</span>
@@ -155,7 +155,7 @@ const WorkspaceDetail = () => {
         {isFetching && (
           <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-40">
             <div className="bg-white rounded-2xl shadow-2xl p-6 flex items-center gap-3">
-              <Loader2 className="w-6 h-6 text-[#014376] animate-spin" />
+              <Loader2 className="w-6 h-6 text-[#aa0e0e] animate-spin" />
               <span className="text-gray-700 font-medium">
                 Loading workspaces...
               </span>

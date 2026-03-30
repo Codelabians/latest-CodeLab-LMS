@@ -112,7 +112,7 @@ const ChallanApprovalModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-[#014376] to-[#31918D] text-white p-6 rounded-t-2xl flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white p-6 rounded-t-2xl flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
             <FileText className="w-6 h-6" />
             <h2 className="text-2xl font-bold">Challan Approval</h2>
@@ -127,8 +127,8 @@ const ChallanApprovalModal = ({
 
         <div className="p-6 space-y-6">
           {/* Student Information */}
-          <div className="bg-blue-50 rounded-xl p-5 border-l-4 border-[#014376]">
-            <h3 className="text-lg font-bold text-[#014376] mb-3">
+          <div className="bg-blue-50 rounded-xl p-5 border-l-4 border-[#aa0e0e]">
+            <h3 className="text-lg font-bold text-[#aa0e0e] mb-3">
               Student Information
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -149,13 +149,13 @@ const ChallanApprovalModal = ({
 
           {/* Installment Details */}
           {firstPendingInstallment && (
-            <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-5 border-2 border-[#31918D]">
-              <h3 className="text-lg font-bold text-[#014376] mb-4">
+            <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-5 border-2 border-[#d61111]">
+              <h3 className="text-lg font-bold text-[#aa0e0e] mb-4">
                 Installment Details
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
-                  <DollarSign className="w-5 h-5 text-[#31918D]" />
+                  <DollarSign className="w-5 h-5 text-[#d61111]" />
                   <div>
                     <p className="text-sm text-gray-600">Amount</p>
                     <p className="font-semibold text-gray-900">
@@ -164,7 +164,7 @@ const ChallanApprovalModal = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-[#31918D]" />
+                  <Calendar className="w-5 h-5 text-[#d61111]" />
                   <div>
                     <p className="text-sm text-gray-600">Due Date</p>
                     <p className="font-semibold text-gray-900">
@@ -184,7 +184,7 @@ const ChallanApprovalModal = ({
 
           {/* Challan Section */}
           <div className="bg-gray-50 rounded-xl p-5">
-            <h3 className="text-lg font-bold text-[#014376] mb-4">
+            <h3 className="text-lg font-bold text-[#aa0e0e] mb-4">
               {hasStudentChallan
                 ? "Student Uploaded Challan"
                 : "Upload Challan"}
@@ -208,7 +208,7 @@ const ChallanApprovalModal = ({
                     }
                     className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-lg shadow-lg"
                   >
-                    <ExternalLink className="w-5 h-5 text-[#014376]" />
+                    <ExternalLink className="w-5 h-5 text-[#aa0e0e]" />
                   </button>
                 </div>
 
@@ -220,7 +220,7 @@ const ChallanApprovalModal = ({
                         onClick={() => setSelectedImageIndex(index)}
                         className={`flex-shrink-0 rounded-lg overflow-hidden border-2 ${
                           selectedImageIndex === index
-                            ? "border-[#014376]"
+                            ? "border-[#aa0e0e]"
                             : "border-gray-300"
                         }`}
                       >
@@ -286,7 +286,7 @@ const ChallanApprovalModal = ({
                     <button
                       onClick={handleUploadChallan}
                       disabled={isUploading}
-                      className="w-full mt-3 py-3 bg-[#014376] text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50"
+                      className="w-full mt-3 py-3 bg-[#aa0e0e] text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50"
                     >
                       {isUploading ? "Uploading..." : "Upload Challan"}
                     </button>
@@ -308,7 +308,7 @@ const ChallanApprovalModal = ({
           <button
             onClick={handleApprove}
             disabled={isApproving || !hasStudentChallan}
-            className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-[#014376] to-[#31918D] hover:opacity-90 flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] hover:opacity-90 flex items-center gap-2 disabled:opacity-50"
           >
             <CheckCircle className="w-5 h-5" />
             {isApproving ? "Approving..." : "Approve Challan"}

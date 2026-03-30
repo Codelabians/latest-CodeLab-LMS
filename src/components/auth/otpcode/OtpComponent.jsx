@@ -84,7 +84,7 @@ const OtpComponent = () => {
 
         <form className="flex flex-col gap-10" onSubmit={handleSubmit}>
           <div className="text-center space-y-2">
-            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-[#014376]">
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-[#aa0e0e]">
               Verify your Email
             </h1>
             <p className="text-sm text-gray-500 max-w-xs mx-auto">
@@ -105,7 +105,7 @@ const OtpComponent = () => {
                     ${
                       touched[`otp${index + 1}`] && errors[`otp${index + 1}`]
                         ? "border-orange-500 shadow-sm"
-                        : "border-[#014376] focus:border-[#31918D] focus:ring-4 focus:ring-[#31918D]/10"
+                        : "border-[#aa0e0e] focus:border-[#d61111] focus:ring-4 focus:ring-[#d61111]/10"
                     }`}
                   value={values[`otp${index + 1}`]}
                   onBlur={handleBlur}
@@ -135,7 +135,7 @@ const OtpComponent = () => {
               disabled={isLoading || !isFormComplete}
               type="submit"
               style={{
-                backgroundColor: isFormComplete ? "#014376" : "#a1b5c7",
+                backgroundColor: isFormComplete ? "#aa0e0e" : "#a1b5c7",
                 cursor: isFormComplete ? "pointer" : "not-allowed",
               }}
               className="w-48 py-3 text-lg text-white font-bold rounded-xl shadow-lg transition-all hover:opacity-90 active:scale-95 disabled:shadow-none"
@@ -146,7 +146,7 @@ const OtpComponent = () => {
             <button
               type="button"
               onClick={() => navigate(SIGNIN)}
-              className="text-gray-500 hover:text-[#31918D] text-sm font-semibold transition-colors"
+              className="text-gray-500 hover:text-[#d61111] text-sm font-semibold transition-colors"
             >
               Didn't receive code?{" "}
               <span className="underline decoration-dotted underline-offset-4">

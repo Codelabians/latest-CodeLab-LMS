@@ -300,7 +300,7 @@ const ItemAddForm = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#014376] to-[#31918D]">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e]">
           <h2 className="text-xl font-bold text-white font-poppins">
             {editingItem ? "Edit Inventory Item" : "Add Inventory Items"}
           </h2>
@@ -541,7 +541,7 @@ const ItemAddForm = ({
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-[#014376] to-[#31918D] text-white font-semibold font-poppins rounded-lg hover:from-[#31918D] hover:to-[#014376] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+              className="px-6 py-2 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white font-semibold font-poppins rounded-lg hover:from-[#d61111] hover:to-[#d61111] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
               disabled={isLoading}
             >
               {isLoading

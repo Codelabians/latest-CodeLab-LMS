@@ -537,7 +537,7 @@ const StudentForm = ({ uuid }) => {
       <div className="container px-4 py-8 mx-auto">
         <div className="p-8 bg-white rounded-2xl shadow-lg">
           <X className="float-right" onClick={() => navigate(-1)} />
-          <h1 className="mb-10 text-4xl font-bold text-center text-[#014376]">
+          <h1 className="mb-10 text-4xl font-bold text-center text-[#aa0e0e]">
             {isEditMode ? "Update Student" : "Student Enrollment Form"}
           </h1>
 
@@ -547,7 +547,7 @@ const StudentForm = ({ uuid }) => {
                 <User color="white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#014376]">
+                <h2 className="text-2xl font-bold text-[#aa0e0e]">
                   Personal Information
                 </h2>
                 <div className="w-20 h-1 mt-1 rounded-full custom-Background"></div>
@@ -685,7 +685,7 @@ const StudentForm = ({ uuid }) => {
                   <School color="white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-[#014376]">
+                  <h2 className="text-2xl font-bold text-[#aa0e0e]">
                     Academic & Course Information
                   </h2>
                   <div className="w-20 h-1 mt-1 rounded-full custom-Background"></div>
@@ -903,7 +903,7 @@ const StudentForm = ({ uuid }) => {
                   <DollarSign color="white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-[#014376]">
+                  <h2 className="text-2xl font-bold text-[#aa0e0e]">
                     Fee Information
                   </h2>
                   <div className="w-20 h-1 mt-1 rounded-full custom-Background"></div>

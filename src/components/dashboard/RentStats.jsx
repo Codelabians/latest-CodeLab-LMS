@@ -4,8 +4,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, BarChart, Bar, XAxis,
 const RentStats = ({ data }) => {
   // Default data structure - replace with your backend data
   const defaultRentTypeData = [
-    { name: 'Individual', value: 0, color: '#31918D', count: 0 },
-    { name: 'Company', value: 0, color: '#014376', count: 0 }
+    { name: 'Individual', value: 0, color: '#d61111', count: 0 },
+    { name: 'Company', value: 0, color: '#aa0e0e', count: 0 }
   ];
 
   const defaultPaymentData = [

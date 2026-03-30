@@ -166,7 +166,7 @@ const AddBatch = () => {
 
       <div className="w-11/12 mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-[#014376]">
+          <h2 className="text-3xl font-bold text-[#aa0e0e]">
             {isEditMode ? "Edit Class" : "Add New Class"}
           </h2>
           <X

@@ -971,12 +971,12 @@ end`};t.events.push(["putFont",function(i){(function(o){var c=o.font,u=o.out,d=o
                 w-full pl-11 pr-10 py-3 rounded-xl bg-white\r
                 border-2 border-gray-100 text-sm font-semibold text-gray-700\r
                 outline-none transition-all duration-200\r
-                focus:border-[#014376] focus:shadow-sm\r
+                focus:border-[#aa0e0e] focus:shadow-sm\r
                 placeholder:text-gray-300 placeholder:font-normal\r
               `}),s&&l.jsx("button",{onClick:()=>i(""),className:"absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-all",children:l.jsx(E2,{className:"w-4 h-4"})})]}),l.jsxs("div",{className:"flex items-center bg-white border-2 border-gray-100 rounded-xl p-1 gap-0.5 flex-shrink-0",children:[l.jsx("div",{className:"px-2 flex-shrink-0",children:l.jsx(Ict,{className:"w-3.5 h-3.5 text-gray-300"})}),[{key:"all",label:"All",count:g.length},{key:"active",label:"Active",count:x},{key:"inactive",label:"Inactive",count:b}].map(({key:_,label:C,count:S})=>l.jsxs("button",{onClick:()=>c(_),className:`
                   flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold
                   transition-all duration-200
-                  ${o===_?"bg-gradient-to-r from-[#014376] to-[#31918D] text-white shadow-sm":"text-gray-400 hover:text-gray-600 hover:bg-gray-50"}
+                  ${o===_?"bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white shadow-sm":"text-gray-400 hover:text-gray-600 hover:bg-gray-50"}
                 `,children:[C,l.jsx("span",{className:`
                   text-[10px] font-black px-1.5 py-0.5 rounded-md min-w-[18px] text-center
                   ${o===_?"bg-white/20 text-white":"bg-gray-100 text-gray-400"}

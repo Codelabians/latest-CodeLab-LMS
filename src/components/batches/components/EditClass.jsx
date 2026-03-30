@@ -83,7 +83,7 @@ const EditClassModal = ({ isOpen, onClose, studentId, currentClass, refetch }) =
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
         {/* Modal Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-[#014376]">Edit Class</h2>
+          <h2 className="text-2xl font-bold text-[#aa0e0e]">Edit Class</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition"

@@ -59,7 +59,7 @@ const handleDownload = async (filterType) => {
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
         {/* Modal Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-[#014376]">
+          <h2 className="text-2xl font-bold text-[#aa0e0e]">
             Download Students List
           </h2>
           <button
@@ -92,9 +92,9 @@ const handleDownload = async (filterType) => {
               <button
                 onClick={() => handleDownload("all")}
                 disabled={isDownloading}
-                className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg hover:border-[#014376] hover:bg-blue-50 transition group disabled:opacity-50"
+                className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 rounded-lg hover:border-[#aa0e0e] hover:bg-blue-50 transition group disabled:opacity-50"
               >
-                <div className="p-3 rounded-lg bg-blue-100 group-hover:bg-[#014376] transition">
+                <div className="p-3 rounded-lg bg-blue-100 group-hover:bg-[#aa0e0e] transition">
                   <Users size={24} className="text-blue-600 group-hover:text-white" />
                 </div>
                 <div className="text-left">

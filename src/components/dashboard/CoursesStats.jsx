@@ -7,13 +7,13 @@ const CoursesStats = () => {
     { name: 'Graphic Designing ', value: 6, color: '#623CB7' },
     { name: 'Digital Marketing', value: 8, color: '#0AA35D' },
     { name: 'Accounting Writing', value: 5, color: '#A5000A' },
-    { name: 'Budgeting', value: 7, color: '#014376' },
-    { name: 'eCommerce', value: 4, color: '#31918D' },
+    { name: 'Budgeting', value: 7, color: '#aa0e0e' },
+    { name: 'eCommerce', value: 4, color: '#d61111' },
     { name: 'Software Development', value: 9, color: '#D68443' },
     { name: 'App Development', value: 5, color: '#009953' },
-    { name: 'Cybersecurity', value: 8, color: '#014376' },
+    { name: 'Cybersecurity', value: 8, color: '#aa0e0e' },
     { name: 'Game Development', value: 6, color: '#D74747' },
-    { name: 'Blockchain', value: 3, color: '#31918D' },
+    { name: 'Blockchain', value: 3, color: '#d61111' },
   ];
 
   // Custom bar component to handle individual colors

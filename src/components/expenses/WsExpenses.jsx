@@ -392,7 +392,7 @@ const ExpensesTable = ({ categoryId, categoryName, onBack }) => {
 
       {isLoading && <Loader />}
       {isError && (
-        <div className="text-red-600 text-center py-8">
+        <div className="text-pink-900 text-center py-8">
           Error loading students
         </div>
       )}
@@ -476,7 +476,7 @@ const ExpenseCategoriesSystem = () => {
 
       {isLoading && (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
         </div>
       )}
 

@@ -19,7 +19,7 @@ const BatchCard = ({ batch, index, active, loading, onToggle }) => (
       absolute left-0 top-0 bottom-0 w-1 transition-all duration-300
       ${
         active
-          ? "bg-gradient-to-b from-[#014376] to-[#31918D]"
+          ? "bg-gradient-to-b from-[#aa0e0e] to-[#aa0e0e]"
           : "bg-gray-100 group-hover:bg-gray-200"
       }
     `}
@@ -34,7 +34,7 @@ const BatchCard = ({ batch, index, active, loading, onToggle }) => (
         font-black text-sm flex-shrink-0 transition-all duration-300 select-none
         ${
           active
-            ? "bg-gradient-to-br from-[#014376] to-[#31918D] text-white shadow-lg shadow-teal-200/40"
+            ? "bg-gradient-to-br from-[#aa0e0e] to-[#aa0e0e] text-white shadow-lg shadow-teal-200/40"
             : "bg-gray-50 text-gray-300 border-2 border-dashed border-gray-150"
         }
       `}
@@ -47,7 +47,7 @@ const BatchCard = ({ batch, index, active, loading, onToggle }) => (
         <p
           className={`
           text-sm font-bold truncate transition-colors duration-200
-          ${active ? "text-gray-900 group-hover:text-[#014376]" : "text-gray-400"}
+          ${active ? "text-gray-900 group-hover:text-[#aa0e0e]" : "text-gray-400"}
         `}
         >
           {batch.name}

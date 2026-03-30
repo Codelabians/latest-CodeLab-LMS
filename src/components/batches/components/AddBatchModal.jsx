@@ -47,7 +47,7 @@ const AddBatchModal = ({
       icon: AlertCircle,
       iconColor: "text-blue-500",
       iconBg: "bg-blue-100",
-      buttonBg: "bg-gradient-to-r from-[#014376] to-[#31918D]",
+      buttonBg: "bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e]",
     },
   };
 

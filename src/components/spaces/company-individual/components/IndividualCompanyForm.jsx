@@ -446,7 +446,7 @@ const IndividualCompanyForm = () => {
                 className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl ${
                   isSubmitting
                     ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#aa0e0e] to-[#d61111] text-white hover:from-[#31918D] hover:to-[#014376]"
+                    : "bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white hover:from-[#d61111] hover:to-[#d61111]"
                 }`}
               >
                 {isSubmitting

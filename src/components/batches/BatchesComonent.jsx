@@ -121,7 +121,7 @@ const BatchesComponent = () => {
               className="
               group inline-flex items-center gap-2 px-4 py-2.5 rounded-xl flex-shrink-0
               border-2 border-gray-200 bg-white text-xs font-bold text-gray-500
-              hover:border-[#31918D] hover:text-[#31918D] hover:bg-teal-50/30
+              hover:border-[#d61111] hover:text-[#d61111] hover:bg-teal-50/30
               transition-all duration-200 shadow-sm
             "
             >
@@ -133,7 +133,7 @@ const BatchesComponent = () => {
               className="
     group inline-flex items-center gap-2 px-4 py-2.5 rounded-xl flex-shrink-0
     border-2 border-gray-200 bg-white text-xs font-bold text-gray-500
-    hover:border-[#31918D] hover:text-[#31918D] hover:bg-teal-50/30
+    hover:border-[#d61111] hover:text-[#d61111] hover:bg-teal-50/30
     transition-all duration-200 shadow-sm
   "
             >
@@ -269,7 +269,7 @@ const BatchesComponent = () => {
                     setSearch("");
                     setFilter("all");
                   }}
-                  className="mt-5 px-5 py-2 rounded-xl bg-gradient-to-r from-[#014376] to-[#31918D] text-white text-xs font-bold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                  className="mt-5 px-5 py-2 rounded-xl bg-gradient-to-r from-[#aa0e0e] to-[#d61111] text-white text-xs font-bold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                 >
                   Clear all filters
                 </button>

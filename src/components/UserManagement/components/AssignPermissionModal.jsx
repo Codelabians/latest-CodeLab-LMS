@@ -97,7 +97,7 @@ const AssignPermissionModal = ({ isOpen, onClose, role, permissions = [], onSave
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="flex-1 px-4 py-2 bg-[#31918D] text-white rounded-lg hover:bg-[#2a7d7a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 px-4 py-2 bg-[#d61111] text-white rounded-lg hover:bg-[#2a7d7a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
                                 <>

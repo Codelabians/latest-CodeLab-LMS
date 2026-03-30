@@ -149,7 +149,7 @@ const CreateEditModal = ({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 animate-fadeIn">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slideUp">
         {/* Header with Gradient */}
-        <div className="relative px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-[#014376] to-[#31918D] rounded-t-xl sm:rounded-t-2xl">
+        <div className="relative px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-[#aa0e0e] to-[#d61111] rounded-t-xl sm:rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -207,9 +207,9 @@ const CreateEditModal = ({
                       type="checkbox"
                       checked={selectAll}
                       onChange={handleSelectAll}
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#31918D] border-gray-300 rounded focus:ring-2 focus:ring-[#014376] focus:ring-offset-0 cursor-pointer"
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#aa0e0e] border-gray-300 rounded focus:ring-2 focus:ring-[#aa0e0e] focus:ring-offset-0 cursor-pointer"
                     />
-                    <span className="text-xs sm:text-sm font-medium text-[#31918D] group-hover:text-[#014376]">
+                    <span className="text-xs sm:text-sm font-medium text-[#aa0e0e] group-hover:text-[#aa0e0e]">
                       Select All
                     </span>
                   </label>
@@ -265,17 +265,17 @@ const CreateEditModal = ({
                                   onChange={() =>
                                     handlePermissionToggle(permissionId)
                                   }
-                                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#31918D] border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-[#014376] focus:ring-offset-0 cursor-pointer transition-all duration-200 checked:scale-110"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#d61111] border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-[#aa0e0e] focus:ring-offset-0 cursor-pointer transition-all duration-200 checked:scale-110"
                                 />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2">
-                                  <div className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-[#31918D] transition-colors break-words">
+                                  <div className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-[#aa0e0e] transition-colors break-words">
                                     {permissionLabel}
                                   </div>
                                   {isPermissionChecked(permissionId) && (
                                     <div className="flex-shrink-0">
-                                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#31918D] rounded-full animate-pulse"></div>
+                                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#aa0e0e] rounded-full animate-pulse"></div>
                                     </div>
                                   )}
                                 </div>
@@ -295,7 +295,7 @@ const CreateEditModal = ({
 
                 <div className="mt-3 flex items-center justify-between px-1">
                   <div className="text-xs sm:text-sm text-gray-600">
-                    <span className="font-semibold text-[#31918D]">
+                    <span className="font-semibold text-[#aa0e0e]">
                       {formData.permissions?.length || 0}
                     </span>
                     <span className="text-gray-500"> of </span>
@@ -358,7 +358,7 @@ const CreateEditModal = ({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-[#014376] to-[#31918D] rounded-lg sm:rounded-xl hover:from-[#31918D] hover:to-[#014376] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] rounded-lg sm:rounded-xl hover:from-[#d61111] hover:to-[#d61111] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
             >
               {isSubmitting ? (
                 <>

@@ -79,7 +79,7 @@ const ReportPreview = ({ reportId, onDownload  }) => {
       </div>
       <div className="flex justify-center gap-4">
         {[
-          { label: 'Download PDF', format: 'pdf', bg: '#31918D' },
+          { label: 'Download PDF', format: 'pdf', bg: '#d61111' },
         ].map((button) => (
           <button 
             key={button.format}

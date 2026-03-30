@@ -93,7 +93,7 @@ const AddSpaceModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg hover:from-[#31918D] hover:to-[#014376] transition-all disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white rounded-lg hover:from-[#d61111] hover:to-[#d61111] transition-all disabled:opacity-50"
             >
               {isLoading ? "Creating..." : "Create Space"}
             </button>
@@ -178,7 +178,7 @@ const NavigationCard = ({ item, icon, color, count, onClick }) => {
 const SectionHeader = ({ title, count, icon, onAdd, showAddButton }) => (
   <div className="flex items-center justify-between mb-6">
     <div className="flex items-center gap-3">
-      <div className="p-2 bg-blue-50 rounded-lg">{icon}</div>
+      <div className="p-2 bg-red-50 rounded-lg">{icon}</div>
       <div>
         <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
         <p className="text-sm text-gray-600">{count} items available</p>
@@ -187,7 +187,7 @@ const SectionHeader = ({ title, count, icon, onAdd, showAddButton }) => (
     {showAddButton && (
       <button
         onClick={onAdd}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg hover:from-[#31918D] hover:to-[#014376] transition-all shadow-md"
+        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#d61111] to-[#d61111] text-white rounded-lg hover:from-[#aa0e0e] hover:to-[#aa0e0e] transition-all shadow-md"
       >
         <Plus className="w-5 h-5" />
         Add Space

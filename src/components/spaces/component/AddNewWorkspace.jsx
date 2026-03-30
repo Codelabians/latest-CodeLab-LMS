@@ -265,7 +265,7 @@ const AddNewWorkspaceModal = ({ isOpen, onClose, onSuccess, companyUuid }) => {
             <button
               type="submit"
               disabled={isCreating || categoriesLoading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg hover:from-[#31918D] hover:to-[#014376] font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white rounded-lg hover:from-[#d61111] hover:to-[#d61111] font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCreating ? 'Adding...' : 'Add Workspace'}
             </button>

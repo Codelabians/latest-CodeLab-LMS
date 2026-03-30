@@ -115,7 +115,7 @@ const ChangeUserPassword = ({
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#014376] to-[#31918D] rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] rounded-full flex items-center justify-center">
             <KeyRound className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -211,7 +211,7 @@ const ChangeUserPassword = ({
             type="button"
             onClick={handleSubmit}
             disabled={isLoading}
-            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#014376] to-[#31918D] text-white rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#aa0e0e] to-[#aa0e0e] text-white rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? "Changing..." : "Change Password"}
           </button>
