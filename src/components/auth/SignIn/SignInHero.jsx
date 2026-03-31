@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import careerLogo from "../../../assets/images/SigninImages/Career.png";
+import careerLogo from "../../../assets/images/SigninImages/careers.png";
 import logo from "../../../assets/images/signinImages/logo.png";
 import skillImage from "../../../assets/images/SigninImages/skill.png";
 import ProjectImage from "../../../assets/images/SigninImages/project.png";

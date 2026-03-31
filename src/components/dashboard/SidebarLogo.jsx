@@ -12,8 +12,6 @@ const SidebarLogo = () => {
         LMS Codelab
       </h1>
 
-     
-
       {/* <p className="text-xs text-beige">Rohi eSkills Learning Hub</p> */}
 
     </div>

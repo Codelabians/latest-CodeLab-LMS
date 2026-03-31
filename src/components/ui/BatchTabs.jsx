@@ -35,7 +35,7 @@ const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
       {/* Selected Value */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer border-[1.5px] border-[#d61111] rounded-md px-4 py-2 flex justify-between items-center text-[#d61111] font-medium w-full"
+        className="cursor-pointer border-[1.5px] border-[#100F0F] rounded-md px-4 py-2 flex justify-between items-center text-[#100F0F] font-medium w-full"
       >
         <span>{selectedBatch?.name || "Select Batch"}</span>
         <span>{isOpen ? "▲" : "▼"}</span>
