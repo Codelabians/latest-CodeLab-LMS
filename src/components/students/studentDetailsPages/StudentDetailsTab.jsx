@@ -163,7 +163,7 @@ const StudentDetailsTab = () => {
                     alt={`${studentName}'s Profile`}
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 border-4 border-white shadow-xl flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-[#ff0000] to-[#100F0F] border-4 border-white shadow-xl flex items-center justify-center">
                     <span className="text-4xl font-bold text-white">
                       {studentData?.first_name?.charAt(0)}
                       {studentData?.last_name?.charAt(0)}
