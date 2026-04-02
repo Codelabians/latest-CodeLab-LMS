@@ -71,7 +71,7 @@ const EmployeeStats = ({ data }) => {
               <XAxis 
                 dataKey="name" 
                 fontSize={12} 
-                tick={{ fill: '#6B7280' }}
+                tick={{ fill: '#120001' }}
                 axisLine={false}
                 tickLine={false}
               />

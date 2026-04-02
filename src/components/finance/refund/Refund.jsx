@@ -39,19 +39,34 @@ const Refund = () => {
 
   return (
     <div className="w-11/12 mx-auto">
-      <Header title="Refunds" icon={<RotateCcw />} showActionButton={false} />
-      <BatchTabs
-        activeBatchTab={activeBatchTab}
-        setActiveBatchTab={setActiveBatchTab}
-      />
+      {/* Header with margin below */}
+      <div className="mb-6">
+        <Header
+          title="Refunds"
+          icon={<RotateCcw />}
+          showActionButton={false}
+        />
+      </div>
+
+      {/* Tabs with spacing below */}
+      <div className="mb-6">
+        <BatchTabs
+          activeBatchTab={activeBatchTab}
+          setActiveBatchTab={setActiveBatchTab}
+        />
+      </div>
+
+      {/* Loader */}
       {isLoading && <Loader />}
 
+      {/* Error State */}
       {isError && (
         <div className="text-red-600 text-center py-8">
-          Error loading students
+          Error loading refunds
         </div>
       )}
 
+      {/* Table */}
       {!isLoading && !isError && (
         <Table
           columns={columns}

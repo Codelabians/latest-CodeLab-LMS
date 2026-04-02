@@ -367,7 +367,7 @@ const SidebarComponent = () => {
           }`}
         >
           <nav className="flex flex-col h-full bg-white">
-            <div className="flex-grow overflow-y-auto">
+            <div className="">
               <ul>
                 {menuItems.map((item) => (
                   <React.Fragment key={item.route || item.label}>
@@ -402,9 +402,9 @@ const SidebarComponent = () => {
                         {item.expandable && (
                           <div className="mr-3">
                             {expandedMenu === item.label ? (
-                              <ArrowDown className="text-red group-hover:text-white" />
+                              <ArrowDown className="text-darkbrown group-hover:text-white" />
                             ) : (
-                              <ArrowUp className="text-red group-hover:text-white" />
+                              <ArrowUp className="text-darkbrown group-hover:text-white" />
                             )}
                           </div>
                         )}

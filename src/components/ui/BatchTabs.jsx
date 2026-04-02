@@ -52,8 +52,8 @@ const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
                 onClick={() => handleSelect(batch.id)}
                 className={`px-4 py-2 cursor-pointer ${
                   isActive
-                    ? "bg-[#d61111] text-white"
-                    : "hover:bg-[#d61111] hover:text-white"
+                    ? "bg-[#aa0e0e] text-white"
+                    : "hover:bg-[#aa0e0e] hover:text-white"
                 }`}
               >
                 {batch.name}
