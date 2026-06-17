@@ -1,417 +1,208 @@
 import React, { useMemo } from "react";
-import { Users, BookOpen, Building, Users2, Package } from "lucide-react";
+import { Users, BookOpen, Building, Users2, Package, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+const fmt = (n) =>
+  n == null ? "—" : Number(n).toLocaleString();
+
+const StatCard = ({ title, heroValue, heroLabel, icon: Icon, color, onClick, children, footerLabel, footerValue }) => (
+  <div
+    onClick={onClick}
+    className="group relative bg-white rounded-[22px] overflow-hidden cursor-pointer border border-red-900/5 shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(214,17,17,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-[0_12px_40px_rgba(214,17,17,0.13),0_2px_8px_rgba(0,0,0,0.06)] active:scale-[0.995]"
+  >
+    <div
+      className="absolute -top-7 -right-7 w-[110px] h-[110px] rounded-full opacity-[0.07] group-hover:opacity-[0.13] group-hover:scale-110 transition-all duration-500"
+      style={{ backgroundColor: color }}
+    />
+
+    <div className="flex items-center gap-3 px-5 pt-5 pb-3.5">
+      <div
+        className="relative w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0 animate-in fade-in zoom-in duration-500"
+        style={{ backgroundColor: color }}
+      >
+        <div className="absolute inset-0 rounded-[14px] border border-white/20" />
+        <Icon size={20} className="text-white relative z-10" />
+      </div>
+      <span className="text-[13px] font-bold text-slate-900 tracking-[0.03em] uppercase font-poppins">
+        {title}
+      </span>
+    </div>
+
+    <div className="px-5 pb-2 flex items-baseline gap-1.5">
+      <span className="font-mono text-4xl font-semibold tracking-tight text-beige">
+        {fmt(heroValue)}
+      </span>
+      <span className="text-[12px] text-slate-400 font-medium font-poppins pb-0.5">
+        {heroLabel}
+      </span>
+    </div>
+
+    <div className="h-[2px] mx-5 mb-4 bg-red-600/10" />
+
+    <div className="grid grid-cols-2 gap-2 px-5 pb-5">
+      {children}
+    </div>
+
+    {footerLabel && (
+      <div className="flex justify-between items-center px-5 py-4 border-t border-red-600/5 bg-red-50/20">
+        <span className="text-[12px] text-slate-400 font-medium font-poppins">{footerLabel}</span>
+        <span className="font-mono text-[14px] font-bold text-beige bg-red-100/50 px-2.5 py-0.5 rounded-full">
+          {footerValue}
+        </span>
+      </div>
+    )}
+  </div>
+);
+
+const StatChip = ({ label, value, color = "text-slate-900" }) => (
+  <div className="bg-red-50/40 border border-red-900/5 rounded-xl p-2.5 flex flex-col gap-0.5 transition-colors group-hover:bg-red-50/60 font-poppins">
+    <span className="text-[10px] font-bold text-red-900/40 uppercase tracking-widest leading-none">
+      {label}
+    </span>
+    <span className={`font-mono text-xl font-medium tracking-tight ${color}`}>
+      {typeof value === "string" ? value : fmt(value)}
+    </span>
+  </div>
+);
+
 
 const TotalStats = ({ dashboardData, financeData }) => {
   const navigate = useNavigate();
 
-  // Default data structure
   const defaultData = {
-    students: {
-      total_students: 0,
-      current_enrolled_students: 0,
-      inactive_students: 0,
-      total_dropout_students: 0,
-      total_civilian_students: 0,
-      total_military_students: 0,
-    },
-    employees: {
-      total_employees: 0,
-      active_employees: 0,
-      inactive_employees: 0,
-    },
-    classes: {
-      total_classes: 0,
-      active_classes: 0,
-      inactive_classes: 0,
-      full_classes: 0,
-      available_classes: 0,
-    },
-    workspace: {
-      // revenue: 0,
-      workspaces: [],
-    },
+    students: { total_students: 0, current_enrolled_students: 0, inactive_students: 0, total_dropout_students: 0, total_civilian_students: 0, total_military_students: 0 },
+    employees: { total_employees: 0, active_employees: 0, inactive_employees: 0 },
+    classes: { total_classes: 0, active_classes: 0, inactive_classes: 0, full_classes: 0, available_classes: 0 },
+    workspace: { workspaces: [] },
     inventory: {},
   };
 
-  // Use provided data or fall back to defaults
   const data = dashboardData || defaultData;
   const students = data.students || defaultData.students;
   const employees = data.employees || defaultData.employees;
   const classes = data.classes || defaultData.classes;
   const workspace = data.workspace || defaultData.workspace;
 
-  // Process workspace data
   const workspaceStats = useMemo(() => {
-    const workspaces = workspace.workspaces || [];
-    let totalSpaces = 0;
-    let totalOccupied = 0;
-    let totalAvailable = 0;
-    let occupiedByCompany = 0;
-    let occupiedByIndividual = 0;
-
-    workspaces.forEach((category) => {
-      category.types?.forEach((type) => {
-        totalSpaces += type.total || 0;
-        totalOccupied += type.occupied || 0;
-        totalAvailable += type.available || 0;
-        occupiedByCompany += type.occupied_by_company || 0;
-        occupiedByIndividual += type.occupied_by_individual || 0;
+    const ws = workspace.workspaces || [];
+    let totalSpaces = 0, totalOccupied = 0, totalAvailable = 0, occupiedByCompany = 0, occupiedByIndividual = 0;
+    ws.forEach((cat) => {
+      cat.types?.forEach((t) => {
+        totalSpaces += t.total || 0;
+        totalOccupied += t.occupied || 0;
+        totalAvailable += t.available || 0;
+        occupiedByCompany += t.occupied_by_company || 0;
+        occupiedByIndividual += t.occupied_by_individual || 0;
       });
     });
-
-    return {
-      totalSpaces,
-      totalOccupied,
-      totalAvailable,
-      occupiedByCompany,
-      occupiedByIndividual,
-      // revenue: workspace.revenue || 0,
-    };
+    return { totalSpaces, totalOccupied, totalAvailable, occupiedByCompany, occupiedByIndividual };
   }, [workspace]);
 
-  // Process inventory data
   const inventoryStats = useMemo(() => {
-    const inventory = data.inventory || {};
-    let totalAssets = 0;
-    let totalAvailable = 0;
-    let totalInUse = 0;
-
-    Object.keys(inventory).forEach((locationName) => {
-      const location = inventory[locationName];
-      totalAssets += location.total || 0;
-      totalAvailable += location.available || 0;
-      totalInUse += location.in_use || 0;
+    const inv = data.inventory || {};
+    let totalAssets = 0, totalAvailable = 0, totalInUse = 0;
+    Object.values(inv).forEach((loc) => {
+      totalAssets += loc.total || 0;
+      totalAvailable += loc.available || 0;
+      totalInUse += loc.in_use || 0;
     });
-
-    return {
-      totalAssets,
-      totalAvailable,
-      totalInUse,
-    };
+    return { totalAssets, totalAvailable, totalInUse };
   }, [data.inventory]);
 
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
+  const go = (path) => navigate(path);
+
+  const RED = "#d61111";
+  const DARK = "#aa0e0e";
 
   return (
-    <div className="bg-gray-50">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Students Card */}
-        <div
-          onClick={() => handleNavigation("/dashboard/student-summary")}
-          className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#d61111" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: "#d61111" }}
-              >
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="ml-3 text-lg font-semibold text-gray-800">
-                Students
-              </h3>
-            </div>
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Students */}
+      <StatCard
+        title="Students"
+        heroValue={students.total_students}
+        heroLabel="total inquiries"
+        icon={Users}
+        color={RED}
+        onClick={() => go("/dashboard/student-summary")}
+        footerLabel={students.total_dropout_students > 0 ? "Dropout" : null}
+        footerValue={students.total_dropout_students}
+      >
+        <StatChip label="Enrolled" value={students.current_enrolled_students} color="text-slate-800" />
+        <StatChip label="Inactive" value={students.inactive_students} color="text-beige" />
+      </StatCard>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Total Student Inquiries</span>
-              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
-                {students.total_students.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Currently Enrolled</span>
-              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
-                {students.current_enrolled_students.toLocaleString()}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">
-                  Military Inquiries
-                </div>
-                <div className="text-xl font-bold text-pink-900">
-                  {students.total_military_students}
-                </div>
-              </div>
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">
-                  Civilian Inquiries
-                </div>
-                <div className="text-xl font-bold text-orange-600">
-                  {students.total_civilian_students}
-                </div>
-              </div>
-            </div>
-            {students.total_dropout_students > 0 && (
-              <div className="flex justify-between text-sm pt-1">
-                <span className="text-gray-500">Dropout</span>
-                <span className="font-semibold text-red-600">
-                  {students.total_dropout_students}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Classes */}
+      <StatCard
+        title="Classes"
+        heroValue={classes.total_classes}
+        heroLabel="total classes"
+        icon={BookOpen}
+        color={DARK}
+        onClick={() => go("/dashboard/course-summary")}
+      >
+        <StatChip label="Active" value={classes.active_classes} color="text-emerald-600" />
+        <StatChip label="Inactive" value={classes.inactive_classes} color="text-beige" />
+        <StatChip label="Full" value={classes.full_classes} color="text-amber-600" />
+        <StatChip label="Available" value={classes.available_classes} color="text-slate-800" />
+      </StatCard>
 
-        {/* classes Card */}
-        <div
-          onClick={() => handleNavigation("/dashboard/course-summary")}
-          className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#aa0e0e" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: "#aa0e0e" }}
-              >
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="ml-3 text-lg font-semibold text-gray-800">
-                Classes
-              </h3>
-            </div>
-          </div>
+      {/* Workspace */}
+      <StatCard
+        title="Freelance / Workspace"
+        heroValue={workspaceStats.totalSpaces}
+        heroLabel="total spaces"
+        icon={Building}
+        color={RED}
+        onClick={() => go("/dashboard/startup-summary")}
+      >
+        <StatChip label="Occupied" value={workspaceStats.totalOccupied} color="text-beige" />
+        <StatChip label="Available" value={workspaceStats.totalAvailable} color="text-emerald-600" />
+        <StatChip label="Companies" value={workspaceStats.occupiedByCompany} color="text-slate-800" />
+        <StatChip label="Individuals" value={workspaceStats.occupiedByIndividual} color="text-amber-600" />
+      </StatCard>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Total Classes</span>
-              <span className="text-2xl font-bold" style={{ color: "#aa0e0e" }}>
-                {classes?.total_classes}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Active</div>
-                <div className="text-xl font-bold text-pink-900">
-                  {classes.active_classes}
-                </div>
-              </div>
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Inactive</div>
-                <div className="text-xl font-bold" style={{ color: "#d61111" }}>
-                  {classes.inactive_classes}
-                </div>
-              </div>
-              <div className="flex justify-between text-sm pt-1">
-                <span className="text-gray-500">Full Classes</span>
-                <span className="font-semibold" style={{ color: "#d61111" }}>
-                  {classes.full_classes}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm pt-1">
-                <span className="text-gray-500">Available Classes</span>
-                <span className="font-semibold" style={{ color: "#d61111" }}>
-                  {classes.available_classes}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Employees */}
+      <StatCard
+        title="Employees"
+        heroValue={employees.total_employees}
+        heroLabel="total employees"
+        icon={Users2}
+        color={DARK}
+        onClick={() => go("/dashboard/employee-summary")}
+      >
+        <StatChip label="STP" value={employees.stp_employees} color="text-slate-800" />
+        <StatChip label="SME" value={employees.sme_employees} color="text-amber-600" />
+        <StatChip label="Active" value={employees.active_employees} color="text-emerald-600" />
+        <StatChip label="Inactive" value={employees.inactive_employees} color="text-beige" />
+      </StatCard>
 
-        {/* Workspace Card */}
-        <div
-          onClick={() => handleNavigation("/dashboard/startup-summary")}
-          className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#d61111" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: "#d61111" }}
-              >
-                <Building className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="ml-3 text-lg font-semibold text-gray-800">
-                Freelance/ Workspace
-              </h3>
-            </div>
-          </div>
+      {/* Inventory */}
+      <StatCard
+        title="Inventory"
+        heroValue={inventoryStats.totalAssets}
+        heroLabel="total assets"
+        icon={Package}
+        color={RED}
+        onClick={() => go("/dashboard/inventory-summary")}
+        footerLabel={inventoryStats.totalAssets > 0 ? "Utilization" : null}
+        footerValue={`${Math.round((inventoryStats.totalInUse / inventoryStats.totalAssets) * 100)}%`}
+      >
+        <StatChip label="Available" value={inventoryStats.totalAvailable} color="text-emerald-600" />
+        <StatChip label="In Use" value={inventoryStats.totalInUse} color="text-amber-600" />
+      </StatCard>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Total Spaces</span>
-              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
-                {workspaceStats.totalSpaces}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Occupied</div>
-                <div className="text-xl font-bold text-red-600">
-                  {workspaceStats.totalOccupied}
-                </div>
-              </div>
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Available</div>
-                <div className="text-xl font-bold text-pink-900">
-                  {workspaceStats.totalAvailable}
-                </div>
-              </div>
-            </div>
-            {/* <div className="flex justify-between text-sm pt-1">
-              <span className="text-gray-500">Revenue</span>
-              <span className="font-semibold" style={{ color: "#31918D" }}>
-                PKR {workspaceStats.revenue.toLocaleString()}
-              </span>
-            </div> */}
-          </div>
-        </div>
-
-        {/* Employees Card */}
-        <div
-          onClick={() => handleNavigation("/dashboard/employee-summary")}
-          className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#aa0e0e" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: "#aa0e0e" }}
-              >
-                <Users2 className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="ml-3 text-lg font-semibold text-gray-800">
-                Employees
-              </h3>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Total Employees</span>
-              <span className="text-2xl font-bold" style={{ color: "#aa0e0e" }}>
-                {employees.total_employees}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Total STP</div>
-                <div className="text-xl font-bold text-pink-900">
-                  {employees.stp_employees}
-                </div>
-              </div>
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Total SME</div>
-                <div className="text-xl font-bold text-orange-600">
-                  {employees.sme_employees}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Inventory Card */}
-        <div
-          onClick={() => handleNavigation("/dashboard/inventory-summary")}
-          className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#d61111" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: "#d61111" }}
-              >
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="ml-3 text-lg font-semibold text-gray-800">
-                Inventory
-              </h3>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Total Assets</span>
-              <span className="text-2xl font-bold" style={{ color: "#d61111" }}>
-                {inventoryStats.totalAssets}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Available</div>
-                <div className="text-xl font-bold pink-900">
-                  {inventoryStats.totalAvailable}
-                </div>
-              </div>
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">In Use</div>
-                <div className="text-xl font-bold text-pink-900">
-                  {inventoryStats.totalInUse}
-                </div>
-              </div>
-            </div>
-            {inventoryStats.totalAssets > 0 && (
-              <div className="flex justify-between text-sm pt-1">
-                <span className="text-gray-500">Utilization</span>
-                <span className="font-semibold" style={{ color: "#d61111" }}>
-                  {Math.round(
-                    (inventoryStats.totalInUse / inventoryStats.totalAssets) *
-                      100
-                  )}
-                  %
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Finance card */}
-        <div
-          onClick={() => handleNavigation("/dashboard/finance-summary")}
-          className="p-6 bg-white border-t-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-          style={{ borderTopColor: "#aa0e0e" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: "#aa0e0e" }}
-              >
-                <Users2 className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="ml-3 text-lg font-semibold text-gray-800">
-                Finance
-              </h3>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Total Income</span>
-              <span className="text-2xl font-bold text-pink-900">
-                Rs {financeData?.total_income}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">Total Expense</div>
-                <div className="text-xl font-bold text-red-600">
-                  Rs {financeData?.total_expense}
-                </div>
-              </div>
-              <div className="p-3 text-center rounded-lg bg-gray-50">
-                <div className="mb-1 text-sm text-gray-500">
-                  Total Net Profit
-                </div>
-                <div className="text-xl font-bold text-orange-600">
-                  Rs {financeData?.net_profit}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Finance */}
+      <StatCard
+        title="Finance"
+        heroValue={`Rs ${fmt(financeData?.total_income)}`}
+        heroLabel="income"
+        icon={TrendingUp}
+        color={DARK}
+        onClick={() => go("/dashboard/finance/stats")}
+      >
+        <StatChip label="Expense" value={`Rs ${fmt(financeData?.total_expense)}`} color="text-beige" />
+        <StatChip label="Net Profit" value={`Rs ${fmt(financeData?.net_profit)}`} color="text-emerald-600" />
+      </StatCard>
     </div>
   );
 };

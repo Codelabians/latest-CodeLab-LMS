@@ -2,7 +2,7 @@ import { useGetQuery } from "../../api/apiSlice";
 import { useState, useEffect, useRef } from "react";
 
 const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
-  const { data: allbatches } = useGetQuery({ path: "/admin/batches" });
+  const { data: allbatches } = useGetQuery({ path: "course/batches" });
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -35,7 +35,7 @@ const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
       {/* Selected Value */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer border-[1.5px] border-[#100F0F] rounded-md px-4 py-2 flex justify-between items-center text-[#100F0F] font-medium w-full"
+        className="cursor-pointer border-b border-rouded shadow-md  px-4 py-2 flex justify-between items-center text-[#100F0F] font-medium w-full"
       >
         <span>{selectedBatch?.name || "Select Batch"}</span>
         <span>{isOpen ? "▲" : "▼"}</span>

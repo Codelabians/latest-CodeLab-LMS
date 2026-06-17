@@ -303,7 +303,7 @@ const StudentsComponent = () => {
 
     refetch: refetchStudents,
   } = useGetQuery({
-    path: `/admin/students`,
+    path: `/student/student-classes`,
     params: apiParams,
   });
 
@@ -529,7 +529,7 @@ const StudentsComponent = () => {
   const filteredStudentsData = mappedStudentsData;
 
   const { data: batchData } = useGetQuery({
-    path: "/admin/batches",
+    path: "course/batches",
     params: { active_status: 1 },
   });
 
@@ -545,7 +545,7 @@ const StudentsComponent = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await deleteStudent({ path: `/admin/student/${selectedID}` }).unwrap();
+      await deleteStudent({ path: `/student/${selectedID}` }).unwrap();
       setIsDeleteModalOpen(false);
       refetchStudents();
       showToast("Student deleted successfully", "success");
@@ -590,7 +590,7 @@ const StudentsComponent = () => {
 
     try {
       const response = await patch({
-        path: `/admin/student/${selectedUuid}`,
+        path: `/student/${selectedUuid}`,
         body: formData,
       }).unwrap();
 
@@ -642,7 +642,7 @@ const StudentsComponent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "#FAFBFC" }}>
       {classUuid && (
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <button
@@ -707,11 +707,12 @@ const StudentsComponent = () => {
             <button
               key={filter.value}
               onClick={() => setSelectedFilter(filter.value)}
-              className={`px-5 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border ${
                 selectedFilter === filter.value
-                  ? "bg-brown text-white shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "text-white border-transparent shadow-sm"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
               }`}
+              style={selectedFilter === filter.value ? { background: "#C90606" } : undefined}
             >
               {filter.label}
             </button>

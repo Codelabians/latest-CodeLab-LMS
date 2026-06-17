@@ -55,7 +55,7 @@ const UpdatePasswordModal = ({ setPasswordModal, passwordModal }) => {
         if (Object.keys(validationErrors).length === 0) {
           try {
             const res = await patch({
-              path: "/admin/change-password",
+              path: "/system/change-password",
               body: values,
             }).unwrap();
             if (res.error) {

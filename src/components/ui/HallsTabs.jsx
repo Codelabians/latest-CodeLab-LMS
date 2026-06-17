@@ -2,7 +2,7 @@ import { useGetQuery } from "../../api/apiSlice";
 
 const HallsTabs = ({ setActiveHallTab, activeHallTab }) => {
   const { data: hallData } = useGetQuery({
-    path: "/admin/halls",
+    path: "course/halls",
   });
   return (
     <>

@@ -29,14 +29,14 @@ const AnnouncementsDetails = () => {
     isLoading: announcementsLoading,
     refetch: refetchAnnouncements,
   } = useGetQuery({
-    path: "/admin/announcements",
+    path: "/communication/announcements",
   });
 
-  // /admin/announcements/
+  // /communication/announcements/
   const handleDeleteConfirm = async () => {
     try {
       await deleteAnnouncements({
-        path: `/admin/announcements/${selectedID}`,
+        path: `/communication/announcements/${selectedID}`,
       }).unwrap();
       setIsDeleteModalOpen(false);
       refetchAnnouncements();
@@ -72,7 +72,7 @@ const AnnouncementsDetails = () => {
 
     try {
       const response = await patch({
-        path: `/admin/announcements/${selectedID}`,
+        path: `/communication/announcements/${selectedID}`,
         body: values,
       }).unwrap();
 
@@ -129,7 +129,7 @@ const AnnouncementsDetails = () => {
 
     try {
       await patch({
-        path: `/admin/announcements/${id}`,
+        path: `/communication/announcements/${id}`,
         body: values,
       }).unwrap();
       refetchAnnouncements();

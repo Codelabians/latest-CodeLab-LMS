@@ -2,15 +2,23 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { clearCredentials } from "../features/auth/authSlice";
 
 
-const REACT_APP_API_URL = "https://dev-rohi-backend.codelab.pk/public/api";
-// // const REACT_APP_API_URL = "http://192.168.1.23:5173/api";
+// API base URL. Reads from Vite env var VITE_API_URL when defined; falls back
+// to the production URL so deployed builds keep working unchanged.
+// For local dev, create a `.env` (or `.env.local`) with:
+//   VITE_API_URL=http://127.0.0.1:8000/api/
+const REACT_APP_API_URL =
+  import.meta.env?.VITE_API_URL || "https://api.codelab.pk/public/api/";
+// const REACT_APP_API_URL = "http://192.168.1.68:8000/api";
 
-const API_URL = REACT_APP_API_URL;
+// Exported so non-RTK callers (e.g. the file-upload XHR in
+// hr/common/FileUploadField) resolve the SAME base as every other request
+// — preventing the uploader from drifting to a different host than the API.
+export const API_URL = REACT_APP_API_URL;
 
 // Helper function to download blob
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("as");
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -31,51 +39,6 @@ const baseQuery = fetchBaseQuery({
     return headers;
   },
 });
-// const baseQuery = fetchBaseQuery({
-//   baseUrl: API_URL,
-//   prepareHeaders: (headers, { getState }) => {
-//     // 1. Set global headers
-//     headers.set("Accept", "application/json");
-
-//     // 2. Set the token (Hardcoded for your test)
-//     headers.set(
-//       "Authorization",
-//       "Bearer 860|a8nG0QrT755gv6Gpmnzhu2H2RYGZwgDdEWVekrYZ642e2ec8"
-//     );
-
-//     return headers;
-//   },
-// });
-// const baseQuery = fetchBaseQuery({
-//   baseUrl: API_URL,
-//   prepareHeaders: (headers, { getState }) => {
-//     headers.set("Accept", "application/json");
-
-//     const token = getState().auth?.token;
-
-//     if (token) {
-//       headers.set("Authorization", `Bearer ${token}`);
-//     }
-
-//     return headers;
-//   },
-// });
-
-// const baseQueryWithReauth = async (args, api, extraOptions) => {
-//   let result = await baseQuery(args, api, extraOptions);
-//   const contentType = result.meta?.response?.headers.get("content-type");
-
-//   if (contentType && contentType.includes("application/json")) {
-//     return result;
-//   } else if (
-//     contentType?.includes("application/octet-stream") ||
-//     contentType?.includes("application/pdf")
-//   ) {
-//     return { data: result.meta.response };
-//   } else {
-//     throw new Error("Unexpected content type received.");
-//   }
-// };
 // Base query with 401 → logout + redirect
 const baseQueryWithReauthAndRedirect = async (args, api, extraOptions) => {
   // original request
@@ -203,7 +166,7 @@ export const apiSlice = createApi({
             method: "POST",
             headers: {
               Accept:
-                "application/json, application/pdf, application/octet-stream",
+                "application/json, application/pdf, application/octet-stream, application/zip",
               ...(token && { Authorization: `Bearer ${token}` }),
               // ❌ DO NOT set Content-Type for FormData
               ...(isFormData ? {} : { "Content-Type": "application/json" }),
@@ -226,7 +189,8 @@ export const apiSlice = createApi({
           // ✅ PDF / FILE RESPONSE
           if (
             contentType?.includes("application/pdf") ||
-            contentType?.includes("application/octet-stream")
+            contentType?.includes("application/octet-stream") ||
+            contentType?.includes("zip")
           ) {
             const blob = await response.blob();
 
@@ -475,6 +439,7 @@ export const apiSlice = createApi({
 
 export const {
   useGetQuery,
+  useLazyGetQuery,
   usePostMutation,
   usePostWithPdfDownloadMutation,
   usePutMutation,

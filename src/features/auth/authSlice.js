@@ -24,6 +24,16 @@ const authSlice = createSlice({
     setStatus: (state, action) => {
       state.status = action.payload;
     },
+    // Update just the logged-in user's avatar so the header chip reflects a
+    // new profile photo immediately (no full re-login / page reload needed).
+    setUserAvatar: (state, action) => {
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          avatar: { ...(state.user.avatar || {}), file_url: action.payload },
+        };
+      }
+    },
     setError: (state, action) => {
       state.error = action.payload;
     },
@@ -51,7 +61,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, clearCredentials, setStatus, setError } =
+export const { setCredentials, clearCredentials, setStatus, setError, setUserAvatar } =
   authSlice.actions;
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectAuthStatus = (state) => state.auth.status;

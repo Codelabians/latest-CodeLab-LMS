@@ -1,18 +1,54 @@
-// Header.jsx - Fixed
-import React, { useState } from "react";
-import PlusIcon from "../../assets/icons/Plus";
-import DeleteAllBin from "../../assets/icons/DeleteAllBin";
-import EditProfile from "../../assets/images/profile/editProfile.png";
-import FeeShare from "../../assets/images/fee/FeeShare.png";
-import Select from "react-select";
+import React from "react";
+import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { FaPlus } from "react-icons/fa";
-import { Pencil } from "lucide-react";
+import Select from "react-select";
 import { useNavigate } from "react-router-dom";
-import { useGetQuery } from "../../api/apiSlice";
-import InventoryActions from "./InventoryActions";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import WorkspaceActions from "../spaces/manageSpaces/components/WorkspaceActions";
+import FeeShare from "../../assets/images/fee/FeeShare.png";
+
+const batchSelectStyles = {
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isFocused ? "#fef2f2" : "white",
+    color: "#1a0505",
+    fontSize: "13px",
+  }),
+  control: (provided) => ({
+    ...provided,
+    minHeight: "36px",
+    height: "36px",
+    backgroundColor: "white",
+    borderRadius: "10px",
+    fontSize: "13px",
+    boxShadow: "none",
+    border: "1px solid rgba(255,255,255,0.3)",
+    cursor: "pointer",
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    height: "36px",
+    padding: "0 10px",
+  }),
+  input: (provided) => ({ ...provided, margin: "0px" }),
+  indicatorSeparator: () => ({ display: "none" }),
+  indicatorsContainer: (provided) => ({ ...provided, height: "36px" }),
+  placeholder: (provided) => ({ ...provided, fontSize: "13px", color: "#9ca3af" }),
+  menu: (provided) => ({ ...provided, borderRadius: "10px", zIndex: 9999 }),
+  menuPortal: (provided) => ({ ...provided, zIndex: 9999 }),
+};
+
+/* ── Shared action button style ── */
+const ActionButton = ({ onClick, children, className = "" }) => (
+  <button
+    onClick={onClick}
+    className={`inline-flex items-center gap-2 px-4 h-9 rounded-xl text-[13px] font-semibold
+                transition-all duration-150 active:scale-95 ${className}`}
+  >
+    {children}
+  </button>
+);
 
 const Header = ({
   icon,
@@ -37,169 +73,142 @@ const Header = ({
   sourceComponent = "",
   handleCategoryChange = () => {},
   handleTypeChange = () => {},
-  setIsCreateBatchConfirmModalOpen, 
+  setIsCreateBatchConfirmModalOpen,
 }) => {
-  const handleEditClick = () => {
-    if (buttontitle === "Edit") {
-      setIsEditMode(true);
-    }
-  };
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const role = user?.role;
 
+  const handleEditClick = () => {
+    if (buttontitle === "Edit") setIsEditMode(true);
+  };
 
+  const handleMainButtonClick = () => {
+    if (buttontitle === "Edit") {
+      handleEditClick();
+    } else if (buttontitle === true) {
+      setFeeTab(true);
+    } else if (buttontitle === "Submit") {
+      handleSubmitAttendance();
+    } else if (setIsCreateModalOpen) {
+      setIsCreateModalOpen(true);
+    } else {
+      if (sourceComponent === "StudentsComponent") navigate("/dashboard/students/add");
+      else if (sourceComponent === "Courses") navigate("/courses/add");
+      else if (sourceComponent === "Categories") navigate("/categories/add");
+      else if (sourceComponent === "BatchesComponent") navigate("/dashboard/batches/create");
+      else if (sourceComponent === "InstructorsComponent") navigate("/dashboard/smes/add");
+      else if (sourceComponent === "EmployeesComponent") navigate("/dashboard/employees/add");
+      else if (sourceComponent === "ClassStudents") navigate("/dashboard/students/add");
+      else if (sourceComponent === "company") navigate("/dashboard/working-spaces/company/register");
+      else if (sourceComponent === "individual") navigate("/dashboard/working-spaces/individual/register");
+      else if (sourceComponent === "CompanyIndividual") navigate("/dashboard/working-spaces/company-individual/register");
+    }
+  };
 
   return (
-    <div className="flex justify-between custom-Background mt-5 mb-2 px-4 h-[4.37rem] rounded-[20px] items-center">
-      <div className="flex items-center justify-center gap-x-2">
-        <div className="relative">
-          <div className="text-white ">{icon}</div>
+    <div className="flex justify-between items-center bg-[#aa0e0e] mt-5 mb-2 px-5 h-[4.25rem] rounded-2xl">
+
+      {/* Left: icon + title + count badge */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-white/10">
+          <span className="text-white [&>svg]:w-5 [&>svg]:h-5">{icon}</span>
           {(batchButton === "category" ||
             batchButton === "course" ||
             batchButton === "batch" ||
             batchButton === "employee" ||
             batchButton === "instructor" ||
             batchButton === "student") && (
-            <div
-              className={`absolute  ${
-                batchButton === "category" && " bottom-5 left-4"
-              } ${batchButton === "course" && " bottom-6 left-5"}  ${
-                batchButton === "batch" && " bottom-5 left-4 "
-              } ${batchButton === "employee" && " bottom-5 left-4"}  ${
-                batchButton === "instructor" && " bottom-5 left-4"
-              }${
-                batchButton === "student" && " bottom-6 left-4"
-              }tracking-wide rounded-full flex items-center justify-center w-4 h-4  bg-white font-poppins text-[10px] font-bold  `}
-            >
-              <span>{TotalCategories ? TotalCategories : 0}</span>
-            </div>
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white text-[#aa0e0e] text-[9px] font-bold flex items-center justify-center shadow-sm">
+              {TotalCategories ?? 0}
+            </span>
           )}
         </div>
-        <div className="text-2xl font-semibold text-white font-poppins">
+        <h1 className="text-[15px] font-semibold text-white tracking-wide">
           {title}
-        </div>
+        </h1>
       </div>
-      <div className="flex items-center gap-3">
+
+      {/* Right: controls */}
+      <div className="flex items-center gap-2">
+
         {isMultipleSelected && (
-          <div
-            onClick={() => {
-              setIsBulkDeleteModalOpen(true);
-            }}
+          <ActionButton
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="bg-white/10 text-white hover:bg-white/20"
           >
-            {/* <DeleteAllBin /> */}
-          </div>
+            <Trash2 size={14} />
+          </ActionButton>
         )}
-        
-        {sourceComponent === "Inventory" && (
-          <div className="flex items-center gap-3">
-            <InventoryActions title="Categories" />
-            <InventoryActions title="Types" />
-          </div>
-        )}
-         {sourceComponent === "Workspace" && (
-          <div className="flex items-center gap-3">
+
+        {sourceComponent === "Workspace" && (
+          <>
             <WorkspaceActions title="Categories" />
             <WorkspaceActions title="Types" />
-          </div>
+          </>
         )}
-          {title === "Company Working Space" && (
-          <div className="flex items-center gap-3">
-            <button 
-             onClick={() => navigate("/dashboard/working-spaces/company/members/add")}
-            className="bg-white text-brown p-2 rounded-lg">
-               Members
-            </button>
-          </div>
+
+        {title === "Company Working Space" && (
+          <ActionButton
+            onClick={() => navigate("/dashboard/working-spaces/company/members/add")}
+            className="bg-white text-[#aa0e0e] hover:bg-red-50"
+          >
+            <Users size={14} />
+            Members
+          </ActionButton>
         )}
-             {title === "Attendance" && (
-          <div className="flex items-center gap-3">
-         
-            <Select
-              className="w-48"
-              onChange={handleBatchChange}
-              options={batchesOptions}
-              styles={customStyles}
-              placeholder="Batch Name"
-            />
-          </div>
-        )}
+
         {title === "Attendance" && (
-          <div className="flex items-center gap-3">
-            <input
-              type="date"
-              value={markAttendanceDate}
-              onChange={handleMarkAttendanceDateChange}
-              className="focus:outline-none border-none border-2 rounded-[10px] w-48 px-2 py-2"
-            />
-          </div>
+          <Select
+            className="w-48"
+            onChange={handleBatchChange}
+            options={batchesOptions}
+            styles={batchSelectStyles}
+            placeholder="Batch Name"
+            menuPortalTarget={document.body}
+          />
         )}
+
+        {title === "Attendance" && (
+          <input
+            type="date"
+            value={markAttendanceDate}
+            onChange={handleMarkAttendanceDateChange}
+            className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white text-[13px]
+                       focus:outline-none focus:ring-2 focus:ring-white/30 placeholder-white/50 w-44"
+          />
+        )}
+
         {isAttendanceDetailsTab && (
           <input
             type="date"
             value={dateFilter}
             onChange={handleDateFilterChange}
-            className="focus:outline-none border-none border-2 rounded-[10px] w-48 px-2 py-2"
+            className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white text-[13px]
+                       focus:outline-none focus:ring-2 focus:ring-white/30 w-44"
           />
         )}
-        {sourceComponent === "BatchesComponent" && setIsCreateBatchConfirmModalOpen &&(
-          <button
-            className="text-brown bg-white text-sm font-poppins font-semibold py-3 px-5 flex items-center gap-2 rounded-[10px] transform transition-transform duration-300 ease-in-out hover:scale-105 hover:text-base"
+
+        {sourceComponent === "BatchesComponent" && setIsCreateBatchConfirmModalOpen && (
+          <ActionButton
             onClick={() => setIsCreateBatchConfirmModalOpen(true)}
+            className="bg-white text-[#aa0e0e] hover:bg-red-50"
           >
+            <Plus size={14} />
             Add new batch
-          </button>
+          </ActionButton>
         )}
+
         {showActionButton && role !== "receptionist" && (
-          <button
-            className="text-brown bg-white text-sm font-poppins font-semibold py-3 px-5 flex items-center gap-2 rounded-[10px] transform transition-transform duration-300 ease-in-out hover:scale-105 hover:text-base"
-            onClick={() => {
-              if (buttontitle === "Edit") {
-                handleEditClick();
-              } else if (buttontitle === true) {
-                setFeeTab(true);
-              } else if (buttontitle === "Submit") {
-                handleSubmitAttendance();
-              } else if (setIsCreateModalOpen) {
-                setIsCreateModalOpen(true);
-              } else {
-                if (sourceComponent === "StudentsComponent") {
-                  navigate("/dashboard/students/enroll");
-                } else if (sourceComponent === "Courses") {
-                  navigate("/courses/add");
-                } else if (sourceComponent === "Categories") {
-                  navigate("/categories/add");
-                } else if (sourceComponent === "BatchesComponent") {
-                  navigate("/dashboard/batches/create");
-                } else if (
-                  sourceComponent === "InstructorsComponent"
-                ) {
-                  navigate("/dashboard/smes/add");
-                } else if (sourceComponent === "EmployeesComponent") {
-                  navigate("/dashboard/employees/add");
-                }
-                else if (sourceComponent === "ClassStudents") {a
-                  navigate("/dashboard/students/enroll");
-                }
-                   else if (sourceComponent === "company") {
-                  navigate("/dashboard/working-spaces/company/register");
-                }
-                 else if (sourceComponent === "individual") {
-                  navigate("/dashboard/working-spaces/individual/register");
-                }
-                 else if (sourceComponent === "CompanyIndividual") {
-                  navigate("/dashboard/working-spaces/company-individual/register");
-                }
-              }
-            }}
+          <ActionButton
+            onClick={handleMainButtonClick}
+            className="bg-white text-[#aa0e0e] hover:bg-red-50"
           >
-            {buttontitle}
-            {buttontitle === "Edit" && <Pencil size={16} />}
-            {buttontitle === true && (
-              <img src={FeeShare} alt="feeshare" className="w-6 " />
-            )}
-            {buttontitle === "Add New" && <FaPlus className="text-brown" />}
-          </button>
+            {buttontitle === "Edit" && <Pencil size={13} />}
+            {buttontitle === true && <img src={FeeShare} alt="fee" className="w-4" />}
+            {buttontitle === "Add New" && <Plus size={14} />}
+            <span>{buttontitle === true ? "Fee" : buttontitle}</span>
+          </ActionButton>
         )}
       </div>
     </div>

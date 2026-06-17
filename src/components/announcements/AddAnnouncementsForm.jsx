@@ -13,6 +13,8 @@ const AddAnnouncementsForm = ({
   selectedImage,
   isActive,
   toggleSwitch,
+  announcementType,
+  setAnnouncementType,
 }) => {
   return (
     <>
@@ -105,11 +107,43 @@ const AddAnnouncementsForm = ({
               <SwitchButton isActive={isActive} toggleSwitch={toggleSwitch} />
             </div>
           </div>
+          <div className="flex items-center justify-start mt-3 gap-3">
+            <h1 className="text-2xl">Show on</h1>
+            <select
+              value={announcementType}
+              onChange={(e) => setAnnouncementType(e.target.value)}
+              className="border rounded-lg p-2 text-lg"
+            >
+              <option value="portal">Portal only</option>
+              <option value="website">Website only</option>
+              <option value="both">Both (portal + website)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="relative mt-4">
+          <label className="block text-sm font-semibold text-slate-600 mb-1">
+            Link (optional) — where the announcement sends visitors when clicked
+          </label>
+          <input
+            type="url"
+            name="link"
+            placeholder="https://… (leave blank to use the default admission page)"
+            className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 w-full ${
+              errors.link && touched.link ? "border-red-500" : ""
+            }`}
+            value={values.link || ""}
+            onBlur={handleBlur}
+            onChange={handleChange}
+          />
+          {errors.link && touched.link && (
+            <div className="text-red-500 text-xs font-bold mt-1">{errors.link}</div>
+          )}
         </div>
 
         <button
           type="submit"
-          className="text-center w-48 mx-auto flex items-center justify-center  border rounded-lg custom-AddButton p-3 mb-10 text-white font-bold  tracking-widest text-xl"
+          className="text-center w-48 mx-auto flex items-center justify-center  border rounded-lg custom-AddButton p-3 mb-10 mt-6 text-white font-bold  tracking-widest text-xl"
         >
           ADD
         </button>

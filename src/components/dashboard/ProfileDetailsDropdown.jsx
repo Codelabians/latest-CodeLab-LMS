@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { showToast } from "../ui/common/ShowToast";
+import { usePostMutation } from "../../api/apiSlice";
 
 const ProfileDetailsDropdown = ({}) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -14,6 +15,30 @@ const ProfileDetailsDropdown = ({}) => {
 
   const dropdownRef = useRef(null); // Ref to track the dropdown element
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [logoutMutation, { isLoading: isLoggingOut }] = usePostMutation();
+
+  // Real logout: revoke the Sanctum token on the server, then clear local
+  // state. If the API call fails (offline, token already invalid) we still
+  // clear locally so the user is signed out on the client.
+  const handleLogout = async (e) => {
+    e?.preventDefault?.();
+    try {
+      await logoutMutation({
+        path: "/admin/authentication/logout",
+        body: {},
+      }).unwrap();
+    } catch (_err) {
+      /* still log out locally */
+    } finally {
+      dispatch(clearCredentials());
+      localStorage.removeItem("token");
+      localStorage.removeItem("rememberMe");
+      setShowDropdown(false);
+      showToast("Signed out successfully", "success");
+      navigate(SIGNIN, { replace: true });
+    }
+  };
 
   const handleClick = () => {
     setShowDropdown(!showDropdown);
@@ -36,12 +61,15 @@ const ProfileDetailsDropdown = ({}) => {
     };
   }, []);
 
-  const adminProfileImage = localStorage.getItem("adminProfileImage");
+  // Prefer the avatar on the live Redux user (updates instantly when the
+  // profile photo changes), then the cached localStorage value, then default.
+  const adminProfileImage =
+    user?.avatar?.file_url || localStorage.getItem("adminProfileImage");
 
   const role = user?.role;
-  const hasAdminAccess = ["oic", "manager", "asstmanager", "admin"].includes(
-    role,
-  );
+  // Anyone past the admin-login gate belongs on the admin dashboard.
+  // Backend blocks `user` and `teacher` at login — mirror that here.
+  const hasAdminAccess = !!role && !["user", "teacher"].includes(role);
   return (
     <div ref={dropdownRef}>
       {" "}
@@ -106,16 +134,14 @@ const ProfileDetailsDropdown = ({}) => {
             </li>
           </ul>
           <div className="py-2 rounded-b-lg hover:bg-brown">
-            <Link
-              to={SIGNIN}
-              onClick={() => {
-                dispatch(clearCredentials());
-                showToast("Logout Successfully", "success");
-              }}
-              className="block px-4 py-1 text-sm text-gray-700 hover:text-white text-grayCheckbox"
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="block w-full px-4 py-1 text-sm text-left text-gray-700 bg-transparent border-0 cursor-pointer hover:text-white text-grayCheckbox disabled:opacity-60"
             >
-              Logout
-            </Link>
+              {isLoggingOut ? "Signing out…" : "Logout"}
+            </button>
           </div>
         </div>
       )}

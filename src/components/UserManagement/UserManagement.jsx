@@ -1,57 +1,81 @@
-// src/pages/UserManagement.jsx
-import { useState, useEffect } from "react";
-import { Users2, Shield } from "lucide-react";
-import Tabs from "../ui/Tabs";
-import Users from "./users/Users";
+// User Management — modern shell matching the Banks / Payment Accounts pages:
+// clean header + a segmented tab strip. The Users / Admins & Access / Roles
+// panels render below.
+import { useEffect, useState } from "react";
+import { Shield, ShieldCheck, Crown } from "lucide-react";
 import Roles from "./roles/Roles";
+import AdminsAccess from "./AdminsAccess";
 
-const tabs = [
-  { id: "users", name: "Users", icon: Users2 },
-  { id: "roles", name: "Roles", icon: Shield },
-  // { id: 'permissions', name: 'Permissions', icon: Key },
+const BRAND = "#C90606";
+const BRAND_DARK = "#A00505";
+const BRAND_TINT = "#FEF2F2";
+const TEXT_PRIMARY = "#0F172A";
+const TEXT_MUTED = "#94A3B8";
+const BORDER = "#EEF2F6";
+
+const TABS = [
+  { id: "admins", label: "Admins & Access", icon: Crown },
+  { id: "roles", label: "Roles", icon: Shield },
 ];
 
+const STORAGE_KEY = "userManagementTab";
+
 const UserManagement = () => {
-  const [activeTab, setActiveTab] = useState("users");
+  const [activeTab, setActiveTab] = useState("admins");
 
   useEffect(() => {
     const urlTab = new URLSearchParams(window.location.search).get("tab");
-    const validTab = tabs.find((t) => t.id === urlTab)?.id || "users";
-    setActiveTab(validTab);
-    localStorage.setItem("userManagementTab", validTab);
+    setActiveTab(TABS.find((t) => t.id === urlTab)?.id || localStorage.getItem(STORAGE_KEY) || "admins");
   }, []);
 
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    localStorage.setItem("userManagementTab", tabId);
+  const handleTabChange = (id) => {
+    setActiveTab(id);
+    localStorage.setItem(STORAGE_KEY, id);
     const params = new URLSearchParams(window.location.search);
-    params.set("tab", tabId);
-    window.history.replaceState(
-      {},
-      "",
-      `${window.location.pathname}?${params}`,
-    );
+    params.set("tab", id);
+    window.history.replaceState({}, "", `${window.location.pathname}?${params}`);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/20 to-teal-50/20 p-6">
-      <div className="max-w-7xl mx-auto">
-        <Tabs
-          items={tabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          getId={(item) => item.id}
-          getLabel={(item) => item.name}
-          getIcon={(item) => item.icon}
-          storageKey="userManagementTab"
-          urlParam="tab"
-        />
-
-        <div className="mt-8">
-          {activeTab === "users" && <Users />}
-          {activeTab === "roles" && <Roles />}
-          {/* {activeTab === 'permissions' && <Permissions />} */}
+    <div className="w-full min-h-[calc(100vh-4rem)]" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC" }}>
+      <div className="px-6 pt-6 pb-0">
+        {/* header */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, background: BRAND_TINT, color: BRAND }}>
+            <ShieldCheck size={18} />
+          </div>
+          <div>
+            <h1 className="text-[18px] font-bold" style={{ color: TEXT_PRIMARY }}>User Management</h1>
+            <p className="text-[12px] mt-0.5" style={{ color: TEXT_MUTED }}>Manage accounts, the roles they hold, and role permission sets.</p>
+          </div>
         </div>
+
+        {/* segmented tab strip */}
+        <div className="inline-flex p-1 rounded-xl" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleTabChange(t.id)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold rounded-lg transition"
+                style={active
+                  ? { background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`, color: "#fff", boxShadow: "0 6px 16px -8px rgba(201,6,6,0.5)" }
+                  : { background: "transparent", color: TEXT_MUTED }}
+              >
+                <Icon size={14} /> {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* panel */}
+      <div>
+        {activeTab === "admins" && <AdminsAccess />}
+        {activeTab === "roles" && <Roles />}
       </div>
     </div>
   );

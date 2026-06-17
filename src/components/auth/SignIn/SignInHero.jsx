@@ -1,17 +1,7 @@
-import React, { useEffect, useState } from "react";
-import careerLogo from "../../../assets/images/SigninImages/careers.png";
-import logo from "../../../assets/images/signinImages/logo.png";
-import skillImage from "../../../assets/images/SigninImages/skill.png";
-import ProjectImage from "../../../assets/images/SigninImages/project.png";
-import profileImage from "../../../assets/images/SigninImages/profile.png";
-import clientImage from "../../../assets/images/SigninImages/client.png";
-import DiversImage from "../../../assets/images/SigninImages/divers.png";
-import pricingImage from "../../../assets/images/SigninImages/pricing.jpg";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
-import Aos from "aos";
-import "aos/dist/aos.css";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -20,13 +10,35 @@ import { usePostMutation } from "../../../api/apiSlice";
 import {
   ADMINDASHBOARD,
   FORGET,
-  RESET,
-  SIGNIN,
-  SIGNUP,
   STUDENT_SUMMARY,
 } from "../../routes/RouteConstants";
+import { firstAccessibleRoute } from "../../dashboard/SidebarComponent";
 import { showToast } from "../../ui/common/ShowToast";
 import Loader from "../../ui/common/LoaderComponent";
+
+// Brand tokens (kept inline so this page is self-contained and the brand
+// colour is correct regardless of what tailwind.config or colors.js say).
+const BRAND_RED = "#C90606";
+const BRAND_RED_DARK = "#A00505";
+
+// Roles that are explicitly NOT allowed into the admin dashboard.
+// The backend itself blocks `user` and `teacher` from /admin/authentication/login,
+// but we mirror that on the client so the redirect logic stays in one place.
+// Everyone else (admin, employee, receptionist, clerk, etc.) lands on the
+// admin dashboard — their visible features are then driven by `permissions[]`.
+const NON_ADMIN_ROLES = ["user", "teacher"];
+
+// Decide where to drop a user after login. Admins get the full dashboard
+// home; everyone else lands on the first page their role can actually open
+// (computed from the same permission-gated sidebar), so no role is dumped on
+// the finance-heavy home (or any page) they're not allowed to load.
+const LEADERSHIP_ROLES = ["admin", "super_admin", "ceo", "coo"];
+const landingRouteFor = (u) => {
+  if (!u) return ADMINDASHBOARD;
+  const roles = u.roles?.length ? u.roles : [u.role];
+  if (roles.some((r) => LEADERSHIP_ROLES.includes(r))) return ADMINDASHBOARD;
+  return firstAccessibleRoute(u) || ADMINDASHBOARD;
+};
 
 const defaultState = {
   email: "",
@@ -39,15 +51,19 @@ const SignInHero = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [passicon, setPassIcon] = useState(false);
-  const error = useSelector((state) => state.error.error);
+  const [rememberMe, setRememberMe] = useState(
+    () => localStorage.getItem("rememberMe") === "true"
+  );
+  const error = useSelector((state) => state.error?.error);
   const { token, user } = useSelector((state) => state.auth);
-  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const signInValidation = Yup.object({
     email: Yup.string()
-      .email("Invalid email address")
+      .email("Please enter a valid email address")
       .required("Email is required"),
-    password: Yup.string().required("Password is required"),
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Password is required"),
   });
 
   const {
@@ -58,230 +74,260 @@ const SignInHero = () => {
     errors,
     validateForm,
     touched,
-    setSubmitting,
     resetForm,
   } = useFormik({
     initialValues: defaultState,
     validationSchema: signInValidation,
     validateOnChange: true,
     validateOnBlur: true,
-    onSubmit: (values, { setSubmitting, resetForm }) => {
-      setFormSubmitted(true);
+    onSubmit: (vals, { setSubmitting }) => {
       validateForm().then(async (validationErrors) => {
-        if (Object.keys(validationErrors).length === 0) {
-          try {
-            const res = await login({
-              path: "admin/authentication/login",
-              body: values,
-            }).unwrap();
-            resetForm();
-            dispatch(setCredentials({ user: res.data, token: res.meta.token }));
-            // if (keepLoggedIn) {
-            //   localStorage.setItem("token", res.meta.token);
-            // }
-            showToast("Welcome To Dashboard", "success");
-            if (
-              res.data.role === "admin" ||
-              res.data.role === "oic" ||
-              res.data.role === "manager" ||
-              res.data.role === "asstmanager"
-            ) {
-              navigate(ADMINDASHBOARD);
-            } else {
-              navigate(STUDENT_SUMMARY);
-            }
-          } catch (err) {
-            showToast(err.data.message, "error");
-          } finally {
+        if (Object.keys(validationErrors).length !== 0) {
+          setSubmitting(false);
+          return;
+        }
+        try {
+          const res = await login({
+            path: "/admin/authentication/login",
+            body: vals,
+          }).unwrap();
+
+          const role = res?.data?.role;
+          const apiToken = res?.meta?.token;
+
+          // Defensive, multi-role aware: allow entry if the user holds ANY role
+          // outside the student/teacher set — even as a SECONDARY role (e.g. a
+          // primary "teacher" who is also a COO). Mirrors the backend gate.
+          const roleList = (res?.data?.roles?.length ? res.data.roles : [role]).filter(Boolean);
+          const hasPortalRole = roleList.some((r) => !NON_ADMIN_ROLES.includes(r));
+          if (!hasPortalRole) {
+            showToast("You are not allowed to access the admin panel.", "error");
             setSubmitting(false);
+            return;
           }
+
+          dispatch(setCredentials({ user: res.data, token: apiToken }));
+
+          // Persist token only when the user asked us to remember them.
+          // (authSlice already reads `localStorage.token` on init.)
+          if (rememberMe && apiToken) {
+            localStorage.setItem("token", apiToken);
+            localStorage.setItem("rememberMe", "true");
+          } else {
+            localStorage.removeItem("token");
+            localStorage.removeItem("rememberMe");
+          }
+
+          resetForm();
+          showToast("Welcome back!", "success");
+          navigate(landingRouteFor(res.data));
+        } catch (err) {
+          // Laravel returns { message, errors: { email: [...] } } on 422.
+          const apiMsg =
+            err?.data?.errors?.email?.[0] ||
+            err?.data?.message ||
+            "Unable to sign in. Please try again.";
+          showToast(apiMsg, "error");
+        } finally {
+          setSubmitting(false);
         }
       });
     },
   });
-  useEffect(() => {
-    if (token) {
-      if (
-        user?.role === "admin" ||
-        user?.role === "oic" ||
-        user?.role === "manager" ||
-        user?.role === "asstmanager"
-      ) {
-        navigate(ADMINDASHBOARD);
-      } else {
-        navigate(STUDENT_SUMMARY);
-      }
-    } else {
-      navigate(SIGNIN);
-    }
-  }, [token, user]);
 
+  // If a token already exists in Redux, send the user where they belong.
   useEffect(() => {
-    Aos.init({ duration: 1700 });
-  }, []);
+    if (!token) return;
+    if (NON_ADMIN_ROLES.includes(user?.role)) {
+      navigate(STUDENT_SUMMARY);
+    } else {
+      navigate(landingRouteFor(user));
+    }
+  }, [token, user, navigate]);
 
   return (
     <>
       {isLoading && <Loader />}
       {!token && (
-        <section className="flex h-screen pt-16 pb-4 md:pt-10">
-          <div className="container flex flex-col gap-12 w-full md:w-[60%] md:border-r border-gray-500">
-            <div className="flex items-center justify-center md:items-center md:justify-center">
-              <img src={logo} alt="logo" className="w-48 md:w-64" />
+        <section
+          className="relative flex items-center justify-center min-h-screen px-4 py-10 overflow-hidden bg-white font-Montserrat"
+          style={{
+            backgroundImage: `
+              radial-gradient(1200px 600px at -10% -20%, rgba(201,6,6,0.08) 0%, rgba(201,6,6,0) 60%),
+              radial-gradient(900px 600px at 110% 110%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0) 60%)
+            `,
+          }}
+        >
+          {/* Faint corner accents */}
+          <div
+            aria-hidden="true"
+            className="absolute top-0 left-0 w-40 h-40 rounded-full opacity-30 -translate-x-1/2 -translate-y-1/2"
+            style={{ background: BRAND_RED, filter: "blur(80px)" }}
+          />
+          <div
+            aria-hidden="true"
+            className="absolute bottom-0 right-0 w-56 h-56 rounded-full opacity-20 translate-x-1/3 translate-y-1/3"
+            style={{ background: "#000", filter: "blur(90px)" }}
+          />
+
+          <div className="relative w-full max-w-md">
+            {/* Logo / brand mark */}
+            <div className="flex flex-col items-center mb-8">
+              <div
+                className="flex items-center justify-center w-16 h-16 mb-4 rounded-2xl shadow-lg"
+                style={{
+                  background: `linear-gradient(135deg, ${BRAND_RED} 0%, ${BRAND_RED_DARK} 100%)`,
+                  boxShadow: "0 10px 30px -10px rgba(201,6,6,0.5)",
+                }}
+              >
+                <span className="text-2xl font-extrabold tracking-tight text-white">
+                  C<span className="opacity-70">/</span>L
+                </span>
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-black">
+                CODELAB
+              </h1>
+              <p className="mt-1 text-xs tracking-[0.18em] text-gray-500 uppercase">
+                Your Potential. Our Dedication.
+              </p>
             </div>
-            <form
-              className="flex flex-col gap-5 md:gap-12"
-              onSubmit={handleSubmit}
+
+            {/* Card */}
+            <div
+              className="p-8 bg-white border border-gray-100 shadow-xl rounded-2xl"
+              style={{ boxShadow: "0 20px 50px -20px rgba(0,0,0,0.15)" }}
             >
-              <div className="flex flex-col items-center justify-center gap-1">
-                <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-4xl md:text-5xl">
-                  Welcome
-                  <span className="text-2xl font-bold tracking-tight text-lightbrown sm:text-4xl md:text-5xl">
-                    Back
-                  </span>
-                </h1>
-                <p className="px-5 text-xs tracking-wide text-center text-lightbrown md:text-sm sm:text-center">
-                  Sign in to continue your journey with us
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-black">
+                  Sign in to your account
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Enter your credentials to access the admin dashboard.
                 </p>
               </div>
-              <div className="relative flex flex-col gap-3 md:flex md:flex-col md:gap-5 md:w-[60%] md:mx-auto md:items-start">
-                <div className="relative w-full">
+
+              <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block mb-2 text-sm font-semibold text-black"
+                  >
+                    Email address
+                  </label>
                   <input
+                    id="email"
                     type="email"
                     name="email"
-                    placeholder={errors.email && touched.email ? "" : "E-mail*"}
-                    className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brown w-full ${
-                      errors.email && touched.email && "border-red-500"
+                    autoComplete="email"
+                    placeholder="admin@example.com"
+                    className={`w-full px-4 py-3 text-sm text-black placeholder-gray-400 transition border rounded-lg outline-none bg-gray-50 focus:bg-white focus:ring-2 ${
+                      errors.email && touched.email
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:ring-red-100"
                     }`}
+                    style={
+                      !(errors.email && touched.email)
+                        ? { borderColor: undefined }
+                        : undefined
+                    }
                     value={values.email}
                     onBlur={handleBlur}
                     onChange={handleChange}
                   />
                   {errors.email && touched.email && (
-                    <div className="absolute text-xs font-bold text-red-500 top-1 left-2">
+                    <p className="mt-1.5 text-xs font-medium text-red-600">
                       {errors.email}
-                    </div>
+                    </p>
                   )}
                 </div>
-                <div className="relative w-full">
-                  <input
-                    type={passicon ? "text" : "password"}
-                    name="password"
-                    placeholder={
-                      errors.password && touched.password ? "" : "Password*"
-                    }
-                    className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brown w-full ${
-                      errors.password && touched.password && "border-red-500"
-                    }`}
-                    value={values.password}
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                  />
+
+                {/* Password */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block mb-2 text-sm font-semibold text-black"
+                  >
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={passicon ? "text" : "password"}
+                      name="password"
+                      autoComplete="current-password"
+                      placeholder="Enter your password"
+                      className={`w-full px-4 py-3 pr-12 text-sm text-black placeholder-gray-400 transition border rounded-lg outline-none bg-gray-50 focus:bg-white focus:ring-2 ${
+                        errors.password && touched.password
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-200 focus:ring-red-100"
+                      }`}
+                      value={values.password}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPassIcon((v) => !v)}
+                      aria-label={passicon ? "Hide password" : "Show password"}
+                      className="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-gray-500 transition hover:text-black"
+                    >
+                      {passicon ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                   {errors.password && touched.password && (
-                    <div className="absolute text-xs font-bold text-red-500 top-1 left-2">
+                    <p className="mt-1.5 text-xs font-medium text-red-600">
                       {errors.password}
-                    </div>
+                    </p>
                   )}
-                  <span className="absolute cursor-pointer right-4 top-4">
-                    {passicon ? (
-                      <FaEyeSlash
-                        className="text-xl"
-                        onClick={() => setPassIcon(!passicon)}
-                      />
-                    ) : (
-                      <FaEye
-                        className="text-xl"
-                        onClick={() => setPassIcon(!passicon)}
-                      />
-                    )}
-                  </span>
                 </div>
-                <div className="w-[100%] flex items-center justify-between ">
-                  {/* <div className="flex items-center "> */}
-                  {/* <div className="flex items-center justify-center gap-2 ">
-                  {/* <input
-                    type="checkbox"
-                    checked={keepLoggedIn}
-                    onChange={(e) => setKeepLoggedIn(e.target.checked)}
-                    className="cursor-pointer"
-                    id="keep"
-                    name="keep"
-                  /> */}
-                  {/* <label htmlFor="keep">Keep me logged in</label>
-                </div>  */}
+
+                {/* Remember + forgot */}
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 border-gray-300 rounded cursor-pointer"
+                      style={{ accentColor: BRAND_RED }}
+                    />
+                    <span>Remember me</span>
+                  </label>
                   <Link
                     to={FORGET}
-                    className="font-semibold underline cursor-pointer text-end"
+                    className="text-sm font-semibold transition hover:underline"
+                    style={{ color: BRAND_RED }}
                   >
                     Forgot password?
                   </Link>
-                  {/* </div> */}
                 </div>
-              </div>
-              <div className="flex flex-col md:w-[40%] mx-auto">
+
+                {/* Submit */}
                 <button
                   type="submit"
-                  className="py-3 font-bold text-white transition duration-300 rounded-lg custom-AddButton"
+                  disabled={isLoading}
+                  className="w-full py-3 mt-2 text-sm font-bold tracking-wide text-white transition rounded-lg shadow-md disabled:opacity-60 disabled:cursor-not-allowed hover:shadow-lg active:translate-y-px"
+                  style={{
+                    background: `linear-gradient(135deg, ${BRAND_RED} 0%, ${BRAND_RED_DARK} 100%)`,
+                    boxShadow: "0 10px 25px -10px rgba(201,6,6,0.55)",
+                  }}
                 >
-                  {isLoading ? "Signing In..." : "Sign In"}
+                  {isLoading ? "Signing in..." : "Sign in"}
                 </button>
-              </div>
-            </form>
-            {error && (
-              <div className="error">
-                {error.title}: {error.description}
-              </div>
-            )}
-            {/* <div className="flex items-center justify-center mt-5 underline cursor-pointer">
-          <Link to={RESET} className="text-xs text-center md:text-sm">
-            Trouble Logging in? Reset your password
-          </Link>
-        </div> */}
-          </div>
-          <div className="mx-auto  md:mt-24 md:pr-16 lg:mt-[8.5rem] lg:pr-28 w-[40%] hidden md:block">
-            <div></div>
-            <div className="mx-auto">
-              <div className="relative">
-                <img
-                  src={careerLogo}
-                  alt="Careerlogo"
-                  className="md:w-[70%] lg:w-[60%] mx-auto"
-                />
-                <div
-                  className="absolute -top-[14%] left-[30%] w-[38%] hover:scale-105"
-                  data-aos="fade-down"
-                >
-                  <img
-                    src={ProjectImage}
-                    alt="projectlogo"
-                    className="hover:scale-105"
-                  />
+              </form>
+
+              {error && (
+                <div className="p-3 mt-4 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50">
+                  <span className="font-semibold">{error.title}:</span>{" "}
+                  {error.description}
                 </div>
-                <div className="absolute top-[5%] left-[61%] w-[38%] hover:scale-105">
-                  <img
-                    src={skillImage}
-                    alt=""
-                    className="hover:scale-105"
-                    data-aos="fade-down-left"
-                  />
-                </div>
-                <div className="absolute top-[25%] left-[70%] w-[38%] hover:scale-105">
-                  <img src={profileImage} alt="" data-aos="fade-left" />
-                </div>
-                <div className="absolute top-[52%] left-[75%] w-[38%] hover:scale-105">
-                  <img src={clientImage} alt="" data-aos="fade-left" />
-                </div>
-                <div className="absolute top-[80%] left-[70%] w-[38%] hover:scale-105">
-                  <img src={DiversImage} alt="" data-aos="fade-up-left" />
-                </div>
-                <div
-                  className="absolute top-[96%] left-[30%] w-[38%]"
-                  data-aos="fade-up"
-                >
-                  <img src={pricingImage} alt="" className="hover:scale-105" />
-                </div>
-              </div>
+              )}
             </div>
+
+            <p className="mt-6 text-xs text-center text-gray-400">
+              &copy; {new Date().getFullYear()} CODELAB. All rights reserved.
+            </p>
           </div>
         </section>
       )}

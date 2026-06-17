@@ -8,13 +8,13 @@ import { useGetQuery } from "../../api/apiSlice"; // Import your RTK Query hook
 const Navbar = () => {
   const navigate = useNavigate();
 
-  // Fetch notifications to get unread count
-  const { data: notificationsResponse, isLoading } = useGetQuery({
-    path: "/admin/notifications",
-  });
+  // Poll the lightweight unread-count endpoint for the bell badge.
+  const { data: unreadResponse, isLoading } = useGetQuery(
+    { path: "communication/notifications/unread-count" },
+    { pollingInterval: 30000, refetchOnMountOrArgChange: true },
+  );
 
-  const notifications = notificationsResponse?.data || [];
-  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  const unreadCount = unreadResponse?.data?.unread || 0;
 
   const toggleNotification = () => {
     navigate("/dashboard/notifications");

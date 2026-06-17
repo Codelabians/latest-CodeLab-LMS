@@ -9,11 +9,15 @@ import {
 } from "../../../api/apiSlice";
 import FormInput from "../../ui/FormInput";
 import Loader from "../../ui/common/LoaderComponent";
+import SearchableSelect from "../../ui/SearchableSelect";
+import { useLaptopFee } from "../../../hooks/useLaptopFee";
 
 const StudentForm = ({ uuid }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { studentUuid } = useParams();
+  // Configured monthly laptop fee (Website Settings).
+  const laptopFeeSetting = useLaptopFee(0);
 
   const isEditMode = uuid || studentUuid;
 
@@ -89,6 +93,7 @@ const StudentForm = ({ uuid }) => {
     isPayingStudent: "1",
     isCharityScholarshipStudent: "0",
     laptopProvided: false,
+    isHostalize: false,
     active_status: "1",
     courseFee: 20000,
     laptopFee: 0,
@@ -139,9 +144,10 @@ const StudentForm = ({ uuid }) => {
           ? "1"
           : "0",
         laptopProvided: student.laptop_provided || false,
+        isHostalize: student.is_hostalize || false,
         active_status: student.active_status ? "1" : "0",
         courseFee: 20000,
-        laptopFee: student.laptop_provided ? 3000 : 0,
+        laptopFee: student.laptop_provided ? laptopFeeSetting : 0,
         discount: 0,
         installments: 1,
         note: "",
@@ -289,8 +295,13 @@ const StudentForm = ({ uuid }) => {
       setFormData((prev) => ({
         ...prev,
         [name]: processedValue,
-        laptopFee: processedValue ? 3000 : 0,
+        laptopFee: processedValue ? laptopFeeSetting : 0,
       }));
+      return;
+    }
+
+    if (name === "isHostalize") {
+      setFormData((prev) => ({ ...prev, isHostalize: value === "true" || value === true }));
       return;
     }
 
@@ -402,6 +413,7 @@ const StudentForm = ({ uuid }) => {
       payload.append("courseId", formData.courseId);
       payload.append("active_status", formData.active_status);
       payload.append("laptopProvided", formData.laptopProvided ? "1" : "0");
+      payload.append("isHostalize", formData.isHostalize ? "1" : "0");
       payload.append("isPayingStudent", formData.isPayingStudent);
       payload.append(
         "isCharityScholarshipStudent",
@@ -456,7 +468,7 @@ const StudentForm = ({ uuid }) => {
         navigate("/dashboard/students");
       } else {
         const res = await createStudent({
-          path: "/admin/user/store",
+          path: "/api/student/create",
           body: payload, // FormData
           filename: "student-challan.pdf",
         }).unwrap();
@@ -746,20 +758,11 @@ const StudentForm = ({ uuid }) => {
                           </span>
                         </div>
                       ) : (
-                        <select
-                          name="batchId"
-                          value={selectedBatch?.name}
-                          onChange={handleChange}
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        >
-                          <option value="">Select a Batch</option>
-                          {batchesData?.data?.map((batch) => (
-                            <option key={batch?.id} value={batch?.name}>
-                              {batch?.name}
-                            </option>
-                          ))}
-                        </select>
+                        <SearchableSelect
+                          options={(batchesData?.data || []).map((batch) => ({ value: batch?.name, label: batch?.name }))}
+                          value={selectedBatch?.name || ""}
+                          onChange={(v) => handleChange({ target: { name: "batchId", value: v || "" } })}
+                          placeholder="Select a Batch" />
                       )}
                     </div>
                     {/* Class select  */}
@@ -852,6 +855,18 @@ const StudentForm = ({ uuid }) => {
                   label="Laptop Provided"
                   name="laptopProvided"
                   value={formData.laptopProvided}
+                  onChange={handleChange}
+                  options={[
+                    { label: "Yes", value: true },
+                    { label: "No", value: false },
+                  ]}
+                />
+
+                <FormInput
+                  type="select"
+                  label="Hostelite (boarder)"
+                  name="isHostalize"
+                  value={formData.isHostalize}
                   onChange={handleChange}
                   options={[
                     { label: "Yes", value: true },

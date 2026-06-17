@@ -3,13 +3,17 @@ import { X, FileText, DollarSign, Download } from "lucide-react";
 import { usePostWithPdfDownloadMutation } from "../../api/apiSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { useLaptopFee } from "../../hooks/useLaptopFee";
 
 const GenerateChallanModal = ({ isOpen, setIsOpen, student, refetchStudents , isLaptopProvided}) => {
   const [createChallanWithPdf] = usePostWithPdfDownloadMutation();
   const [isGenerating, setIsGenerating] = useState(false);
+  // Configured monthly laptop fee (Website Settings). Used instead of a
+  // hardcoded amount so an assigned laptop is charged the right value.
+  const laptopFeeSetting = useLaptopFee(0);
 
   const navigate = useNavigate()
-  
+
   const [challanData, setChallanData] = useState({
     totalFee: 20000,
     discount: 0,
@@ -20,12 +24,13 @@ const GenerateChallanModal = ({ isOpen, setIsOpen, student, refetchStudents , is
 
   useEffect(() => {
     if (isOpen && isLaptopProvided !== undefined) {
+      const hasLaptop = isLaptopProvided === true || isLaptopProvided === "true" || isLaptopProvided === 1;
       setChallanData((prev) => ({
         ...prev,
-        laptopFee: isLaptopProvided === true || isLaptopProvided === "true" || isLaptopProvided === 1 ? 3000 : 0,
+        laptopFee: hasLaptop ? laptopFeeSetting : 0,
       }));
     }
-  }, [isOpen, isLaptopProvided]);
+  }, [isOpen, isLaptopProvided, laptopFeeSetting]);
 
   if (!isOpen || !student) return null;
 
@@ -66,7 +71,7 @@ const GenerateChallanModal = ({ isOpen, setIsOpen, student, refetchStudents , is
     setChallanData({
       totalFee: 20000,
       discount: 0,
-      laptopFee: 3000,
+      laptopFee: laptopFeeSetting,
       installments: 1,
       note: "",
     });

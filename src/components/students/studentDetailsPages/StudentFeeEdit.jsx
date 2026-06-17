@@ -8,6 +8,7 @@ import {
 } from "../../../api/apiSlice";
 import FormInput from "../../ui/FormInput";
 import Loader from "../../ui/common/LoaderComponent";
+import { useLaptopFee } from "../../../hooks/useLaptopFee";
 
 const StudentFeeEdit = ({
   isOpen,
@@ -18,6 +19,9 @@ const StudentFeeEdit = ({
   isLoadingStudent,
 }) => {
   const [updateFee, { isLoading: isUpdating }] = usePostMutation();
+  // Configured monthly laptop fee (Website Settings) — used instead of a
+  // hardcoded amount when a laptop is provided.
+  const laptopFeeSetting = useLaptopFee(0);
 
   const [formData, setFormData] = useState({
     courseFee: 20000,
@@ -137,7 +141,7 @@ const StudentFeeEdit = ({
       setFormData((prev) => ({
         ...prev,
         laptopProvided: isProvided,
-        laptopFee: isProvided ? 3000 : 0,
+        laptopFee: isProvided ? laptopFeeSetting : 0,
         selectedLaptop: isProvided ? prev.selectedLaptop : "",
       }));
       return;

@@ -31,7 +31,7 @@ const Users = () => {
     isLoading,
     isError,
   } = useGetQuery({
-    path: "/admin/users/employee",
+    path: "/user/employees",
     params: { page: currentPage, per_page: itemsPerPage },
   });
 

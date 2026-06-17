@@ -1,114 +1,127 @@
 /* eslint-disable no-unused-vars */
-import { useEffect, useState } from "react";
-import Instructors from "./components/Instructors";
-import AttendanceChart from "./components/AttendenceChart";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../features/auth/authSlice";
+import { firstAccessibleRoute } from "../dashboard/SidebarComponent";
 import { useGetQuery } from "../../api/apiSlice";
-import hostelImage from "../../assets/images/adminDashboard/hostel.png";
-import HomeImage from "../../assets/images/adminDashboard/Home.png";
-import Student from "../../assets/images/adminDashboard/student.png";
-import StudentsStats from "../dashboard/StudentsStats";
-import StudentFeeStats from "../dashboard/StudentFeeStats";
-import FeeChart from "../dashboard/FeeStats";
-import BatchStats from "../dashboard/BatchStats";
-import StartsupsStats from "../dashboard/StartsupsStats";
-import CoursesStats from "../dashboard/CoursesStats";
-import RentStats from "../dashboard/RentStats";
-import StudentPercentageStats from "../dashboard/StudentPercentageStats";
-import EnrollmentChart from "./EnrollmentChart";
-import TotalStats from "./components/TotalStats";
-import Inventory from "../../inventory/Inventory";
-import InventoryStats from "../dashboard/InventoryStats";
-import EmployeeDetails from "../employees/employeeDetailsPages/EmployeeDetails";
-import EmployeeStats from "./components/EmployeeStats";
-import CompletionStats from "../dashboard/CompletionStats";
 import { useNavigate } from "react-router-dom";
-import BatchTabs from "../ui/BatchTabs";
 import Loader from "../ui/common/LoaderComponent";
+import TodayAttendanceWidget from "../hr/attendance/TodayAttendanceWidget";
+import {
+  Users, UserPlus, GraduationCap, Award, Building2, Layers,
+  Wallet, TrendingUp, TrendingDown, Undo2,
+} from "lucide-react";
 
 const DashboardComponent = () => {
-  const [activeBatchTab, setActiveBatchTab] = useState("all");
-
   const navigate = useNavigate();
+  const currentUser = useSelector(selectCurrentUser);
 
-  const {
-    data,
-    isLoading,
-    isFetching: isDashboardFetching,
-  } = useGetQuery({
-    path: "/admin/dashboard",
-    params: { ...(activeBatchTab !== "all" && { batch_id: activeBatchTab }) },
-  });
-
-  const { data: financeStats } = useGetQuery({
-    path: "/admin/finance/get/summary",
-    params: { ...(activeBatchTab !== "all" && { batch_id: activeBatchTab }) },
-  });
-
-  const financeData = financeStats?.data;
-
-  const { data: adminProfileData } = useGetQuery({
-    path: "/admin",
-  });
+  // The admin home shows company-wide finance summary + stats. Only users who
+  // can see those analytics belong here (admin, finance/overview roles).
+  // Operational roles that merely record income/expenses (e.g. Fiza) must NOT
+  // land here — it would also 401 on the finance-summary fetch and log them
+  // out. Bounce everyone else to the first page their role can actually open.
+  const ANALYTICS_PERMS = ["get finance-summary", "get finance-stats", "get dashboard"];
+  const canSeeAdminHome =
+    currentUser?.role === "admin" ||
+    (currentUser?.permissions || []).some((p) => ANALYTICS_PERMS.includes(p));
 
   useEffect(() => {
-    if (adminProfileData?.data?.avatar?.file_url) {
-      localStorage.setItem(
-        "adminProfileImage",
-        adminProfileData?.data?.avatar?.file_url
-      );
+    if (currentUser && !canSeeAdminHome) {
+      const target = firstAccessibleRoute(currentUser);
+      if (target) navigate(target, { replace: true });
     }
-  }, [adminProfileData]);
+  }, [currentUser, canSeeAdminHome, navigate]);
 
-  const dashboardData = data?.data;
+  // "Today at a glance" — cross-module counts/sums for the current day.
+  const { data: todayResp } = useGetQuery(
+    { path: "/admin/dashboard/today" },
+    { skip: !canSeeAdminHome },
+  );
+  const today = todayResp?.data?.stats || {};
+  const todayDate = todayResp?.data?.date || "";
+  const money = (n) => "Rs " + Number(n || 0).toLocaleString();
+  const todayCards = [
+    { label: "Visitors",     value: today.visitors ?? 0,     icon: Users,         color: "#2563EB" },
+    { label: "Inquiries",    value: today.inquiries ?? 0,    icon: UserPlus,      color: "#7C3AED" },
+    { label: "New Students", value: today.students ?? 0,     icon: GraduationCap, color: "#C90606" },
+    { label: "Certificates", value: today.certificates ?? 0, icon: Award,         color: "#B45309" },
+    { label: "New Clients",  value: today.clients ?? 0,      icon: Building2,     color: "#0891B2" },
+    { label: "New Batches",  value: today.batches_new ?? 0,  icon: Layers,        color: "#16A34A", sub: `${today.batches_active ?? 0} active` },
+    { label: "Payments",     value: money(today.payments),   icon: Wallet,        color: "#15803D" },
+    { label: "Income",       value: money(today.income),     icon: TrendingUp,    color: "#0D9488" },
+    { label: "Expenses",     value: money(today.expenses),   icon: TrendingDown,  color: "#DC2626" },
+    { label: "Refunds",      value: money(today.refunds),    icon: Undo2,         color: "#9333EA" },
+  ];
 
-  if (isLoading || isDashboardFetching) {
+  // Seed the header avatar from the already-authenticated user. The previous
+  // GET "/admin" call has no matching backend route (only /admin/dashboard,
+  // /admin/authentication/*, etc. exist) and returned 404 on every dashboard
+  // load. currentUser already carries the avatar from login, so use that.
+  const adminAvatarUrl = currentUser?.avatar?.file_url;
+  useEffect(() => {
+    if (adminAvatarUrl) {
+      localStorage.setItem("adminProfileImage", adminAvatarUrl);
+    }
+  }, [adminAvatarUrl]);
+
+  // Redirecting an HR-only user away — don't flash the finance home.
+  if (currentUser && !canSeeAdminHome) {
     return <Loader />;
   }
 
   return (
     <div className="flex flex-col bg-midnight min-h-screen">
-      
+
       <div className="px-4 sm:px-6 md:px-8 lg:px-12 pb-8 sm:pb-10 md:pb-12">
-        
+
         {/* Header */}
         <div className="mb-6 sm:mb-8 md:mb-10 text-xl sm:text-2xl md:text-3xl font-semibold text-heading font-poppins">
           Admin Dashboard
         </div>
 
-        {/* Batch Tabs */}
-        <div className="mb-4 sm:mb-6">
-          <BatchTabs
-            activeBatchTab={activeBatchTab}
-            setActiveBatchTab={setActiveBatchTab}
-          />
+        {/* Today at a glance */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-heading">
+              Today at a glance
+            </h2>
+            {todayDate && (
+              <span className="text-xs text-[#94A3B8]">{todayDate}</span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+            {todayCards.map((c) => {
+              const Icon = c.icon;
+              return (
+                <div
+                  key={c.label}
+                  className="bg-white rounded-2xl p-4 shadow-sm border border-[#EEF2F6] flex items-center gap-3"
+                >
+                  <div
+                    className="flex items-center justify-center flex-shrink-0 rounded-xl"
+                    style={{ width: 44, height: 44, background: `${c.color}1A`, color: c.color }}
+                  >
+                    <Icon size={20} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[#94A3B8] truncate">
+                      {c.label}
+                    </div>
+                    <div className="text-lg sm:text-xl font-bold text-[#0F172A] truncate">
+                      {c.value}
+                    </div>
+                    {c.sub && <div className="text-[10.5px] text-[#64748B] truncate">{c.sub}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Total Stats */}
-        <div className="mb-6">
-          <TotalStats
-            dashboardData={dashboardData}
-            financeData={financeData}
-          />
-        </div>
-
-        {/* Student Fee Stats */}
-       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-4 sm:my-6">
-  <div className="col-span-1 md:col-span-2 xl:col-span-3">
-    <StudentFeeStats dashboardData={dashboardData} />
-  </div>
-</div>
-
-        {/* Optional future sections (kept structure clean & responsive) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[40%_60%] gap-4 my-4">
-          {/* Add components here when needed */}
-        </div>
-
-        {/* Clickable Section */}
-        <div
-          onClick={() => navigate("/dashboard/startup-summary")}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 cursor-pointer my-4"
-        >
-          {/* Add content/cards here */}
+        {/* Today's employee attendance (hidden if no permission) */}
+        <div className="mb-6 sm:mb-8">
+          <TodayAttendanceWidget />
         </div>
 
       </div>

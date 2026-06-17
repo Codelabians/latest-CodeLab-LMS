@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   User,
@@ -16,6 +16,8 @@ import {
   CreditCard,
   UserCheck,
   UserX,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import {
   useGetQuery,
@@ -47,6 +49,23 @@ const StudentDetailsTab = () => {
   );
 
   const [statuschange, { isLoading: statusLoad }] = usePatchMutation();
+  const [uploadOfficial, { isLoading: uploadingOfficial }] = usePostMutation();
+  const officialFileRef = useRef(null);
+
+  // Admin uploads the OFFICIAL (recognition) photo for this student.
+  const handleOfficialPhoto = async (e) => {
+    const f = e.target.files?.[0];
+    if (!f || !studentData?.uuid) return;
+    const fd = new FormData();
+    fd.append("avatar", f);
+    try {
+      await uploadOfficial({ path: `user/${studentData.uuid}/avatar`, body: fd }).unwrap();
+      toast.success("Official photo updated.");
+      refetchStudent();
+    } catch (err) {
+      toast.error(err?.data?.message || "Could not upload photo.");
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -170,6 +189,18 @@ const StudentDetailsTab = () => {
                     </span>
                   </div>
                 )}
+                {/* Admin: upload the OFFICIAL (recognition) photo for this student. */}
+                <button
+                  type="button"
+                  onClick={() => officialFileRef.current?.click()}
+                  disabled={uploadingOfficial}
+                  title="Upload official photo"
+                  className="absolute -bottom-2 -right-2 grid place-items-center rounded-full text-white shadow-lg"
+                  style={{ width: 34, height: 34, background: "#C90606" }}
+                >
+                  {uploadingOfficial ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                </button>
+                <input ref={officialFileRef} type="file" accept="image/*" className="hidden" onChange={handleOfficialPhoto} />
               </div>
             </div>
           </div>

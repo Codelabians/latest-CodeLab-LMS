@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useGetQuery, useSmartPostMutation } from "../../../api/apiSlice";
 import FormInput from "../../ui/FormInput";
+import SearchableSelect from "../../ui/SearchableSelect";
+import { useLaptopFee } from "../../../hooks/useLaptopFee";
 
 const EnrollClassModal = ({
   isOpen,
@@ -12,6 +14,8 @@ const EnrollClassModal = ({
   refetch,
   studentData,
 }) => {
+  // Configured monthly laptop fee (Website Settings).
+  const laptopFeeSetting = useLaptopFee(0);
   const [enrollFormData, setEnrollFormData] = useState({
     classId: "",
     className: "",
@@ -74,7 +78,7 @@ const EnrollClassModal = ({
     if (enrollFormData.provideLaptop === "yes") {
       setEnrollFormData((prev) => ({
         ...prev,
-        laptopFee: 3000,
+        laptopFee: laptopFeeSetting,
       }));
     } else if (enrollFormData.provideLaptop === "no") {
       setEnrollFormData((prev) => ({
@@ -83,7 +87,7 @@ const EnrollClassModal = ({
         inventoryId: "",
       }));
     }
-  }, [enrollFormData.provideLaptop]);
+  }, [enrollFormData.provideLaptop, laptopFeeSetting]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -102,7 +106,7 @@ const EnrollClassModal = ({
         courseId: selectedClass?.course?.id || "",
         courseName: selectedClass?.course?.name || "",
         courseFee: selectedClass?.course?.fee || 20000,
-        laptopFee: enrollFormData.provideLaptop === "yes" ? 3000 : 0,
+        laptopFee: enrollFormData.provideLaptop === "yes" ? laptopFeeSetting : 0,
         inventoryId: "",
       });
       return;
@@ -227,7 +231,7 @@ const EnrollClassModal = ({
     // Prevent manual editing of laptop fee if admin selected to provide laptop
     if (name === "laptopFee" && enrollFormData.provideLaptop === "yes") {
       toast.info(
-        "Laptop fee is automatically set to Rs. 3,000 when providing a laptop",
+        `Laptop fee is automatically set to Rs. ${Number(laptopFeeSetting).toLocaleString()} when providing a laptop`,
       );
       return;
     }
@@ -404,20 +408,11 @@ const EnrollClassModal = ({
                 </span>
               </div>
             ) : (
-              <select
-                name="batchId"
-                value={selectedBatch?.name}
-                onChange={handleChange}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select a Batch</option>
-                {batchesData?.data?.map((batch) => (
-                  <option key={batch?.id} value={batch?.name}>
-                    {batch?.name}
-                  </option>
-                ))}
-              </select>
+              <SearchableSelect
+                options={(batchesData?.data || []).map((batch) => ({ value: batch?.name, label: batch?.name }))}
+                value={selectedBatch?.name || ""}
+                onChange={(v) => handleChange({ target: { name: "batchId", value: v || "" } })}
+                placeholder="Select a Batch" />
             )}
           </div>
           {/* Class Selection */}

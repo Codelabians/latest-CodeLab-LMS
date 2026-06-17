@@ -24,7 +24,7 @@ const CreateEditUserModal = ({
   });
   const [errors, setErrors] = useState({});
 
-  const { data: rolesResponse } = useGetQuery({ path: "admin/roles" });
+  const { data: rolesResponse } = useGetQuery({ path: "core/roles" });
   const roles = rolesResponse?.data || [];
 
   const [createUser, { isLoading: isCreating }] = usePostMutation();
@@ -163,7 +163,7 @@ const CreateEditUserModal = ({
         }).unwrap();
       } else {
         response = await createUser({
-          path: "admin/user/create-with-role",
+          path: "/user/create-with-role",
           body: payload,
         }).unwrap();
       }

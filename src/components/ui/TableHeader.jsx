@@ -1,4 +1,5 @@
 import React from "react";
+import { Hash, Zap } from "lucide-react";
 
 const TableHeader = ({
   selectAll,
@@ -7,48 +8,50 @@ const TableHeader = ({
   TableHeadingAction,
   hasActiveStatus,
   borderNone,
+  sourceComponent,
 }) => {
   return (
-    <thead
-      className={`font-medium text-xl  ${
-        borderNone && "border-b border-grayBorder "
-      }`}
-    >
-      <tr>
-        <td className="py-2 pr-4 pl-6 text-left">
-          <div className="flex gap-5 items-center">
-            {/* <div className="self-center">
-              <input
-                type="checkbox"
-                checked={selectAll}
-                onChange={handleSelectAll}
-              ></input>
-            </div> */}
-            <div className="text-nowrap text-tableHeading font-poppins text-xl">
-              SR #
-            </div>
+    <thead>
+      <tr className="bg-[#aa0e0e]">
+        {/* SR # */}
+        <th className="py-3 pl-5 pr-3 text-left rounded-tl-xl w-14">
+          <div className="flex items-center gap-1.5">
+            <Hash size={12} className="text-white/60" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/80 whitespace-nowrap">
+              Sr
+            </span>
           </div>
-        </td>
-        {columns.map((column) => (
-          <td
+        </th>
+
+        {/* Data columns */}
+        {columns.map((column, i) => (
+          <th
             key={column}
-            className={`text-nowrap py-2 px-4 text-left text-tableHeading font-poppins text-xl`}
+            className="py-3 px-4 text-left"
           >
-            {column}
-          </td>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/80 whitespace-nowrap">
+              {column}
+            </span>
+          </th>
         ))}
 
         {hasActiveStatus && (
-          <td className="py-2 px-4 text-center w-36 text-tableHeading font-poppins text-xl">
-            Status
-          </td>
+          <th className="py-3 px-4 text-left w-28">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/80">
+              Status
+            </span>
+          </th>
         )}
+
         {TableHeadingAction && (
-          <td
-            className={`py-2 px-4 text-left w-36 text-tableHeading font-poppins text-xl`}
-          >
-            Action
-          </td>
+          <th className="py-3 px-4 text-left w-36 rounded-tr-xl">
+            <div className="flex items-center gap-1.5">
+              <Zap size={12} className="text-white/60" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/80">
+                Action
+              </span>
+            </div>
+          </th>
         )}
       </tr>
     </thead>

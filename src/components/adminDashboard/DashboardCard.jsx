@@ -4,7 +4,7 @@ import {
   STUDENTS,
   INSTRUCTORS,
   PROJECTS,
-  BATCHES,
+  ALLBATCHES,
   EMPLOYEE,
 } from "../../components/routes/RouteConstants";
 
@@ -92,7 +92,7 @@ const DashboardCard = ({ image, title, stats, section }) => {
       case "Projects":
         return PROJECTS;
       case "Batches":
-        return BATCHES;
+        return ALLBATCHES;
       default:
         return "";
     }

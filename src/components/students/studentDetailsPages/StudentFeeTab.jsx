@@ -2,11 +2,17 @@ import {
   AlertCircle,
   BookOpen,
   Calendar,
+  ChevronDown,
+  ChevronUp,
   Download,
   Edit2,
   FileText,
   Lock,
+  Mail,
+  MessageCircle,
+  Receipt,
   Upload,
+  Wallet,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -19,10 +25,33 @@ import {
 import DeleteModal from "../../ui/DeleteModal";
 import ChallanApprovalModal from "../ChallanApprovalModal";
 import StudentFeeEdit from "./StudentFeeEdit";
+import RecordPaymentModal from "./RecordPaymentModal";
+
+const METHOD_LABELS = {
+  cash: "Cash",
+  jazzcash: "JazzCash",
+  easypaisa: "EasyPaisa",
+  bank_transfer: "Bank Transfer",
+  cheque: "Cheque",
+  other: "Other",
+};
+
+const fmtDateTime = (value) => {
+  if (!value) return "—";
+  const d = new Date(value.replace(" ", "T"));
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const StudentFeeTab = () => {
   const { id } = useParams();
-  const [refundFee, { isLoading: isRefunding }] = usePostMutation();
+  const [refundFee] = usePostMutation();
 
   const [downloadChallan, { isLoading: isDownloading }] =
     useDownloadChallanMutation();
@@ -34,6 +63,14 @@ const StudentFeeTab = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedFeeUuid, setSelectedFeeUuid] = useState(null);
+
+  // Per-payment ledger: which installment rows are expanded, and the
+  // Record Payment modal target.
+  const [expandedLedger, setExpandedLedger] = useState({});
+  const [recordTarget, setRecordTarget] = useState(null);
+
+  const toggleLedger = (key) =>
+    setExpandedLedger((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const handleRefund = async (reason) => {
     if (!selectedFeeUuid) {
@@ -113,23 +150,33 @@ const StudentFeeTab = () => {
         const netPayable = totalFee - discountFee + laptopFee;
 
         let totalPaid = 0;
-        let totalPending = 0;
         let overdueCount = 0;
+        const methodBreakdown = {};
 
         installments.forEach((installment) => {
           const amount = parseFloat(installment.amount || 0);
-          if (installment.status === "paid") {
-            totalPaid += amount;
-          } else if (
-            installment.status === "pending" ||
-            installment.is_overdue
-          ) {
-            totalPending += amount;
-            if (installment.is_overdue) {
-              overdueCount++;
-            }
+          // Prefer the real sum of recorded payments (handles partials);
+          // fall back to status when payments aren't present.
+          const paidForInst =
+            installment.paid_amount != null
+              ? parseFloat(installment.paid_amount)
+              : installment.status === "paid"
+                ? amount
+                : 0;
+          totalPaid += paidForInst;
+
+          if (installment.is_overdue && installment.status !== "paid") {
+            overdueCount++;
           }
+
+          (installment.payments || []).forEach((p) => {
+            const m = p.payment_method || "other";
+            methodBreakdown[m] =
+              (methodBreakdown[m] || 0) + parseFloat(p.amount || 0);
+          });
         });
+
+        const remaining = Math.max(netPayable - totalPaid, 0);
 
         paymentSummary = {
           totalFee,
@@ -137,9 +184,10 @@ const StudentFeeTab = () => {
           laptopFee,
           netPayable,
           totalPaid,
-          totalPending,
-          remaining: netPayable - totalPaid,
+          totalPending: remaining,
+          remaining,
           overdueCount,
+          methodBreakdown,
         };
       }
 
@@ -159,18 +207,12 @@ const StudentFeeTab = () => {
     classIndex,
     installmentIndex,
   ) => {
-    // Check if this installment can be accessed
-    if (!canAccessInstallment(installments, installmentIndex)) {
-      toast.error(
-        `Please complete payment for Installment #${installmentIndex} first before downloading this challan.`,
-      );
-      return;
-    }
+    // Any challan is downloadable (it's just the voucher) — no pay-in-order gate.
 
     setDownloadingInstallmentId(installment.installment_id);
     try {
       await downloadChallan({
-        path: `/admin/fees/installments/${installment.installment_uuid}/challan`,
+        path: `finance/installments/${installment.installment_uuid}/challan`,
         params: {},
         filename: `Challan_Class_${classIndex + 1}_Installment_${
           installmentIndex + 1
@@ -183,6 +225,25 @@ const StudentFeeTab = () => {
       toast.error("Failed to download challan. Please try again.");
     } finally {
       setDownloadingInstallmentId(null);
+    }
+  };
+
+  // Send the challan to the student by email or WhatsApp (same PDF as download).
+  const [sendChallan] = usePostMutation();
+  const [sendingId, setSendingId] = useState(null);
+
+  const handleSendChallan = async (installment, channel) => {
+    setSendingId(`${channel}-${installment.installment_id}`);
+    try {
+      const res = await sendChallan({
+        path: `finance/installments/${installment.installment_uuid}/${channel === "email" ? "email-challan" : "whatsapp-challan"}`,
+        body: {},
+      }).unwrap();
+      toast.success(res?.message || (channel === "email" ? "Challan emailed." : "Challan sent on WhatsApp."));
+    } catch (error) {
+      toast.error(error?.data?.message || `Could not send challan via ${channel}.`);
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -422,6 +483,43 @@ const StudentFeeTab = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* Paid vs remaining + breakdown by payment method */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-600">
+                    <p className="text-sm text-gray-600 mb-1">Total Paid</p>
+                    <p className="text-xl font-bold text-green-700">
+                      Rs. {(paymentSummary?.totalPaid || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-[#C90606]">
+                    <p className="text-sm text-gray-600 mb-1">Remaining</p>
+                    <p className="text-xl font-bold text-[#C90606]">
+                      Rs. {(paymentSummary?.remaining || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-slate-400">
+                    <p className="text-sm text-gray-600 mb-2">Paid by method</p>
+                    {Object.keys(paymentSummary?.methodBreakdown || {}).length ===
+                    0 ? (
+                      <p className="text-sm text-gray-400">No payments yet</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(paymentSummary.methodBreakdown).map(
+                          ([method, amt]) => (
+                            <span
+                              key={method}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                            >
+                              {METHOD_LABELS[method] || method}: Rs.{" "}
+                              {amt.toLocaleString()}
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -544,30 +642,47 @@ const StudentFeeTab = () => {
                                 )
                               }
                               disabled={
-                                !isAccessible ||
-                                (isDownloading &&
-                                  downloadingInstallmentId ===
-                                    installment.installment_id)
+                                isDownloading &&
+                                downloadingInstallmentId ===
+                                  installment.installment_id
                               }
-                              className={`p-2 rounded-lg transition-colors shadow-md hover:shadow-lg ${
-                                isAccessible
-                                  ? "bg-green-600 text-white hover:bg-green-700"
-                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              } disabled:opacity-50`}
-                              title={
-                                isAccessible
-                                  ? "Download Challan"
-                                  : "Complete previous installment first"
-                              }
+                              className="p-2 text-white transition-colors shadow-md rounded-lg bg-green-600 hover:bg-green-700 hover:shadow-lg disabled:opacity-50"
+                              title="Download Challan"
                             >
                               {isDownloading &&
                               downloadingInstallmentId ===
                                 installment.installment_id ? (
                                 <span className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                              ) : isAccessible ? (
-                                <Download className="w-5 h-5" />
                               ) : (
-                                <Lock className="w-5 h-5" />
+                                <Download className="w-5 h-5" />
+                              )}
+                            </button>
+
+                            {/* Email challan */}
+                            <button
+                              onClick={() => handleSendChallan(installment, "email")}
+                              disabled={sendingId === `email-${installment.installment_id}`}
+                              className="p-2 text-white transition-colors shadow-md rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                              title="Email challan to student"
+                            >
+                              {sendingId === `email-${installment.installment_id}` ? (
+                                <span className="inline-block w-5 h-5 border-b-2 border-white rounded-full animate-spin"></span>
+                              ) : (
+                                <Mail className="w-5 h-5" />
+                              )}
+                            </button>
+
+                            {/* WhatsApp challan */}
+                            <button
+                              onClick={() => handleSendChallan(installment, "whatsapp")}
+                              disabled={sendingId === `whatsapp-${installment.installment_id}`}
+                              className="p-2 text-white transition-colors shadow-md rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                              title="Send challan on WhatsApp"
+                            >
+                              {sendingId === `whatsapp-${installment.installment_id}` ? (
+                                <span className="inline-block w-5 h-5 border-b-2 border-white rounded-full animate-spin"></span>
+                              ) : (
+                                <MessageCircle className="w-5 h-5" />
                               )}
                             </button>
 
@@ -598,6 +713,36 @@ const StudentFeeTab = () => {
                                 ) : (
                                   <Lock className="w-5 h-5" />
                                 )}
+                              </button>
+                            )}
+
+                            {/* Record Payment */}
+                            {installment.status !== "paid" && (
+                              <button
+                                onClick={() => {
+                                  if (!isAccessible) {
+                                    toast.error(
+                                      "Complete the previous installment first.",
+                                    );
+                                    return;
+                                  }
+                                  setRecordTarget({
+                                    installment,
+                                    installmentIndex,
+                                    studentBatchUuid:
+                                      classDetail.student_batch_uuid,
+                                  });
+                                }}
+                                disabled={!isAccessible}
+                                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold shadow-md transition-colors ${
+                                  isAccessible
+                                    ? "bg-[#C90606] text-white hover:bg-[#A00505]"
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
+                                title="Record a payment for this installment"
+                              >
+                                <Wallet className="w-4 h-4" />
+                                Record
                               </button>
                             )}
                           </div>
@@ -668,6 +813,111 @@ const StudentFeeTab = () => {
                             </p>
                           </div>
                         )}
+
+                        {/* Payment ledger: how much was paid, which method, when */}
+                        {(() => {
+                          const payments = installment.payments || [];
+                          const instAmount = parseFloat(installment.amount || 0);
+                          const paid =
+                            installment.paid_amount != null
+                              ? parseFloat(installment.paid_amount)
+                              : installment.status === "paid"
+                                ? instAmount
+                                : 0;
+                          const instRemaining =
+                            installment.remaining != null
+                              ? parseFloat(installment.remaining)
+                              : Math.max(instAmount - paid, 0);
+                          if (payments.length === 0 && paid === 0) return null;
+
+                          const ledgerKey = `${classDetail.student_batch_uuid}-${installment.installment_uuid}`;
+                          const isOpen = !!expandedLedger[ledgerKey];
+
+                          return (
+                            <div className="mt-3 bg-white rounded-lg shadow-sm border border-gray-100">
+                              <button
+                                onClick={() => toggleLedger(ledgerKey)}
+                                className="w-full flex items-center justify-between p-3"
+                              >
+                                <span className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                  <Receipt className="w-4 h-4 text-[#C90606]" />
+                                  Payments ({payments.length}) · Paid Rs.{" "}
+                                  {paid.toLocaleString()}
+                                  {instRemaining > 0 && (
+                                    <span className="text-[#C90606]">
+                                      {" "}
+                                      · Remaining Rs.{" "}
+                                      {instRemaining.toLocaleString()}
+                                    </span>
+                                  )}
+                                </span>
+                                {isOpen ? (
+                                  <ChevronUp className="w-4 h-4 text-gray-500" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                                )}
+                              </button>
+
+                              {isOpen && payments.length > 0 && (
+                                <div className="px-3 pb-3 overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
+                                        <th className="py-2 pr-3">Amount</th>
+                                        <th className="py-2 pr-3">Method</th>
+                                        <th className="py-2 pr-3">Date</th>
+                                        <th className="py-2 pr-3">Reference</th>
+                                        <th className="py-2 pr-3">Recorded by</th>
+                                        <th className="py-2">Notes</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {payments.map((p) => (
+                                        <tr
+                                          key={p.uuid || p.id}
+                                          className="border-b border-gray-50 last:border-0"
+                                        >
+                                          <td className="py-2 pr-3 font-semibold text-gray-800">
+                                            Rs.{" "}
+                                            {parseFloat(
+                                              p.amount || 0,
+                                            ).toLocaleString()}
+                                          </td>
+                                          <td className="py-2 pr-3">
+                                            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                                              {p.payment_method_label ||
+                                                METHOD_LABELS[
+                                                  p.payment_method
+                                                ] ||
+                                                p.payment_method}
+                                            </span>
+                                            {p.payment_account?.display_name && (
+                                              <span className="block text-xs text-gray-400 mt-0.5">
+                                                {p.payment_account.display_name}
+                                              </span>
+                                            )}
+                                          </td>
+                                          <td className="py-2 pr-3 text-gray-600">
+                                            {fmtDateTime(p.paid_at)}
+                                          </td>
+                                          <td className="py-2 pr-3 text-gray-600">
+                                            {p.payment_reference || "—"}
+                                          </td>
+                                          <td className="py-2 pr-3 text-gray-600">
+                                            {p.recorded_by?.name || "—"}
+                                          </td>
+                                          <td className="py-2 text-gray-600">
+                                            {p.notes || "—"}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}
@@ -686,6 +936,15 @@ const StudentFeeTab = () => {
           refetchStudents={refetchStudents}
         />
       )}
+
+      <RecordPaymentModal
+        isOpen={!!recordTarget}
+        onClose={() => setRecordTarget(null)}
+        studentBatchUuid={recordTarget?.studentBatchUuid}
+        installment={recordTarget?.installment}
+        installmentIndex={recordTarget?.installmentIndex}
+        onRecorded={refetchStudents}
+      />
     </div>
   );
 };

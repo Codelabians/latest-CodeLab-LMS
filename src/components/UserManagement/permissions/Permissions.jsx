@@ -21,7 +21,7 @@ const Permissions = () => {
     isError,
     refetch: refetchPermissions,
   } = useGetQuery({
-    path: "admin/permissions",
+    path: "core/permissions",
     params: { page: currentPage, per_page: itemsPerPage },
   });
 
@@ -45,8 +45,8 @@ const Permissions = () => {
   const handleSubmit = async (formData) => {
     try {
       const endpoint = selectedPermission?.id
-        ? `admin/permissions/update/${selectedPermission.id}`
-        : "admin/permission/create";
+        ? `core/permission/${selectedPermission.id}`
+        : "core/permission/create";
 
       const response = await createPermission({
         path: endpoint,
