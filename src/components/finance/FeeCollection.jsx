@@ -1,0 +1,397 @@
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Wallet, Search, Loader2, Plus, Trash2, CheckCircle2, AlertTriangle, X,
+  CalendarDays, BadgeDollarSign, User as UserIcon, Download, Mail, MessageCircle,
+} from "lucide-react";
+import { useGetQuery, usePostMutation, useDownloadChallanMutation } from "../../api/apiSlice";
+import SearchableSelect from "../ui/SearchableSelect";
+
+const BRAND = "#C90606";
+const BORDER = "#EEF2F6";
+const TEXT_PRIMARY = "#0F172A";
+const TEXT_SECONDARY = "#475569";
+const TEXT_MUTED = "#94A3B8";
+const SURFACE_HOVER = "#F8FAFC";
+
+const METHODS = [
+  { value: "cash", label: "Cash" },
+  { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "jazzcash", label: "JazzCash" },
+  { value: "easypaisa", label: "EasyPaisa" },
+  { value: "cheque", label: "Cheque" },
+  { value: "other", label: "Other" },
+];
+
+const money = (n) => `Rs ${Number(n || 0).toLocaleString()}`;
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+const STATUS_STYLE = {
+  paid: { bg: "#DCFCE7", fg: "#15803D", label: "Paid" },
+  partially_paid: { bg: "#FEF3C7", fg: "#B45309", label: "Partial" },
+  overdue: { bg: "#FEE2E2", fg: "#B91C1C", label: "Overdue" },
+  pending: { bg: "#E2E8F0", fg: "#475569", label: "Pending" },
+};
+
+export default function FeeCollection() {
+  const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const [feeStatus, setFeeStatus] = useState("all"); // all | pending | overdue
+  const [selectedUuid, setSelectedUuid] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [collectFor, setCollectFor] = useState(null); // installment row
+
+  useEffect(() => { const t = setTimeout(() => setDebouncedQ(q.trim()), 300); return () => clearTimeout(t); }, [q]);
+  const notify = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 2800); };
+
+  // Challan actions (download / email / whatsapp) per installment.
+  const [dlChallan] = useDownloadChallanMutation();
+  const [sendChallan] = usePostMutation();
+  const [challanBusy, setChallanBusy] = useState(null);
+  const downloadChallanFor = async (uuid) => {
+    setChallanBusy(`dl-${uuid}`);
+    try { await dlChallan({ path: `finance/installments/${uuid}/challan`, params: {}, filename: `challan-${uuid}.pdf` }).unwrap(); }
+    catch { notify("Could not download challan.", false); }
+    finally { setChallanBusy(null); }
+  };
+  const sendChallanFor = async (uuid, channel) => {
+    setChallanBusy(`${channel}-${uuid}`);
+    try {
+      const res = await sendChallan({ path: `finance/installments/${uuid}/${channel === "email" ? "email-challan" : "whatsapp-challan"}`, body: {} }).unwrap();
+      notify(res?.message || (channel === "email" ? "Challan emailed." : "Challan sent on WhatsApp."));
+    } catch (e) { notify(e?.data?.message || `Could not send the challan via ${channel}.`, false); }
+    finally { setChallanBusy(null); }
+  };
+
+  // --- Student dropdown feed -------------------------------------------
+  const studentsQuery = useMemo(() => {
+    const p = new URLSearchParams();
+    if (debouncedQ) p.set("q", debouncedQ);
+    if (feeStatus !== "all") p.set("fee_status", feeStatus);
+    p.set("limit", "50");
+    return p.toString();
+  }, [debouncedQ, feeStatus]);
+
+  const { data: studentsData, isFetching: loadingStudents } = useGetQuery({
+    path: `finance/fee-collection/students?${studentsQuery}`,
+  });
+  const students = useMemo(() => studentsData?.data || [], [studentsData]);
+
+  const options = useMemo(
+    () => students.map((s) => ({
+      value: s.uuid,
+      label: `${s.name}${s.course ? " — " + s.course : ""}${s.batch ? " / " + s.batch : ""}`,
+      avatarUrl: s.image || null,
+    })),
+    [students]
+  );
+  const selectedStudent = useMemo(
+    () => students.find((s) => s.uuid === selectedUuid) || null,
+    [students, selectedUuid]
+  );
+
+  // --- Selected student's installments ---------------------------------
+  const { data: feeData, isFetching: loadingFees, refetch } = useGetQuery(
+    { path: `finance/fee-collection/${selectedUuid}/installments` },
+    { skip: !selectedUuid }
+  );
+  const student = feeData?.data?.student || selectedStudent;
+  const installments = useMemo(() => feeData?.data?.installments || [], [feeData]);
+
+  const totals = useMemo(() => installments.reduce(
+    (a, i) => ({
+      amount: a.amount + Number(i.amount || 0),
+      paid: a.paid + Number(i.paid || 0),
+      remaining: a.remaining + Number(i.remaining || 0),
+    }), { amount: 0, paid: 0, remaining: 0 }
+  ), [installments]);
+
+  const inputStyle = { background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" };
+
+  const Chip = ({ id, label }) => (
+    <button
+      onClick={() => setFeeStatus(id)}
+      className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition"
+      style={feeStatus === id
+        ? { background: BRAND, color: "#fff" }
+        : { background: "#fff", color: TEXT_SECONDARY, border: `1px solid ${BORDER}` }}
+    >{label}</button>
+  );
+
+  return (
+    <div className="w-full px-6 py-6 min-h-[calc(100vh-4rem)]" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC" }}>
+      <div className="flex items-center gap-3 mb-5">
+        <span className="flex items-center justify-center rounded-xl" style={{ width: 44, height: 44, background: `${BRAND}14`, color: BRAND }}><Wallet size={22} /></span>
+        <div>
+          <h1 className="text-[20px] font-bold" style={{ color: TEXT_PRIMARY }}>Collect Fee</h1>
+          <p className="text-[12px]" style={{ color: TEXT_MUTED }}>Search a student, pick a month, record a full, partial or split payment.</p>
+        </div>
+      </div>
+
+      {/* Picker card */}
+      <div className="bg-white rounded-xl p-4 mb-5" style={{ border: `1px solid ${BORDER}` }}>
+        <div className="flex flex-col md:flex-row md:items-end gap-3">
+          <div className="flex-1">
+            <label className="text-[11px] font-semibold block mb-1" style={{ color: TEXT_SECONDARY }}>Student</label>
+            <SearchableSelect
+              options={options}
+              value={selectedUuid}
+              onChange={(v) => setSelectedUuid(v)}
+              placeholder={loadingStudents ? "Searching…" : "Search by name, email, CNIC or phone…"}
+              showAvatars
+              onSearch={(text) => setQ(text)}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Chip id="all" label="All" />
+            <Chip id="pending" label="Pending fee" />
+            <Chip id="overdue" label="Overdue" />
+          </div>
+        </div>
+        <p className="text-[11px] mt-2" style={{ color: TEXT_MUTED }}>
+          Showing {students.length} student{students.length === 1 ? "" : "s"}{feeStatus !== "all" ? ` with ${feeStatus} fee` : ""}.
+        </p>
+      </div>
+
+      {/* No selection */}
+      {!selectedUuid && (
+        <div className="bg-white rounded-xl p-12 text-center" style={{ border: `1px solid ${BORDER}` }}>
+          <Search size={26} className="mx-auto mb-2" style={{ color: TEXT_MUTED }} />
+          <p className="text-[13px]" style={{ color: TEXT_SECONDARY }}>Pick a student above to view their fee schedule and collect a payment.</p>
+        </div>
+      )}
+
+      {/* Selected student */}
+      {selectedUuid && (
+        <>
+          <div className="bg-white rounded-xl p-4 mb-4 flex items-center gap-4" style={{ border: `1px solid ${BORDER}` }}>
+            {student?.image
+              ? <img src={student.image} alt="" className="rounded-full object-cover" style={{ width: 56, height: 56 }} />
+              : <span className="flex items-center justify-center rounded-full" style={{ width: 56, height: 56, background: `${BRAND}14`, color: BRAND }}><UserIcon size={24} /></span>}
+            <div className="flex-1">
+              <div className="text-[16px] font-bold" style={{ color: TEXT_PRIMARY }}>{student?.name}</div>
+              <div className="text-[12px]" style={{ color: TEXT_MUTED }}>
+                {selectedStudent?.course || "—"}{selectedStudent?.batch ? ` · ${selectedStudent.batch}` : ""}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[11px]" style={{ color: TEXT_MUTED }}>Outstanding</div>
+              <div className="text-[18px] font-bold" style={{ color: totals.remaining > 0 ? BRAND : "#15803D" }}>{money(totals.remaining)}</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
+            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <span className="text-[13px] font-bold" style={{ color: TEXT_PRIMARY }}>Fee schedule</span>
+              {loadingFees && <Loader2 size={16} className="animate-spin" style={{ color: TEXT_MUTED }} />}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr style={{ background: SURFACE_HOVER, color: TEXT_SECONDARY }}>
+                    <th className="text-left px-4 py-2 font-semibold">Course / Batch</th>
+                    <th className="text-left px-4 py-2 font-semibold">Type</th>
+                    <th className="text-left px-4 py-2 font-semibold">Due date</th>
+                    <th className="text-right px-4 py-2 font-semibold">Amount</th>
+                    <th className="text-right px-4 py-2 font-semibold">Paid</th>
+                    <th className="text-right px-4 py-2 font-semibold">Remaining</th>
+                    <th className="text-center px-4 py-2 font-semibold">Status</th>
+                    <th className="px-4 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {installments.length === 0 && !loadingFees && (
+                    <tr><td colSpan={8} className="text-center px-4 py-8" style={{ color: TEXT_MUTED }}>No fee records for this student.</td></tr>
+                  )}
+                  {installments.map((i) => {
+                    const st = STATUS_STYLE[i.status] || STATUS_STYLE.pending;
+                    const methods = i.method_breakdown && Object.keys(i.method_breakdown).length
+                      ? Object.entries(i.method_breakdown).map(([m, a]) => `${m}: ${money(a)}`).join(", ")
+                      : null;
+                    return (
+                      <tr key={i.installment_uuid} style={{ borderTop: `1px solid ${BORDER}` }}>
+                        <td className="px-4 py-2.5" style={{ color: TEXT_PRIMARY }}>
+                          <div className="font-semibold">{i.course || "—"}</div>
+                          <div style={{ color: TEXT_MUTED }}>{i.batch || ""}</div>
+                        </td>
+                        <td className="px-4 py-2.5 capitalize" style={{ color: TEXT_SECONDARY }}>{i.fee_type}</td>
+                        <td className="px-4 py-2.5" style={{ color: TEXT_SECONDARY }}>{i.due_date || "—"}</td>
+                        <td className="px-4 py-2.5 text-right" style={{ color: TEXT_PRIMARY }}>{money(i.amount)}</td>
+                        <td className="px-4 py-2.5 text-right" style={{ color: "#15803D" }}>{money(i.paid)}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold" style={{ color: i.remaining > 0 ? BRAND : TEXT_MUTED }}>{money(i.remaining)}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          <span className="px-2 py-1 rounded-md text-[11px] font-semibold" style={{ background: st.bg, color: st.fg }}>{st.label}</span>
+                          {methods && <div className="text-[10px] mt-1" style={{ color: TEXT_MUTED }}>{methods}</div>}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <span className="inline-flex items-center gap-1.5 justify-end">
+                            <button onClick={() => downloadChallanFor(i.installment_uuid)} disabled={challanBusy === `dl-${i.installment_uuid}`} title="Download challan" className="inline-flex items-center p-1.5 rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#15803D" }}>
+                              {challanBusy === `dl-${i.installment_uuid}` ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                            </button>
+                            <button onClick={() => sendChallanFor(i.installment_uuid, "email")} disabled={challanBusy === `email-${i.installment_uuid}`} title="Email challan" className="inline-flex items-center p-1.5 rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#1D4ED8" }}>
+                              {challanBusy === `email-${i.installment_uuid}` ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
+                            </button>
+                            <button onClick={() => sendChallanFor(i.installment_uuid, "whatsapp")} disabled={challanBusy === `whatsapp-${i.installment_uuid}`} title="Send on WhatsApp" className="inline-flex items-center p-1.5 rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#059669" }}>
+                              {challanBusy === `whatsapp-${i.installment_uuid}` ? <Loader2 size={13} className="animate-spin" /> : <MessageCircle size={13} />}
+                            </button>
+                            {i.remaining > 0 && (
+                              <button
+                                onClick={() => setCollectFor(i)}
+                                className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white"
+                                style={{ background: BRAND }}
+                              >Collect</button>
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {collectFor && (
+        <CollectModal
+          installment={collectFor}
+          studentUuid={selectedUuid}
+          onClose={() => setCollectFor(null)}
+          onDone={(msg) => { notify(msg); setCollectFor(null); refetch(); }}
+          onError={(msg) => notify(msg, false)}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg text-white flex items-center gap-2 shadow-lg"
+          style={{ background: toast.ok ? "#15803D" : BRAND }}>
+          {toast.ok ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+          <span className="text-[13px]">{toast.msg}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Collect modal — split-tender payment recording                     */
+/* ------------------------------------------------------------------ */
+function CollectModal({ installment, studentUuid, onClose, onDone, onError }) {
+  const remaining = Number(installment.remaining || 0);
+  const [splits, setSplits] = useState([
+    { amount: remaining ? String(remaining) : "", payment_method: "cash", paid_at: todayStr(), reference: "" },
+  ]);
+  const [note, setNote] = useState("");
+  const [post, { isLoading }] = usePostMutation();
+
+  const total = splits.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const over = total > remaining + 0.001;
+
+  const addSplit = () => setSplits((s) => [...s, { amount: "", payment_method: "cash", paid_at: todayStr(), reference: "" }]);
+  const removeSplit = (idx) => setSplits((s) => s.filter((_, i) => i !== idx));
+  const update = (idx, key, val) => setSplits((s) => s.map((r, i) => (i === idx ? { ...r, [key]: val } : r)));
+
+  const submit = async () => {
+    const clean = splits
+      .map((s) => ({ ...s, amount: parseFloat(s.amount) }))
+      .filter((s) => s.amount > 0);
+    if (clean.length === 0) { onError("Enter at least one amount."); return; }
+    if (over) { onError("Total exceeds the remaining balance."); return; }
+    try {
+      await post({
+        path: `finance/fee-collection/${studentUuid}/collect`,
+        body: {
+          installment_uuid: installment.installment_uuid,
+          note: note || undefined,
+          splits: clean.map((s) => ({
+            amount: s.amount,
+            payment_method: s.payment_method,
+            paid_at: s.paid_at || undefined,
+            reference: s.reference || undefined,
+          })),
+        },
+      }).unwrap();
+      onDone("Payment recorded.");
+    } catch (e) {
+      onError(e?.data?.message || "Could not record payment.");
+    }
+  };
+
+  const cellStyle = { background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.45)" }}>
+      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${BORDER}` }}>
+          <div className="flex items-center gap-2">
+            <BadgeDollarSign size={18} style={{ color: BRAND }} />
+            <span className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>Collect Payment</span>
+          </div>
+          <button onClick={onClose}><X size={18} style={{ color: TEXT_MUTED }} /></button>
+        </div>
+
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between text-[12px] mb-4 p-3 rounded-lg" style={{ background: SURFACE_HOVER, color: TEXT_SECONDARY }}>
+            <span>{installment.course} · {installment.batch}</span>
+            <span>Remaining <b style={{ color: BRAND }}>{money(remaining)}</b></span>
+          </div>
+
+          <div className="text-[11px] font-semibold mb-2" style={{ color: TEXT_SECONDARY }}>Payment splits</div>
+          {splits.map((s, idx) => (
+            <div key={idx} className="grid grid-cols-12 gap-2 mb-2 items-center">
+              <input
+                type="number" min="0" placeholder="Amount"
+                value={s.amount} onChange={(e) => update(idx, "amount", e.target.value)}
+                className="col-span-3 px-2 py-2 rounded-lg text-[12px] outline-none" style={cellStyle}
+              />
+              <select
+                value={s.payment_method} onChange={(e) => update(idx, "payment_method", e.target.value)}
+                className="col-span-3 px-2 py-2 rounded-lg text-[12px] outline-none" style={cellStyle}
+              >
+                {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+              <input
+                type="date" value={s.paid_at} onChange={(e) => update(idx, "paid_at", e.target.value)}
+                className="col-span-3 px-2 py-2 rounded-lg text-[12px] outline-none" style={cellStyle}
+              />
+              <input
+                type="text" placeholder="Ref #"
+                value={s.reference} onChange={(e) => update(idx, "reference", e.target.value)}
+                className="col-span-2 px-2 py-2 rounded-lg text-[12px] outline-none" style={cellStyle}
+              />
+              <button onClick={() => removeSplit(idx)} disabled={splits.length === 1}
+                className="col-span-1 flex justify-center" style={{ color: splits.length === 1 ? TEXT_MUTED : BRAND, opacity: splits.length === 1 ? 0.4 : 1 }}>
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+
+          <button onClick={addSplit} className="flex items-center gap-1 text-[12px] font-semibold mt-1" style={{ color: BRAND }}>
+            <Plus size={14} /> Add split (different method / date)
+          </button>
+
+          <div className="mt-4">
+            <label className="text-[11px] font-semibold block mb-1" style={{ color: TEXT_SECONDARY }}>Note (optional)</label>
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. balance to be paid next week"
+              className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cellStyle} />
+          </div>
+
+          <div className="flex items-center justify-between mt-4 p-3 rounded-lg" style={{ background: SURFACE_HOVER }}>
+            <span className="text-[12px]" style={{ color: TEXT_SECONDARY }}>Total this payment</span>
+            <span className="text-[15px] font-bold" style={{ color: over ? BRAND : TEXT_PRIMARY }}>{money(total)}</span>
+          </div>
+          {over && <p className="text-[11px] mt-1" style={{ color: BRAND }}>Exceeds the remaining balance of {money(remaining)}.</p>}
+        </div>
+
+        <div className="px-5 py-4 flex justify-end gap-2" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}>Cancel</button>
+          <button onClick={submit} disabled={isLoading || over || total <= 0}
+            className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2"
+            style={{ background: `linear-gradient(135deg, ${BRAND}, #A30505)`, opacity: (isLoading || over || total <= 0) ? 0.6 : 1 }}>
+            {isLoading && <Loader2 size={15} className="animate-spin" />} Record Payment
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

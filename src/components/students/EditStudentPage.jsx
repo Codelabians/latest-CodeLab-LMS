@@ -1,0 +1,257 @@
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  ChevronLeft, Loader2, Save, User, Mail, Phone, CreditCard, MapPin,
+  GraduationCap, Users as UsersIcon, Home, CheckCircle2, AlertTriangle,
+  Gift, UserPlus,
+} from "lucide-react";
+import { useGetQuery, usePatchMutation } from "../../api/apiSlice";
+import SearchableSelect from "../ui/SearchableSelect";
+
+const BRAND = "#C90606";
+const BORDER = "#EEF2F6";
+const TEXT_PRIMARY = "#0F172A";
+const TEXT_SECONDARY = "#475569";
+const TEXT_MUTED = "#94A3B8";
+const SURFACE_HOVER = "#F8FAFC";
+
+const inputStyle = (err) => ({
+  background: SURFACE_HOVER,
+  border: `1px solid ${err ? BRAND : BORDER}`,
+  color: TEXT_PRIMARY,
+  fontFamily: "'Montserrat', sans-serif",
+  height: 40,
+});
+
+function Field({ icon: Icon, label, required, error, children }) {
+  return (
+    <div>
+      <label className="text-[12px] font-semibold flex items-center gap-1 mb-1" style={{ color: TEXT_SECONDARY }}>
+        {Icon && <Icon size={13} style={{ color: TEXT_MUTED }} />} {label}{required && <span style={{ color: BRAND }}>*</span>}
+      </label>
+      {children}
+      {error && <p className="text-[11px] mt-1" style={{ color: BRAND }}>{error}</p>}
+    </div>
+  );
+}
+
+export default function EditStudentPage() {
+  const { studentUuid } = useParams();
+  const navigate = useNavigate();
+  const { data, isLoading } = useGetQuery({ path: `/student/students/${studentUuid}` });
+  const [patch, { isLoading: saving }] = usePatchMutation();
+  const { data: cityData } = useGetQuery({ path: "/core/cities/active" });
+
+  const [form, setForm] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState(null);
+  const notify = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 2800); };
+
+  useEffect(() => {
+    const s = data?.data?.student;
+    if (s && !form) {
+      setForm({
+        first_name: s.first_name || "",
+        last_name: s.last_name || "",
+        email: s.email || "",
+        contact: s.contact || "",
+        cnic: s.cnic || "",
+        gender: (s.gender || "").toLowerCase(),
+        city: s.city || "",
+        address: s.address || "",
+        guardian_name: s.guardian_name || "",
+        guardian_phone: s.guardian_phone || "",
+        qualification: s.qualification || "",
+        is_hostalize: !!s.is_hostalize,
+        father_name: s.father_name || "",
+        dob: s.dob ? String(s.dob).slice(0, 10) : "",
+        marital_status: s.marital_status || "",
+        student_type: s.student_type || "",
+        province: s.province || "",
+        university: s.university || "",
+        current_qualification: s.current_qualification || "",
+        is_laptop_demanded: s.is_laptop_demanded || "",
+        fixed_fee: s.fixed_fee ?? "",
+        // Referral: the student's OWN shareable code + who referred them.
+        referral_code: s.referral_code || "",
+        referrer_code: s.referrer?.referral_code || "",
+      });
+    }
+  }, [data, form]);
+
+  const cityOptions = useMemo(
+    () => (cityData?.data || []).map((c) => ({ value: c.name || c, label: c.name || c })),
+    [cityData]
+  );
+
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const validate = () => {
+    const e = {};
+    if (!form.first_name?.trim()) e.first_name = "First name is required.";
+    if (!form.email?.trim()) e.email = "Email is required.";
+    if (!form.gender) e.gender = "Select gender.";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const submit = async () => {
+    if (!validate()) { notify("Fix the highlighted fields.", false); return; }
+    const body = { ...form, fixed_fee: form.fixed_fee === "" || form.fixed_fee == null ? null : Number(form.fixed_fee) };
+    try {
+      await patch({ path: `/student/students/${studentUuid}`, body }).unwrap();
+      notify("Student updated.");
+      setTimeout(() => navigate(-1), 700);
+    } catch (err) {
+      notify(err?.data?.message || "Update failed.", false);
+    }
+  };
+
+  if (isLoading || !form) {
+    return <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]" style={{ background: "#FAFBFC" }}><Loader2 size={28} className="animate-spin" style={{ color: BRAND }} /></div>;
+  }
+
+  const s = data?.data?.student;
+  const inp = "w-full px-3 rounded-lg text-[13px] outline-none";
+
+  return (
+    <div className="w-full px-6 py-6 pb-28 min-h-[calc(100vh-4rem)]" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC" }}>
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 mb-4 text-sm font-semibold" style={{ color: TEXT_SECONDARY }}><ChevronLeft size={16} /> Back</button>
+
+      <div className="flex items-center gap-3 mb-5">
+        {s?.image
+          ? <img src={s.image} alt="" className="rounded-full object-cover" style={{ width: 44, height: 44 }} />
+          : <span className="flex items-center justify-center rounded-xl" style={{ width: 44, height: 44, background: `${BRAND}14`, color: BRAND }}><User size={22} /></span>}
+        <div>
+          <h1 className="text-[20px] font-bold" style={{ color: TEXT_PRIMARY }}>Edit Student</h1>
+          <p className="text-[12px]" style={{ color: TEXT_MUTED }}>{s?.name}{s?.registration_no ? ` · Reg ${s.registration_no}` : ""}</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl p-5" style={{ border: `1px solid ${BORDER}` }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field icon={User} label="First name" required error={errors.first_name}>
+            <input className={inp} style={inputStyle(errors.first_name)} value={form.first_name} onChange={(e) => set("first_name", e.target.value)} />
+          </Field>
+          <Field icon={User} label="Last name">
+            <input className={inp} style={inputStyle()} value={form.last_name} onChange={(e) => set("last_name", e.target.value)} />
+          </Field>
+          <Field icon={Mail} label="Email" required error={errors.email}>
+            <input className={inp} style={inputStyle(errors.email)} value={form.email} onChange={(e) => set("email", e.target.value)} />
+          </Field>
+          <Field icon={Phone} label="Phone">
+            <input className={inp} style={inputStyle()} value={form.contact} onChange={(e) => set("contact", e.target.value)} />
+          </Field>
+          <Field icon={CreditCard} label="CNIC">
+            <input className={inp} style={inputStyle()} value={form.cnic} onChange={(e) => set("cnic", e.target.value)} />
+          </Field>
+          <Field icon={User} label="Gender" required error={errors.gender}>
+            <select className={inp} style={inputStyle(errors.gender)} value={form.gender} onChange={(e) => set("gender", e.target.value)}>
+              <option value="">Select…</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </Field>
+          <Field icon={MapPin} label="City">
+            <SearchableSelect options={cityOptions} value={form.city} onChange={(v) => set("city", v || "")} placeholder="Select city…" />
+          </Field>
+          <Field icon={GraduationCap} label="Qualification">
+            <input className={inp} style={inputStyle()} value={form.qualification} onChange={(e) => set("qualification", e.target.value)} />
+          </Field>
+          <Field icon={User} label="Father name">
+            <input className={inp} style={inputStyle()} value={form.father_name} onChange={(e) => set("father_name", e.target.value)} />
+          </Field>
+          <Field icon={CreditCard} label="Date of birth">
+            <input type="date" className={inp} style={inputStyle()} value={form.dob} onChange={(e) => set("dob", e.target.value)} />
+          </Field>
+          <Field icon={User} label="Marital status">
+            <select className={inp} style={inputStyle()} value={form.marital_status} onChange={(e) => set("marital_status", e.target.value)}>
+              <option value="">Select…</option>
+              {["Single", "Married", "Divorced", "Widowed", "Separated"].map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </Field>
+          <Field icon={Home} label="Student type">
+            <select className={inp} style={inputStyle()} value={form.student_type} onChange={(e) => set("student_type", e.target.value)}>
+              <option value="">Select…</option>
+              <option value="hostalite">Hostalite</option>
+              <option value="day_scholar">Day scholar</option>
+            </select>
+          </Field>
+          <Field icon={MapPin} label="Province">
+            <input className={inp} style={inputStyle()} value={form.province} onChange={(e) => set("province", e.target.value)} />
+          </Field>
+          <Field icon={GraduationCap} label="University / Institute">
+            <input className={inp} style={inputStyle()} value={form.university} onChange={(e) => set("university", e.target.value)} />
+          </Field>
+          <Field icon={GraduationCap} label="Current qualification">
+            <input className={inp} style={inputStyle()} value={form.current_qualification} onChange={(e) => set("current_qualification", e.target.value)} />
+          </Field>
+          <Field icon={CreditCard} label="Fixed fee (Rs)">
+            <input type="number" min="0" className={inp} style={inputStyle()} value={form.fixed_fee} onChange={(e) => set("fixed_fee", e.target.value)} />
+          </Field>
+          <Field icon={GraduationCap} label="Laptop demanded">
+            <select className={inp} style={inputStyle()} value={form.is_laptop_demanded} onChange={(e) => set("is_laptop_demanded", e.target.value)}>
+              <option value="">—</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </Field>
+          <Field icon={UsersIcon} label="Guardian name">
+            <input className={inp} style={inputStyle()} value={form.guardian_name} onChange={(e) => set("guardian_name", e.target.value)} />
+          </Field>
+          <Field icon={Phone} label="Guardian phone">
+            <input className={inp} style={inputStyle()} value={form.guardian_phone} onChange={(e) => set("guardian_phone", e.target.value)} />
+          </Field>
+          <div className="md:col-span-2">
+            <Field icon={MapPin} label="Address">
+              <input className={inp} style={inputStyle()} value={form.address} onChange={(e) => set("address", e.target.value)} />
+            </Field>
+          </div>
+          <label className="flex items-center gap-2 mt-1 cursor-pointer">
+            <input type="checkbox" checked={form.is_hostalize} onChange={(e) => set("is_hostalize", e.target.checked)} />
+            <span className="text-[13px] inline-flex items-center gap-1" style={{ color: TEXT_SECONDARY }}><Home size={14} /> Hostelite</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Referral */}
+      <div className="bg-white rounded-xl p-5 mt-4" style={{ border: `1px solid ${BORDER}` }}>
+        <h3 className="text-[14px] font-bold mb-1 flex items-center gap-2" style={{ color: TEXT_PRIMARY }}><Gift size={16} /> Referral</h3>
+        <p className="text-[12px] mb-4" style={{ color: TEXT_MUTED }}>
+          The student&apos;s own shareable code, and who referred them. Set the referrer for a walk-in who came directly — if they haven&apos;t paid yet the reward applies on their first payment; if they&apos;ve already paid it&apos;s credited immediately.
+        </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field icon={Gift} label="Own referral code">
+            <input className={inp} style={inputStyle()} value={form.referral_code}
+              onChange={(e) => set("referral_code", e.target.value.toUpperCase())} placeholder="e.g. ABDUL-CSYP" />
+          </Field>
+          <Field icon={UserPlus} label="Referred by (referrer's code)">
+            <input className={inp} style={inputStyle()} value={form.referrer_code}
+              onChange={(e) => set("referrer_code", e.target.value.toUpperCase())} placeholder="Enter referrer's code, or clear to remove" />
+          </Field>
+        </div>
+      </div>
+
+      {/* Sticky save toolbar */}
+      <div className="fixed bottom-0 left-0 right-0 px-6 py-3 flex items-center justify-between" style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, zIndex: 30 }}>
+        <span className="text-[12px]" style={{ color: Object.keys(errors).length ? BRAND : TEXT_MUTED }}>
+          {Object.keys(errors).length ? "Fix the highlighted fields" : "Ready to save"}
+        </span>
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}>Cancel</button>
+          <button onClick={submit} disabled={saving} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style={{ background: `linear-gradient(135deg, ${BRAND}, #A30505)`, opacity: saving ? 0.6 : 1 }}>
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Update Student
+          </button>
+        </div>
+      </div>
+
+      {toast && (
+        <div className="fixed bottom-20 right-6 z-50 px-4 py-3 rounded-lg text-white flex items-center gap-2 shadow-lg" style={{ background: toast.ok ? "#15803D" : BRAND }}>
+          {toast.ok ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+          <span className="text-[13px]">{toast.msg}</span>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,25 @@
+# SPA fallback for console.codelab.pk (React Router).
+# Any request that isn't a real file or directory is served index.html,
+# so deep links like /dashboard/students refresh correctly instead of 404ing.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Let real files (assets, images, etc.) and directories serve directly.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Everything else → the SPA entry point.
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# Sensible caching for hashed assets (safe — Vite fingerprints filenames).
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(html)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
