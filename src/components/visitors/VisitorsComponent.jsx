@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, AlertTriangle, Loader2, X,
   Snowflake, Bell, ArrowRightCircle, GraduationCap, Receipt,
   ArrowUpDown, ArrowUp, ArrowDown, Mail, Phone, Calendar, Download, FileText,
+  StickyNote, Link2, Users,
 } from "lucide-react";
 import { TRAINING_INQUIRY_CREATE, ENROLL_STUDENT, STUDENT_ENROLL } from "../routes/RouteConstants";
 import {
@@ -20,6 +21,10 @@ import UpdateReminderDialog from "./components/UpdateReminderDialog";
 import ConvertDialog from "./components/ConvertDialog";
 import SendChallanDialog from "./components/SendChallanDialog";
 import ChallanHistoryModal from "../ui/ChallanHistoryModal";
+import LeadNotesModal from "../ui/LeadNotesModal";
+import LinkInquiryDialog from "../ui/LinkInquiryDialog";
+import AssignGroupDialog from "../ui/AssignGroupDialog";
+import GroupsModal from "../ui/GroupsModal";
 import SimplePagination from "../ui/SimplePagination";
 import LeadStatsStrip from "../ui/LeadStatsStrip";
 
@@ -189,6 +194,10 @@ const VisitorsComponent = () => {
   const [convertDialog, setConvertDialog] = useState({ open: false, visitor: null, target: null });
   const [challanDialog, setChallanDialog] = useState({ open: false, visitor: null, mode: "send" });
   const [challanLog, setChallanLog] = useState({ open: false, id: null, name: "" });
+  const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
+  const [linkDialog, setLinkDialog] = useState({ open: false, visitor: null });
+  const [groupDialog, setGroupDialog] = useState({ open: false, entity: null });
+  const [groupsOpen, setGroupsOpen] = useState(false);
 
   /* search debounce */
   useEffect(() => {
@@ -567,8 +576,12 @@ const VisitorsComponent = () => {
             Clear filters
           </button>
         )}
+        <button onClick={() => setGroupsOpen(true)}
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg" style={{ background: "#F5F3FF", color: "#7C3AED", border: "1px solid #DDD6FE" }} title="View groups">
+          <Users size={14} /> Groups
+        </button>
         <button onClick={() => setReportOpen(true)}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: "#0F172A" }} title="Download report">
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: "#0F172A" }} title="Download report">
           <Download size={14} /> Report
         </button>
         <div className="text-[12px]" style={{ color: TEXT_MUTED }}>
@@ -691,6 +704,24 @@ const VisitorsComponent = () => {
                     <td className="px-4 py-3"><StatusPill status={v.status || "pending"} /></td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-1">
+                        <button type="button" onClick={() => setNotesModal({ open: true, id: v.id, name: v.name })} title="Notes & reminders"
+                          className="flex items-center justify-center transition rounded-md"
+                          style={{ width: 28, height: 28, color: TEXT_SECONDARY, background: "transparent" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#FFFBEB"; e.currentTarget.style.color = "#B45309"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SECONDARY; }}
+                        ><StickyNote size={13} strokeWidth={2} /></button>
+                        <button type="button" onClick={() => setLinkDialog({ open: true, visitor: v })} title="Link to inquiry (same person)"
+                          className="flex items-center justify-center transition rounded-md"
+                          style={{ width: 28, height: 28, color: TEXT_SECONDARY, background: "transparent" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#EFF6FF"; e.currentTarget.style.color = "#1D4ED8"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SECONDARY; }}
+                        ><Link2 size={13} strokeWidth={2} /></button>
+                        <button type="button" onClick={() => setGroupDialog({ open: true, entity: { id: v.id, name: v.name, group_id: v.group_id } })} title="Group"
+                          className="flex items-center justify-center transition rounded-md"
+                          style={{ width: 28, height: 28, color: TEXT_SECONDARY, background: "transparent" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#F5F3FF"; e.currentTarget.style.color = "#7C3AED"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT_SECONDARY; }}
+                        ><Users size={13} strokeWidth={2} /></button>
                         {canUpdate && !isConverted && (
                           <button type="button" onClick={() => openReminder(v)} title="Update reminder"
                             className="flex items-center justify-center transition rounded-md"
@@ -825,6 +856,18 @@ const VisitorsComponent = () => {
           onSent={() => setChallanDialog({ open: false, visitor: null, mode: "send" })}
         />
       )}
+      <LeadNotesModal
+        open={notesModal.open}
+        type="visitor"
+        id={notesModal.id}
+        name={notesModal.name}
+        onClose={() => setNotesModal({ open: false, id: null, name: "" })}
+      />
+
+      <LinkInquiryDialog open={linkDialog.open} visitor={linkDialog.visitor} onChanged={refetch} onClose={() => setLinkDialog({ open: false, visitor: null })} />
+      <AssignGroupDialog open={groupDialog.open} type="visitor" entity={groupDialog.entity} onChanged={refetch} onClose={() => setGroupDialog({ open: false, entity: null })} />
+      <GroupsModal open={groupsOpen} onClose={() => setGroupsOpen(false)} />
+
       <ChallanHistoryModal
         open={challanLog.open}
         type="visitor"

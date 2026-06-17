@@ -31,12 +31,12 @@ export default function SendChallanDialog({ visitor, courses = [], mode = "send"
   const [downloading, setDownloading] = useState(false);
   const [form, setForm] = useState({
     course_id: visitor?.interested_course?.id ? String(visitor.interested_course.id) : "",
-    enrollment_discount: "",
+    enrollment_discount: visitor?.enrollment_discount ? String(visitor.enrollment_discount) : "",
     enrollment_discount_type: "amount",
-    monthly_discount: "",
+    monthly_discount: visitor?.monthly_discount ? String(visitor.monthly_discount) : "",
     monthly_discount_type: "amount",
-    is_laptop: false,
-    discount_reason: "",
+    is_laptop: !!visitor?.laptop_required,
+    discount_reason: visitor?.discount_reason || "",
     email: true,
     whatsapp: true,
   });
@@ -60,12 +60,16 @@ export default function SendChallanDialog({ visitor, courses = [], mode = "send"
   // course or the loaded settings change (admin can still override).
   useEffect(() => {
     if (!selCourse) return;
+    // Prefer the discount stored on THIS visitor (what reception offered
+    // them); fall back to the org-wide default percent only when none set.
+    const visEnr = Number(visitor?.enrollment_discount) || 0;
+    const visMon = Number(visitor?.monthly_discount) || 0;
     setForm((f) => ({
       ...f,
-      enrollment_discount: defEnr ? String(Math.round((Number(selCourse.enrollment_fee) || 0) * defEnr / 100)) : f.enrollment_discount,
-      enrollment_discount_type: defEnr ? "amount" : f.enrollment_discount_type,
-      monthly_discount: defMon ? String(Math.round((Number(selCourse.monthly_fee) || 0) * defMon / 100)) : f.monthly_discount,
-      monthly_discount_type: defMon ? "amount" : f.monthly_discount_type,
+      enrollment_discount: visEnr ? String(visEnr) : (defEnr ? String(Math.round((Number(selCourse.enrollment_fee) || 0) * defEnr / 100)) : f.enrollment_discount),
+      enrollment_discount_type: "amount",
+      monthly_discount: visMon ? String(visMon) : (defMon ? String(Math.round((Number(selCourse.monthly_fee) || 0) * defMon / 100)) : f.monthly_discount),
+      monthly_discount_type: "amount",
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.course_id, defEnr, defMon]);

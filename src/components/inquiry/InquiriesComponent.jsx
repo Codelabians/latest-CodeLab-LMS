@@ -5,7 +5,7 @@ import {
   Plus, Search, Pencil, Trash2, ClipboardList,
   ChevronLeft, ChevronRight, AlertTriangle, Loader2, X,
   Send, FileText, GraduationCap, ArrowUpDown, ArrowUp, ArrowDown,
-  Mail, Phone, Download, Bell, FileSpreadsheet,
+  Mail, Phone, Download, Bell, FileSpreadsheet, StickyNote, Users,
 } from "lucide-react";
 import {
   useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation, useLazyGetQuery,
@@ -19,6 +19,9 @@ import SendChallanDialog from "./components/SendChallanDialog";
 import ImportInquiriesModal from "./components/ImportInquiriesModal";
 import UpdateInquiryReminderDialog from "./components/UpdateInquiryReminderDialog";
 import ChallanHistoryModal from "../ui/ChallanHistoryModal";
+import LeadNotesModal from "../ui/LeadNotesModal";
+import AssignGroupDialog from "../ui/AssignGroupDialog";
+import GroupsModal from "../ui/GroupsModal";
 import SimplePagination from "../ui/SimplePagination";
 import LeadStatsStrip from "../ui/LeadStatsStrip";
 
@@ -167,6 +170,9 @@ const InquiriesComponent = () => {
   const [deleteDialog, setDeleteDialog] = useState({ open: false, inquiry: null });
   const [challanDialog, setChallanDialog] = useState({ open: false, inquiry: null, mode: "send" });
   const [challanLog, setChallanLog] = useState({ open: false, id: null, name: "" });
+  const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
+  const [groupDialog, setGroupDialog] = useState({ open: false, entity: null });
+  const [groupsOpen, setGroupsOpen] = useState(false);
   const [reminderDialog, setReminderDialog] = useState({ open: false, inquiry: null });
   const [importOpen, setImportOpen] = useState(false);
 
@@ -547,8 +553,12 @@ const InquiriesComponent = () => {
             Clear filters
           </button>
         )}
+        <button onClick={() => setGroupsOpen(true)}
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg" style={{ background: "#F5F3FF", color: "#7C3AED", border: "1px solid #DDD6FE" }} title="View groups">
+          <Users size={14} /> Groups
+        </button>
         <button onClick={() => setReportOpen(true)}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: "#0F172A" }} title="Download report">
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: "#0F172A" }} title="Download report">
           <Download size={14} /> Report
         </button>
         <div className="text-[12px]" style={{ color: TEXT_MUTED }}>
@@ -671,6 +681,18 @@ const InquiriesComponent = () => {
                     </td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-1.5">
+                        <button type="button" onClick={() => setNotesModal({ open: true, id: v.id, name: `${v.first_name || ""} ${v.last_name || ""}`.trim() })} title="Notes & reminders"
+                          className="flex items-center justify-center transition rounded-md"
+                          style={{ width: 30, height: 30, color: "#B45309", background: "#FFFBEB", border: "1px solid #FDE68A" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF3C7"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "#FFFBEB"; }}
+                        ><StickyNote size={14} strokeWidth={2.2} /></button>
+                        <button type="button" onClick={() => setGroupDialog({ open: true, entity: { id: v.id, name: `${v.first_name || ""} ${v.last_name || ""}`.trim(), group_id: v.group_id } })} title="Group"
+                          className="flex items-center justify-center transition rounded-md"
+                          style={{ width: 30, height: 30, color: "#7C3AED", background: "#F5F3FF", border: "1px solid #DDD6FE" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#EDE9FE"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "#F5F3FF"; }}
+                        ><Users size={14} strokeWidth={2.2} /></button>
                         {canChallan && !isEnrolled && (
                           <button type="button" onClick={() => openChallan(v)} title="Send fee challan"
                             className="flex items-center justify-center transition rounded-md"
@@ -753,6 +775,17 @@ const InquiriesComponent = () => {
         onConfirm={handleConfirmChallan}
         isLoading={challanLoading}
       />
+      <LeadNotesModal
+        open={notesModal.open}
+        type="inquiry"
+        id={notesModal.id}
+        name={notesModal.name}
+        onClose={() => setNotesModal({ open: false, id: null, name: "" })}
+      />
+
+      <AssignGroupDialog open={groupDialog.open} type="inquiry" entity={groupDialog.entity} onChanged={refetch} onClose={() => setGroupDialog({ open: false, entity: null })} />
+      <GroupsModal open={groupsOpen} onClose={() => setGroupsOpen(false)} />
+
       <ChallanHistoryModal
         open={challanLog.open}
         type="inquiry"

@@ -215,7 +215,7 @@ const InquiryFormPage = ({ mode }) => {
     primary_course_id: "", primary_status: "basic",
     secondary_course_id: "", secondary_status: "",
     company_name: "", job_title: "", joined_date: "", leaving_date: "",
-    student_type: "", is_laptop_demanded: "No",
+    student_type: "", is_laptop_demanded: "No", laptop_fee: "",
     profile_image: null, qualification_file: null,
     status: "pending",
     // Phase F-Inquiry #8 — discount quoted at reception. Stored as flat
@@ -292,6 +292,7 @@ const InquiryFormPage = ({ mode }) => {
       leaving_date: v.leaving_date || "",
       student_type: v.student_type || "",
       is_laptop_demanded: v.is_laptop_demanded || "No",
+      laptop_fee: v.laptop_fee ?? "",
       profile_image: null,
       qualification_file: null,
       status: v.status || "pending",
@@ -410,6 +411,8 @@ const InquiryFormPage = ({ mode }) => {
       primary_course_id: Number(state.primary_course_id),
       primary_status: state.primary_status,
       is_laptop_demanded: state.is_laptop_demanded,
+      laptop_required: state.is_laptop_demanded === "Yes",
+      laptop_fee: state.is_laptop_demanded === "Yes" && state.laptop_fee !== "" ? (Number(state.laptop_fee) || 0) : 0,
     };
     if (state.marital_status.trim()) out.marital_status = state.marital_status.trim();
     if (state.secondary_course_id) {
@@ -878,6 +881,20 @@ const InquiryFormPage = ({ mode }) => {
                 ]}
               />
             </Field>
+            {state.is_laptop_demanded === "Yes" && (
+              <Field label="Monthly laptop fee (Rs.)">
+                <input
+                  type="number"
+                  min={0}
+                  step="100"
+                  value={state.laptop_fee}
+                  onChange={(e) => set("laptop_fee", e.target.value)}
+                  disabled={isLoading}
+                  style={{ ...inputStyle(false), padding: "8px 10px", fontSize: 13 }}
+                  placeholder="0"
+                />
+              </Field>
+            )}
             {isEdit && (
               <Field label="Inquiry status" helper="Cold = applicant stopped responding">
                 <Select
