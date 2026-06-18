@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { Mail, Search, Loader2, CheckCircle2, XCircle, Download } from "lucide-react";
+import { Mail, Search, Loader2, CheckCircle2, XCircle, Download, Send } from "lucide-react";
 import { useGetQuery, useLazyGetQuery } from "../../api/apiSlice";
 import SimplePagination from "../ui/SimplePagination";
 import ReportModal from "../ui/ReportModal";
+import NewsletterComposer from "./NewsletterComposer";
 
 const BRAND = "#C90606";
 const BORDER = "#EEF2F6";
@@ -18,6 +19,7 @@ export default function NewsletterSubscribers() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [reportOpen, setReportOpen] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -47,6 +49,10 @@ export default function NewsletterSubscribers() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setComposeOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-white" style={{ background: BRAND }} title="Compose & send a newsletter">
+            <Send size={14} /> Compose
+          </button>
           <button onClick={() => setReportOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-white" style={{ background: "#0F172A" }} title="Download report">
             <Download size={14} /> Report
@@ -120,6 +126,8 @@ export default function NewsletterSubscribers() {
           { label: "Subscribed", map: (r) => (r.subscribed_at || r.created_at || "").slice(0, 10) },
         ]}
       />
+
+      <NewsletterComposer open={composeOpen} onClose={() => setComposeOpen(false)} total={pg.total || rows.length} />
     </div>
   );
 }

@@ -165,6 +165,7 @@ const InquiriesComponent = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [followUp, setFollowUp] = useState(""); // "" | "true" | "false" → has_reminder
+  const [reminderOn, setReminderOn] = useState(""); // YYYY-MM-DD — reminder set for this date
 
   // dialogs (modal-based) — add/edit moved to a dedicated /create + /:id/edit page.
   const [deleteDialog, setDeleteDialog] = useState({ open: false, inquiry: null });
@@ -205,12 +206,16 @@ const InquiriesComponent = () => {
     if (shift)           p["filters[shift]"] = shift;
     if (source)          p["filters[source]"] = source;
     if (followUp !== "") p["filters[has_reminder]"] = followUp; // needs / no follow-up
+    if (reminderOn) {
+      p["filters[reminder_date_from]"] = reminderOn;
+      p["filters[reminder_date_to]"] = reminderOn;
+    }
     if (fromDate)        p.from = fromDate;
     if (toDate)          p.to = toDate;
     return p;
-  }, [page, perPage, debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate]);
+  }, [page, perPage, debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
 
   const { data, error, isLoading, isFetching, refetch } = useGetQuery(
     { path: "/student/inquiry", params: queryParams },
@@ -387,9 +392,9 @@ const InquiriesComponent = () => {
   );
 
   const [reportOpen, setReportOpen] = useState(false);
-  const hasActiveFilters = !!(courseId || status || shift || source || followUp || fromDate || toDate || debouncedSearch);
+  const hasActiveFilters = !!(courseId || status || shift || source || followUp || fromDate || toDate || reminderOn || debouncedSearch);
   const clearFilters = () => {
-    setCourseId(""); setStatus(""); setShift(""); setSource(""); setFollowUp(""); setFromDate(""); setToDate(""); setSearch("");
+    setCourseId(""); setStatus(""); setShift(""); setSource(""); setFollowUp(""); setFromDate(""); setToDate(""); setReminderOn(""); setSearch("");
   };
 
   const isEmpty = !isLoading && !error && rows.length === 0;
@@ -484,6 +489,7 @@ const InquiriesComponent = () => {
             { v: "pending", l: "Pending" },
             { v: "enrolled", l: "Enrolled" },
             { v: "dropout", l: "Dropout" },
+            { v: "cold", l: "Cold" },
           ].map((o) => (
             <button key={o.v} type="button" onClick={() => setStatus(o.v)}
               className="px-3 py-1 text-xs font-semibold transition rounded-md"
@@ -533,6 +539,17 @@ const InquiriesComponent = () => {
               style={{ color: followUp === o.v ? "#fff" : TEXT_SECONDARY, background: followUp === o.v ? BRAND_RED : "transparent" }}
             >{o.l}</button>
           ))}
+        </div>
+
+        {/* Reminder set for a specific date (e.g. today) */}
+        <div className="inline-flex items-center gap-1.5">
+          <input type="date" value={reminderOn} onChange={(e) => setReminderOn(e.target.value)} title="Show leads with a reminder on this date"
+            className="px-2.5 py-1.5 text-xs rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }} />
+          <button type="button" onClick={() => setReminderOn(new Date().toISOString().slice(0, 10))}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg"
+            style={{ background: reminderOn === new Date().toISOString().slice(0, 10) ? BRAND_RED : SURFACE_HOVER, color: reminderOn === new Date().toISOString().slice(0, 10) ? "#fff" : TEXT_SECONDARY, border: `1px solid ${BORDER}` }}>
+            Reminders today
+          </button>
         </div>
 
         {/* Date range */}
@@ -656,6 +673,16 @@ const InquiriesComponent = () => {
                         <Mail size={10} strokeWidth={2} />
                         {v.email}
                       </div>
+                      {v.latest_note?.body && (
+                        <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: TEXT_SECONDARY, maxWidth: 240 }} title={v.latest_note.body}>
+                          <StickyNote size={10} strokeWidth={2} /> <span className="truncate">{v.latest_note.body}</span>
+                        </div>
+                      )}
+                      {v.fees && (v.fees.net_enrollment > 0 || v.fees.net_monthly > 0) && (
+                        <div className="text-[11px] mt-0.5 font-semibold" style={{ color: "#15803D" }}>
+                          Fee: Rs {Number(v.fees.net_enrollment).toLocaleString()} + Rs {Number(v.fees.net_monthly).toLocaleString()}/mo
+                        </div>
+                      )}
                       <ChallanStatusBadge row={v} onClick={() => setChallanLog({ open: true, id: v.id, name: `${v.first_name || ""} ${v.last_name || ""}`.trim() })} />
                     </td>
                     <td className="px-4 py-3">

@@ -5,7 +5,7 @@ import {
   GraduationCap, Users as UsersIcon, Home, CheckCircle2, AlertTriangle,
   Gift, UserPlus,
 } from "lucide-react";
-import { useGetQuery, usePatchMutation } from "../../api/apiSlice";
+import { useGetQuery, usePatchMutation, usePostMutation } from "../../api/apiSlice";
 import SearchableSelect from "../ui/SearchableSelect";
 
 const BRAND = "#C90606";
@@ -40,6 +40,8 @@ export default function EditStudentPage() {
   const navigate = useNavigate();
   const { data, isLoading } = useGetQuery({ path: `/student/students/${studentUuid}` });
   const [patch, { isLoading: saving }] = usePatchMutation();
+  const [uploadAvatar, { isLoading: uploadingPhoto }] = usePostMutation();
+  const [imageFile, setImageFile] = useState(null);
   const { data: cityData } = useGetQuery({ path: "/core/cities/active" });
 
   const [form, setForm] = useState(null);
@@ -100,6 +102,17 @@ export default function EditStudentPage() {
     const body = { ...form, fixed_fee: form.fixed_fee === "" || form.fixed_fee == null ? null : Number(form.fixed_fee) };
     try {
       await patch({ path: `/student/students/${studentUuid}`, body }).unwrap();
+      // Photo is stored via the dedicated admin avatar endpoint (the student
+      // PATCH does not handle images). Best-effort so it never blocks the save.
+      if (imageFile instanceof File) {
+        try {
+          const fd = new FormData();
+          fd.append("avatar", imageFile);
+          await uploadAvatar({ path: `user/${studentUuid}/avatar`, body: fd }).unwrap();
+        } catch (e) {
+          notify("Saved, but the photo upload failed.", false);
+        }
+      }
       notify("Student updated.");
       setTimeout(() => navigate(-1), 700);
     } catch (err) {
@@ -130,6 +143,19 @@ export default function EditStudentPage() {
 
       <div className="bg-white rounded-xl p-5" style={{ border: `1px solid ${BORDER}` }}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2 flex items-center gap-4 pb-2">
+            {(imageFile || s?.image) ? (
+              <img src={imageFile ? URL.createObjectURL(imageFile) : s.image} alt="" className="rounded-full object-cover" style={{ width: 64, height: 64, border: `2px solid ${BORDER}` }} />
+            ) : (
+              <span className="flex items-center justify-center rounded-full" style={{ width: 64, height: 64, background: `${BRAND}14`, color: BRAND }}><User size={28} /></span>
+            )}
+            <div>
+              <label className="text-[12px] font-semibold flex items-center gap-1 mb-1" style={{ color: TEXT_SECONDARY }}>Profile photo</label>
+              <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                className="block text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer" />
+              <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Optional — add or change the photo anytime.</p>
+            </div>
+          </div>
           <Field icon={User} label="First name" required error={errors.first_name}>
             <input className={inp} style={inputStyle(errors.first_name)} value={form.first_name} onChange={(e) => set("first_name", e.target.value)} />
           </Field>

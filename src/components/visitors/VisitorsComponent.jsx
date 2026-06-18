@@ -185,6 +185,7 @@ const VisitorsComponent = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [followUpRequired, setFollowUpRequired] = useState("");
+  const [reminderOn, setReminderOn] = useState(""); // YYYY-MM-DD — reminder set for this date
 
   // modals / dialogs
   const [formModal, setFormModal] = useState({ open: false, mode: null, visitor: null });
@@ -241,15 +242,19 @@ const VisitorsComponent = () => {
     // follow-up" = no reminder. Uses the repo's has_reminder filter so it
     // matches the bell/reminder system rather than the legacy boolean.
     if (followUpRequired !== "") p["filters[has_reminder]"] = followUpRequired;
+    if (reminderOn) {
+      p["filters[reminder_date_from]"] = reminderOn;
+      p["filters[reminder_date_to]"] = reminderOn;
+    }
     // F4b universal filters
     if (section)  p["filters[section]"] = section;
     if (status)   p["filters[status]"]  = status;
     if (sourceFilter) p["filters[referral_source]"] = sourceFilter;
     return p;
-  }, [page, perPage, debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired]);
+  }, [page, perPage, debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn]);
 
   // reset to page 1 when filters/search change
-  useEffect(() => { setPage(1); }, [debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn]);
 
   const { data, error, isLoading, isFetching, refetch } = useGetQuery(
     { path: "/student/visitors", params: queryParams },
@@ -428,10 +433,10 @@ const VisitorsComponent = () => {
 
 
   const [reportOpen, setReportOpen] = useState(false);
-  const hasActiveFilters = !!(section || status || fromDate || toDate || followUpRequired !== "" || debouncedSearch);
+  const hasActiveFilters = !!(section || status || fromDate || toDate || followUpRequired !== "" || reminderOn || debouncedSearch);
   const clearFilters = () => {
     setSection(""); setStatus(""); setSourceFilter(""); setFromDate(""); setToDate("");
-    setFollowUpRequired(""); setSearch("");
+    setFollowUpRequired(""); setReminderOn(""); setSearch("");
   };
 
   const isEmpty = !isLoading && !error && rows.length === 0;
@@ -571,6 +576,17 @@ const VisitorsComponent = () => {
           ))}
         </div>
 
+        {/* Reminder set for a specific date (e.g. today) */}
+        <div className="inline-flex items-center gap-1.5">
+          <input type="date" value={reminderOn} onChange={(e) => setReminderOn(e.target.value)} title="Show visitors with a reminder on this date"
+            className="py-2 px-3 text-sm rounded-lg outline-none" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" }} />
+          <button type="button" onClick={() => setReminderOn(new Date().toISOString().slice(0, 10))}
+            className="px-3 py-2 text-xs font-semibold rounded-lg"
+            style={{ background: reminderOn === new Date().toISOString().slice(0, 10) ? BRAND_RED : SURFACE_HOVER, color: reminderOn === new Date().toISOString().slice(0, 10) ? "#fff" : TEXT_SECONDARY, border: `1px solid ${BORDER}` }}>
+            Reminders today
+          </button>
+        </div>
+
         {hasActiveFilters && (
           <button type="button" onClick={clearFilters} className="text-[12px] font-semibold transition" style={{ color: BRAND_RED }}>
             Clear filters
@@ -681,6 +697,16 @@ const VisitorsComponent = () => {
                         <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: TEXT_MUTED }}>
                           <Mail size={10} strokeWidth={2} />
                           {v.email}
+                        </div>
+                      )}
+                      {v.latest_note?.body && (
+                        <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: TEXT_SECONDARY, maxWidth: 240 }} title={v.latest_note.body}>
+                          <StickyNote size={10} strokeWidth={2} /> <span className="truncate">{v.latest_note.body}</span>
+                        </div>
+                      )}
+                      {v.fees && (v.fees.net_enrollment > 0 || v.fees.net_monthly > 0) && (
+                        <div className="text-[11px] mt-0.5 font-semibold" style={{ color: "#15803D" }}>
+                          Fee: Rs {Number(v.fees.net_enrollment).toLocaleString()} + Rs {Number(v.fees.net_monthly).toLocaleString()}/mo
                         </div>
                       )}
                       <ChallanStatusBadge row={v} onClick={() => setChallanLog({ open: true, id: v.id, name: v.name })} />

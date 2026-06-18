@@ -170,6 +170,8 @@ export default function EnrollStudentWizard() {
   );
   const netEnroll = Math.max(baseEnroll - (Number(enrollDisc) || 0), 0);
   const netMonthly = Math.max(baseMonthly - (Number(monthlyDisc) || 0), 0);
+  const laptopDiscAmt = !needsLaptop ? 0 : laptopDiscType === "flat" ? (Number(laptopDiscValue) || 0) : laptopDiscType === "percent" ? Math.round((laptopFeeSetting * (Number(laptopDiscValue) || 0)) / 100) : 0;
+  const netLaptop = needsLaptop ? Math.max(0, laptopFeeSetting - laptopDiscAmt) : 0;
   const money = (n) => "Rs " + Number(n || 0).toLocaleString();
 
   // Seed the org-wide default discount (% → Rs for this course) when nothing
@@ -213,6 +215,7 @@ export default function EnrollStudentWizard() {
       if (payTotal <= 0) return "Add at least one payment line with an amount, or turn off 'record payment'.";
       if (sumForSlot("enrollment") > netEnroll) return `Enrollment payments can't exceed the net enrollment fee (${money(netEnroll)}).`;
       if (sumForSlot("monthly") > netMonthly) return `Monthly payments can't exceed one month's net fee (${money(netMonthly)}).`;
+      if (sumForSlot("laptop") > netLaptop) return `Laptop payment can't exceed the laptop fee (${money(netLaptop)}).`;
     }
     return "";
   };
@@ -221,7 +224,7 @@ export default function EnrollStudentWizard() {
     for (let i = 0; i < STEPS.length; i++) if (validateStep(i)) set.add(i);
     return set;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stu, courseId, batchUuid, joiningDate, needsLaptop, laptopUuid, payNow, payLines, netEnroll, netMonthly]);
+  }, [stu, courseId, batchUuid, joiningDate, needsLaptop, laptopUuid, payNow, payLines, netEnroll, netMonthly, netLaptop]);
   const allValid = errSteps.size === 0;
 
   const next = () => { const e = validateStep(step); if (e) { setErr(e); return; } setErr(""); setStep((p) => Math.min(STEPS.length - 1, p + 1)); };
@@ -435,7 +438,7 @@ export default function EnrollStudentWizard() {
                   </div>
                   <div className="space-y-2">
                     {payLines.map((line, idx) => {
-                      const slotNet = line.fee_slot === "monthly" ? netMonthly : netEnroll;
+                      const slotNet = line.fee_slot === "laptop" ? netLaptop : line.fee_slot === "monthly" ? netMonthly : netEnroll;
                       return (
                         <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end rounded-lg p-2.5" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
                           <div className="md:col-span-3">
@@ -443,6 +446,7 @@ export default function EnrollStudentWizard() {
                             <Select value={line.fee_slot} onChange={(e) => { setPayTouched(true); updateLine(idx, "fee_slot", e.target.value); }}>
                               <option value="enrollment">Enrollment</option>
                               <option value="monthly">Monthly</option>
+                              {needsLaptop && netLaptop > 0 && <option value="laptop">Laptop</option>}
                             </Select>
                           </div>
                           <div className="md:col-span-2">
@@ -475,7 +479,7 @@ export default function EnrollStudentWizard() {
                       <Plus size={14} /> Add payment line
                     </button>
                     <div className="text-[12px] font-semibold" style={{ color: TEXT_PRIMARY }}>
-                      Paying now: {money(payTotal)} <span className="font-normal" style={{ color: TEXT_MUTED }}>({money(sumForSlot("enrollment"))} enrol · {money(sumForSlot("monthly"))} monthly)</span>
+                      Paying now: {money(payTotal)} <span className="font-normal" style={{ color: TEXT_MUTED }}>({money(sumForSlot("enrollment"))} enrol · {money(sumForSlot("monthly"))} monthly{needsLaptop && netLaptop > 0 ? ` · ${money(sumForSlot("laptop"))} laptop` : ""})</span>
                     </div>
                   </div>
                 </>

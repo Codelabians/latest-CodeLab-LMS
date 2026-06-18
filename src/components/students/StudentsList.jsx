@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
-  Users, Search, Loader2, Plus, Home, Laptop, Eye, ChevronDown, Download, UserX, X, Trash2, AlertTriangle,
+  Users, Search, Loader2, Plus, Home, Laptop, Eye, ChevronDown, Download, UserX, X, Trash2, AlertTriangle, StickyNote,
 } from "lucide-react";
 import { useGetQuery, useLazyGetQuery, usePostMutation, useDeleteMutation } from "../../api/apiSlice";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { downloadCSV } from "../../api/fileDownload";
 import SimplePagination from "../ui/SimplePagination";
 import SearchableSelect from "../ui/SearchableSelect";
+import LeadNotesModal from "../ui/LeadNotesModal";
 import { STUDENT_ADD, STUDENT } from "../routes/RouteConstants";
 
 const hasPermission = (user, perm) => {
@@ -105,6 +106,7 @@ export default function StudentsList() {
   const [purgeTarget, setPurgeTarget] = useState(null); // student row
   const [purgeConfirm, setPurgeConfirm] = useState("");
   const [purgeErr, setPurgeErr] = useState(null);
+  const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
   const [purgeUser, { isLoading: purging }] = useDeleteMutation();
   const openPurge = (row) => { setPurgeTarget(row); setPurgeConfirm(""); setPurgeErr(null); };
   const submitPurge = async () => {
@@ -239,6 +241,11 @@ export default function StudentsList() {
                           {r.laptop_provided && <Laptop size={12} style={{ color: "#B45309" }} title="Laptop provided" />}
                         </div>
                         <div className="text-[11px]" style={{ color: TEXT_MUTED }}>{r.email || r.cnic || r.contact || ""}</div>
+                        {r.latest_note?.body && (
+                          <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: TEXT_SECONDARY, maxWidth: 260 }} title={r.latest_note.body}>
+                            <StickyNote size={10} strokeWidth={2} /> <span className="truncate">{r.latest_note.body}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -259,10 +266,19 @@ export default function StudentsList() {
                   <td className="px-4 py-3">
                     <span className="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: fee.bg, color: fee.fg }}>{fee.label}</span>
                     {r.pending > 0 && <div className="mt-1 text-[11px]" style={{ color: TEXT_MUTED }}>Rs {Number(r.pending).toLocaleString()} due</div>}
+                    {(r.enrollment_fee != null || r.monthly_fee != null) && (
+                      <div className="mt-1 text-[11px] font-semibold" style={{ color: TEXT_PRIMARY }}>
+                        {r.enrollment_fee != null ? `Enroll Rs ${Number(r.enrollment_fee).toLocaleString()}` : ""}
+                        {r.enrollment_fee != null && r.monthly_fee != null ? " · " : ""}
+                        {r.monthly_fee != null ? `Rs ${Number(r.monthly_fee).toLocaleString()}/mo` : ""}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-[12px] capitalize" style={{ color: TEXT_SECONDARY }}>{(r.status || "").replace(/_/g, " ")}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-1.5">
+                      <button onClick={() => setNotesModal({ open: true, id: r.id, name: r.name })} title="Notes & reminders"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#B45309" }}><StickyNote size={14} /></button>
                       <button onClick={() => navigate(`${STUDENT}/${r.uuid}`)} title="View student"
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#1D4ED8" }}><Eye size={14} /> View</button>
                       {(r.status || "").toLowerCase() !== "dropout" ? (
@@ -354,6 +370,7 @@ export default function StudentsList() {
           </div>
         </div>
       )}
+      <LeadNotesModal open={notesModal.open} type="student" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
     </div>
   );
 }

@@ -12,9 +12,11 @@ import {
   Briefcase,
   MapPin,
   Clock,
+  StickyNote,
 } from "lucide-react";
 
 import { useGetQuery } from "../../../api/apiSlice";
+import LeadNotesModal from "../../ui/LeadNotesModal";
 import { selectCurrentUser } from "../../../features/auth/authSlice";
 import { HR_EMPLOYEE_DETAIL, HR_EMPLOYEE_NEW } from "../../routes/RouteConstants";
 import SearchableSelect from "../../ui/SearchableSelect";
@@ -70,6 +72,7 @@ const EmployeeAvatar = ({ src, name, fallback, size = 36 }) => {
           onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
       )}
+      <LeadNotesModal open={notesModal.open} type="employee" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
     </div>
   );
 };
@@ -147,6 +150,7 @@ const EmployeesListPage = () => {
   const [serviceId, setServiceId] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
 
   // Catalogs for the dept + service dropdowns. Cheap to fetch — both are
   // small admin-curated lists.
@@ -385,7 +389,13 @@ const EmployeesListPage = () => {
                     </div>
                   </td>
                   <td className="px-4 py-3"><StatusChip status={r.employment_status} /></td>
-                  <td className="px-4 py-3"><ReadyChip ready={r.payroll_ready} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <ReadyChip ready={r.payroll_ready} />
+                      <button onClick={(e) => { e.stopPropagation(); setNotesModal({ open: true, id: r.user_id, name: r.full_name }); }} title="Notes & reminders"
+                        className="inline-flex items-center justify-center rounded-md" style={{ width: 28, height: 28, color: "#B45309", background: "#FFFBEB", border: "1px solid #FDE68A" }}><StickyNote size={14} /></button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

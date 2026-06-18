@@ -27,6 +27,7 @@ const StudentForm = ({ uuid }) => {
 
   const [createStudent, { isLoading: isCreating }] = useSmartPostMutation();
   const [updateStudent, { isLoading: isUpdating }] = usePostMutation();
+  const [uploadStudentAvatar] = usePostMutation();
 
   const {
     data: classData,
@@ -97,6 +98,7 @@ const StudentForm = ({ uuid }) => {
     active_status: "1",
     courseFee: 20000,
     laptopFee: 0,
+    laptop_discount: 0,
     discount: 0,
     installments: 1,
     note: "",
@@ -148,6 +150,7 @@ const StudentForm = ({ uuid }) => {
         active_status: student.active_status ? "1" : "0",
         courseFee: 20000,
         laptopFee: student.laptop_provided ? laptopFeeSetting : 0,
+        laptop_discount: 0,
         discount: 0,
         installments: 1,
         note: "",
@@ -199,6 +202,7 @@ const StudentForm = ({ uuid }) => {
         active_status: "1",
         courseFee: 20000,
         laptopFee: 0,
+        laptop_discount: 0,
         discount: 0,
         installments: 1,
         note: "",
@@ -233,7 +237,8 @@ const StudentForm = ({ uuid }) => {
     const discount = Number(formData.discount) || 0;
     const installments = Number(formData.installments) || 1;
 
-    const netPayable = courseFee + laptopFee - discount;
+    const laptopDiscount = Number(formData.laptop_discount) || 0;
+    const netPayable = courseFee + (laptopFee - laptopDiscount) - discount;
     const perInstallment = Math.round(netPayable / installments);
 
     if (installments === 1) {
@@ -266,6 +271,7 @@ const StudentForm = ({ uuid }) => {
   }, [
     formData.courseFee,
     formData.laptopFee,
+    formData.laptop_discount,
     formData.discount,
     formData.installments,
   ]);
@@ -336,7 +342,7 @@ const StudentForm = ({ uuid }) => {
       const firstInstallment = Number(value) || 0;
       const netPayable =
         Number(formData.courseFee) +
-        Number(formData.laptopFee) -
+        Number(formData.laptopFee) - Number(formData.laptop_discount || 0) -
         Number(formData.discount);
       const installments = Number(formData.installments);
 
@@ -364,7 +370,7 @@ const StudentForm = ({ uuid }) => {
       const secondInstallment = Number(value) || 0;
       const netPayable =
         Number(formData.courseFee) +
-        Number(formData.laptopFee) -
+        Number(formData.laptopFee) - Number(formData.laptop_discount || 0) -
         Number(formData.discount);
       const firstInstallment = Number(formData.first_installment);
 
@@ -420,7 +426,7 @@ const StudentForm = ({ uuid }) => {
         formData.isCharityScholarshipStudent,
       );
       payload.append("shift", formData.shift);
-      payload.append("laptop_fee", Number(formData.laptopFee));
+      payload.append("laptop_fee", Math.max(0, Number(formData.laptopFee) - Number(formData.laptop_discount || 0) - (Number(formData.laptop_discount) || 0)));
       payload.append("discount", Number(formData.discount));
       payload.append("installments", Number(formData.installments));
       payload.append("total_fee", formData.courseFee);
@@ -437,7 +443,7 @@ const StudentForm = ({ uuid }) => {
       const installments = Number(formData.installments);
       const netPayable =
         Number(formData.courseFee) +
-        Number(formData.laptopFee) -
+        Number(formData.laptopFee) - Number(formData.laptop_discount || 0) -
         Number(formData.discount);
       const amounts = [];
       // Always push the correct number of amounts
@@ -464,6 +470,17 @@ const StudentForm = ({ uuid }) => {
           path: `/admin/students/${studentUuid}?_method=PATCH`,
           body: payload,
         }).unwrap();
+        if (formData.image instanceof File) {
+          // The student PATCH endpoint does not store the photo; upload it via
+          // the dedicated admin avatar endpoint (same one the detail page uses).
+          try {
+            const avatarFd = new FormData();
+            avatarFd.append("avatar", formData.image);
+            await uploadStudentAvatar({ path: `user/${studentUuid}/avatar`, body: avatarFd }).unwrap();
+          } catch (e) {
+            toast.error("Student saved, but the photo upload failed.");
+          }
+        }
         toast.success("Student updated successfully!");
         navigate("/dashboard/students");
       } else {
@@ -489,7 +506,7 @@ const StudentForm = ({ uuid }) => {
   };
   const netPayable =
     Number(formData.courseFee) +
-    Number(formData.laptopFee) -
+    Number(formData.laptopFee) - Number(formData.laptop_discount || 0) -
     Number(formData.discount);
   const installmentAmount =
     formData.installments > 0
@@ -503,6 +520,14 @@ const StudentForm = ({ uuid }) => {
       <label className="mb-2 block text-sm font-semibold text-gray-700">
         Profile Image
       </label>
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.files?.[0] || null }))}
+        className="mb-3 block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer"
+      />
+      <p className="mb-2 text-xs text-gray-400">Optional — add or change the photo anytime.</p>
 
       {formData.profileImage && !formData.image && (
         <div className="mb-3 p-2 bg-gray-50 rounded-lg">
@@ -938,7 +963,18 @@ const StudentForm = ({ uuid }) => {
                   label="Laptop Fee (PKR)"
                   name="laptopFee"
                   value={formData.laptopFee}
-                  disabled
+                  onChange={handleChange}
+                  min="0"
+                  disabled={!formData.laptopProvided}
+                />
+                <FormInput
+                  type="number"
+                  label="Laptop Discount (PKR)"
+                  name="laptop_discount"
+                  value={formData.laptop_discount}
+                  onChange={handleChange}
+                  min="0"
+                  disabled={!formData.laptopProvided}
                 />
                 <FormInput
                   type="number"

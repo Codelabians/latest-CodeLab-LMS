@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useGetQuery } from "../../../api/apiSlice";
 import {
   X, UserSearch, Phone, Mail, BookOpen, MessageSquare,
   CalendarClock, Loader2, Bell, Instagram, UserCheck, Tag, Layers,
@@ -191,6 +192,32 @@ const VisitorModal = ({
     () => courses.map((c) => ({ value: String(c.id), label: c.name })),
     [courses]
   );
+
+  // Org-wide default discounts (percent). We convert them to a Rs amount
+  // based on the selected course’s fees and seed the discount fields, but
+  // only when the user (or saved record) has not already set a value — so
+  // staff can always override. Discounts are stored/sent in Rs.
+  const { data: discSettings } = useGetQuery({ path: "finance/fee-discount-settings" });
+  const defEnrPct = discSettings?.data?.enrollment_discount_percent ?? 0;
+  const defMonPct = discSettings?.data?.monthly_discount_percent ?? 0;
+  const selCourse = useMemo(
+    () => courses.find((c) => String(c.id) === String(state.interested_course_id)),
+    [courses, state.interested_course_id]
+  );
+  useEffect(() => {
+    if (!isOpen || !selCourse) return;
+    setState((p) => {
+      const next = { ...p };
+      if (p.enrollment_discount === "" || p.enrollment_discount === null || p.enrollment_discount === undefined) {
+        next.enrollment_discount = defEnrPct ? String(Math.round((Number(selCourse.enrollment_fee) || 0) * defEnrPct / 100)) : p.enrollment_discount;
+      }
+      if (p.monthly_discount === "" || p.monthly_discount === null || p.monthly_discount === undefined) {
+        next.monthly_discount = defMonPct ? String(Math.round((Number(selCourse.monthly_fee) || 0) * defMonPct / 100)) : p.monthly_discount;
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selCourse, defEnrPct, defMonPct, isOpen]);
 
   const referrerOptions = useMemo(
     () => referrerUsers.map((u) => ({
@@ -426,10 +453,10 @@ const VisitorModal = ({
             </h4>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <Field label="Enrollment discount (Rs)" icon={Percent} helper="Rs off the one-time enrollment fee">
+            <Field label="Enrollment discount (Rs)" icon={Percent} helper="Defaults from settings · editable · in Rs">
               <input type="number" min="0" value={state.enrollment_discount} onChange={(ev) => set("enrollment_discount", ev.target.value)} disabled={isLoading} placeholder="0" style={inputStyle(false)} />
             </Field>
-            <Field label="Monthly discount (Rs)" icon={Percent} helper="Rs off every monthly fee">
+            <Field label="Monthly discount (Rs)" icon={Percent} helper="Defaults from settings · editable · in Rs">
               <input type="number" min="0" value={state.monthly_discount} onChange={(ev) => set("monthly_discount", ev.target.value)} disabled={isLoading} placeholder="0" style={inputStyle(false)} />
             </Field>
             <Field label="Discount reason" icon={MessageSquare} helper="Why this discount">

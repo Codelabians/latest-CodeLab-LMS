@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Laptop, Plus, X, Loader2, Undo2, Ban } from "lucide-react";
 import { useGetQuery, usePostMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
+import useLaptopFee from "../../hooks/useLaptopFee";
 
 const BRAND = "#C90606";
 const BRAND_TINT = "#FEF2F2";
@@ -94,6 +95,11 @@ function AssignLaptopModal({ studentId, studentName, onClose, onDone }) {
   const [days, setDays] = useState("");
   const [discType, setDiscType] = useState("");
   const [discValue, setDiscValue] = useState("");
+  const standardRate = useLaptopFee(0);
+  const [feeAmount, setFeeAmount] = useState("");
+  const [feeDiscount, setFeeDiscount] = useState("");
+  const [feeInstallments, setFeeInstallments] = useState("1");
+  useEffect(() => { if (standardRate > 0 && feeAmount === "") setFeeAmount(String(standardRate)); }, [standardRate]);
   const [post, { isLoading }] = usePostMutation();
 
   const { data: laptopData } = useGetQuery(
@@ -108,6 +114,12 @@ function AssignLaptopModal({ studentId, studentName, onClose, onDone }) {
     const body = { assignee_type: "student", assignee_id: studentId, time_slot: slot, is_billable: true, is_full_course: fullCourse };
     if (!fullCourse && Number(days) > 0) body.duration_days = Number(days);
     if (discType && Number(discValue) > 0) { body.discount_type = discType; body.discount_value = Number(discValue); }
+    const _amt = feeAmount !== "" ? Number(feeAmount) : standardRate;
+    if (_amt > 0) {
+      body.laptop_fee_amount = _amt;
+      if (Number(feeDiscount) > 0) body.laptop_fee_discount = Number(feeDiscount);
+      body.laptop_fee_installments = Number(feeInstallments) || 1;
+    }
     try {
       await post({ path: `assets/${laptopUuid}/assign`, body }).unwrap();
       showToast("Laptop issued.", "success"); onDone();
@@ -159,6 +171,35 @@ function AssignLaptopModal({ studentId, studentName, onClose, onDone }) {
             <input type="number" min="0" value={discValue} onChange={(e) => setDiscValue(e.target.value)} disabled={!discType} placeholder="Discount" style={{ ...inp, opacity: discType ? 1 : 0.5 }} />
           </div>
           <p className="text-[11px]" style={{ color: TM }}>A recurring laptop fee bills monthly at the standard rate{discType ? " minus this discount" : ""} while assigned.</p>
+          <div className="pt-2" style={{ borderTop: `1px solid ${BORDER}` }}>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[12px] font-semibold" style={{ color: T2 }}>Laptop fee (Rs)</label>
+              <span className="text-[11px]" style={{ color: TM }}>
+                Default (settings): Rs {Number(standardRate || 0).toLocaleString()}
+                {feeAmount !== "" && Number(feeAmount) !== Number(standardRate) && (
+                  <button type="button" onClick={() => setFeeAmount(String(standardRate))} className="ml-2 font-semibold" style={{ color: BRAND }}>reset</button>
+                )}
+              </span>
+            </div>
+            <input type="number" min="0" value={feeAmount} onChange={(e) => setFeeAmount(e.target.value)} placeholder={standardRate ? String(standardRate) : "0"} style={inp} />
+          </div>
+          <div>
+            <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T2 }}>Discount on laptop fee (Rs)</label>
+            <input type="number" min="0" value={feeDiscount} onChange={(e) => setFeeDiscount(e.target.value)} placeholder="0" style={inp} />
+          </div>
+          <div>
+            <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T2 }}>Split into installments</label>
+            <select value={feeInstallments} onChange={(e) => setFeeInstallments(e.target.value)} style={inp}>
+              <option value="1">Full (1)</option>
+              <option value="2">2 installments</option>
+              <option value="3">3 installments</option>
+            </select>
+          </div>
+          <div className="flex items-center justify-between text-[12.5px]">
+            <span style={{ color: T2 }}>Charging now (after discount)</span>
+            <span style={{ color: T1, fontWeight: 700 }}>Rs {Math.max(0, (feeAmount !== "" ? Number(feeAmount) : standardRate) - (Number(feeDiscount) || 0)).toLocaleString()}</span>
+          </div>
+          <p className="text-[11px]" style={{ color: TM }}>Creates a laptop fee in the student's fees — visible there and collectible from Collect Fee. Use 0 discount if none.</p>
         </div>
         <div className="flex items-center justify-end gap-2 px-5 py-3" style={{ background: "#F8FAFC", borderTop: `1px solid ${BORDER}` }}>
           <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-medium" style={{ background: "#fff", color: T2, border: `1px solid ${BORDER}` }}>Cancel</button>
