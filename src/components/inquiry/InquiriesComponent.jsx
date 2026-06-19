@@ -47,6 +47,7 @@ const STATUS_CFG = {
   pending:  { fg: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE", label: "Pending" },
   enrolled: { fg: "#15803D", bg: "#F0FDF4", border: "#BBF7D0", label: "Enrolled" },
   dropout:  { fg: TEXT_SECONDARY, bg: "#F1F5F9", border: BORDER, label: "Dropout" },
+  cold:     { fg: "#0369A1", bg: "#F0F9FF", border: "#BAE6FD", label: "Cold" },
 };
 const StatusPill = ({ status }) => {
   const cfg = STATUS_CFG[status] || STATUS_CFG.pending;
@@ -206,10 +207,7 @@ const InquiriesComponent = () => {
     if (shift)           p["filters[shift]"] = shift;
     if (source)          p["filters[source]"] = source;
     if (followUp !== "") p["filters[has_reminder]"] = followUp; // needs / no follow-up
-    if (reminderOn) {
-      p["filters[reminder_date_from]"] = reminderOn;
-      p["filters[reminder_date_to]"] = reminderOn;
-    }
+    if (reminderOn) p["filters[reminder_on]"] = reminderOn;
     if (fromDate)        p.from = fromDate;
     if (toDate)          p.to = toDate;
     return p;

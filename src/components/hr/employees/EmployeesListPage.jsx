@@ -72,7 +72,6 @@ const EmployeeAvatar = ({ src, name, fallback, size = 36 }) => {
           onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
       )}
-      <LeadNotesModal open={notesModal.open} type="employee" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
     </div>
   );
 };
@@ -412,6 +411,8 @@ const EmployeesListPage = () => {
         onPageChange={setPage}
         onPerPageChange={setPerPage}
       />
+
+      <LeadNotesModal open={notesModal.open} type="employee" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
     </div>
   );
 };

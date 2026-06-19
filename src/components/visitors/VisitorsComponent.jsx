@@ -242,10 +242,7 @@ const VisitorsComponent = () => {
     // follow-up" = no reminder. Uses the repo's has_reminder filter so it
     // matches the bell/reminder system rather than the legacy boolean.
     if (followUpRequired !== "") p["filters[has_reminder]"] = followUpRequired;
-    if (reminderOn) {
-      p["filters[reminder_date_from]"] = reminderOn;
-      p["filters[reminder_date_to]"] = reminderOn;
-    }
+    if (reminderOn) p["filters[reminder_on]"] = reminderOn;
     // F4b universal filters
     if (section)  p["filters[section]"] = section;
     if (status)   p["filters[status]"]  = status;

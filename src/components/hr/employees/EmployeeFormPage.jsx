@@ -410,6 +410,16 @@ const EmployeeFormPage = () => {
   // Cycle helpers for prev/next buttons
   const tabIndex = TABS.findIndex((t) => t.id === activeTab);
   const goTab = (dir) => {
+    // Moving forward: validate the current tab first so problems are fixed
+    // in place instead of letting the user reach the end and get bounced
+    // back to the first page. Backward navigation is always allowed.
+    if (dir > 0) {
+      const stepError = validateTab(activeTab);
+      if (stepError) {
+        showToast(stepError, "error");
+        return;
+      }
+    }
     const i = Math.max(0, Math.min(TABS.length - 1, tabIndex + dir));
     setActiveTab(TABS[i].id);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -670,22 +680,56 @@ const EmployeeFormPage = () => {
     );
   }
 
+  // Per-tab validation, mirroring the backend CreateEmployeeRequest rules.
+  // All backend-required fields live on the Basics tab; the other tabs have
+  // no required fields for user creation, so they pass. Returns an error
+  // string for the given tab, or null when that tab is valid.
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const BLOCKED_ROLE_NAMES = ["admin", "ceo", "coo"]; // matches backend blocklist
+  const validateTab = (tabId) => {
+    if (tabId === "basics") {
+      if (!firstName || firstName.trim().length < 3) return "First name (3+ characters) is required.";
+      if (firstName.length > 99)                     return "First name must be at most 99 characters.";
+      if (!lastName || lastName.trim().length < 3)   return "Last name (3+ characters) is required.";
+      if (lastName.length > 99)                      return "Last name must be at most 99 characters.";
+      if (!email)                                    return "Email is required.";
+      if (!EMAIL_RE.test(email))                     return "Enter a valid email address.";
+      if (!contact)                                  return "Phone number is required.";
+      if (password && password.length < 6)           return "Password must be at least 6 characters.";
+      if (selectedRoles.length === 0)                return "At least one role is required.";
+      if (!selectedRoles.some((r) => r.is_primary))  return "Mark one role as primary.";
+      const primary = selectedRoles.find((r) => r.is_primary);
+      const primaryName = String(primary?.name || primary?.slug || "").toLowerCase();
+      if (primaryName && BLOCKED_ROLE_NAMES.includes(primaryName)) {
+        return "You are not allowed to assign this role.";
+      }
+    }
+    return null;
+  };
+
+  // Full-form validation: walk every tab in order and return the first
+  // failing tab so handleSubmit can focus it. Driven by validateTab so the
+  // step-by-step and final checks never drift apart.
   const validate = () => {
-    // Every required field is on the Basics tab, so a validation failure
-    // always sends the user back there. If/when other tabs gain required
-    // fields, return the tab id alongside the message.
-    if (!firstName || firstName.length < 3) return { tab: "basics", message: "First name (3+ chars) is required." };
-    if (!lastName  || lastName.length  < 3) return { tab: "basics", message: "Last name (3+ chars) is required." };
-    if (!email)                              return { tab: "basics", message: "Email is required." };
-    if (!contact)                            return { tab: "basics", message: "Phone number is required." };
-    if (selectedRoles.length === 0)          return { tab: "basics", message: "At least one role is required." };
-    if (!selectedRoles.some((r) => r.is_primary)) return { tab: "basics", message: "Mark one role as primary." };
-    if (password && password.length < 6)     return { tab: "basics", message: "Password must be at least 6 characters." };
+    for (const t of TABS) {
+      const message = validateTab(t.id);
+      if (message) return { tab: t.id, message };
+    }
     return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Create flow: never fire the request before the final (Schedule) tab.
+    // The submit button only renders on the last tab, but an Enter keypress
+    // on an earlier tab (e.g. Org, the second-last) would otherwise submit
+    // the form prematurely and skip the scheduler. Treat any such early
+    // submit as a "Next" so the user can finish setting the schedule.
+    if (!isEdit && tabIndex < TABS.length - 1) {
+      goTab(1);
+      return;
+    }
 
     // In edit mode the validation rules are looser (no password required) —
     // but we DO still require at least one role + a primary marked, since
