@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { X, Sparkles, Image as ImageIcon, Send, Loader2, Eye, Code2 } from "lucide-react";
+import { X, Sparkles, Send, Loader2 } from "lucide-react";
 import { usePostMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
+import RichTextEditor from "../hr/common/RichTextEditor";
 
 const BRAND = "#C90606";
 const BORDER = "#EEF2F6";
@@ -11,21 +12,19 @@ const TM = "#94A3B8";
 const SURFACE = "#F8FAFC";
 
 /**
- * Compose a newsletter to all subscribers: write it manually, or draft it with
- * AI and edit; attach inline images; preview; then send. {name} is replaced
- * with each subscriber's first name at send time.
+ * Compose a newsletter to all subscribers: write it manually in the shared
+ * rich-text editor, or draft it with AI and edit; add inline images; then
+ * send. {name} is replaced with each subscriber's first name at send time.
  */
 export default function NewsletterComposer({ open, onClose, total = 0 }) {
   const [prompt, setPrompt] = useState("");
   const [tone, setTone] = useState("friendly and professional");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [tab, setTab] = useState("edit"); // edit | preview
   const [confirming, setConfirming] = useState(false);
 
   const [post, { isLoading: posting }] = usePostMutation();
   const [generating, setGenerating] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   if (!open) return null;
 
@@ -36,7 +35,6 @@ export default function NewsletterComposer({ open, onClose, total = 0 }) {
       const res = await post({ path: "newsletter/generate", body: { prompt: prompt.trim(), tone } }).unwrap();
       setSubject(res?.data?.subject || subject);
       setBody(res?.data?.body_html || "");
-      setTab("edit");
       showToast("Draft generated — edit as you like.", "success");
     } catch (e) {
       showToast(e?.data?.message || "AI generation failed.", "error");
@@ -45,24 +43,16 @@ export default function NewsletterComposer({ open, onClose, total = 0 }) {
     }
   };
 
-  const onPickImage = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setUploading(true);
+  // Uploads an image and returns its URL; the editor inserts it at the cursor.
+  const uploadImage = async (file) => {
+    const fd = new FormData();
+    fd.append("image", file);
     try {
-      const fd = new FormData();
-      fd.append("image", file);
       const res = await post({ path: "newsletter/upload-image", body: fd }).unwrap();
-      const url = res?.data?.url;
-      if (url) {
-        setBody((b) => `${b}\n<img src="${url}" alt="" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" />\n`);
-        showToast("Image added to the body.", "success");
-      }
+      return res?.data?.url || null;
     } catch (err) {
       showToast(err?.data?.message || "Image upload failed.", "error");
-    } finally {
-      setUploading(false);
+      return null;
     }
   };
 
@@ -82,7 +72,7 @@ export default function NewsletterComposer({ open, onClose, total = 0 }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(15,23,42,0.45)", fontFamily: "'Montserrat', sans-serif" }} onClick={onClose}>
       <div className="w-full max-w-3xl bg-white rounded-2xl max-h-[92vh] overflow-y-auto" style={{ border: `1px solid ${BORDER}` }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white" style={{ borderBottom: `1px solid ${BORDER}` }}>
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white z-10" style={{ borderBottom: `1px solid ${BORDER}` }}>
           <div className="flex items-center gap-2">
             <span className="grid place-items-center rounded-lg" style={{ width: 34, height: 34, background: "#FEF2F2", color: BRAND }}><Send size={16} /></span>
             <div>
@@ -121,35 +111,22 @@ export default function NewsletterComposer({ open, onClose, total = 0 }) {
               className="w-full px-3 py-2 text-[13px] rounded-lg outline-none" style={{ border: `1px solid ${BORDER}`, color: T1 }} />
           </div>
 
-          {/* Body — edit / preview */}
+          {/* Body — shared rich-text editor */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[12px] font-semibold" style={{ color: T2 }}>Body (HTML — fully editable)</label>
-              <div className="flex items-center gap-1.5">
-                <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold cursor-pointer" style={{ border: `1px solid ${BORDER}`, color: T2 }}>
-                  {uploading ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />} Add image
-                  <input type="file" accept="image/*" className="hidden" onChange={onPickImage} disabled={uploading} />
-                </label>
-                <button type="button" onClick={() => setTab(tab === "edit" ? "preview" : "edit")}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: T2 }}>
-                  {tab === "edit" ? <><Eye size={12} /> Preview</> : <><Code2 size={12} /> Edit</>}
-                </button>
-              </div>
-            </div>
-            {tab === "edit" ? (
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={12}
-                placeholder="Write your newsletter here. You can use HTML (<p>, <h2>, <a>…). Use {name} for the subscriber's first name."
-                className="w-full px-3 py-2 text-[13px] rounded-lg outline-none resize-y font-mono" style={{ border: `1px solid ${BORDER}`, color: T1 }} />
-            ) : (
-              <div className="px-4 py-3 rounded-lg overflow-auto" style={{ border: `1px solid ${BORDER}`, background: "#fff", maxHeight: 380 }}
-                dangerouslySetInnerHTML={{ __html: body || '<p style="color:#94A3B8">Nothing to preview yet.</p>' }} />
-            )}
-            <p className="text-[11px] mt-1" style={{ color: TM }}>Tip: <code>{"{name}"}</code> becomes each subscriber's first name. Images you add are embedded inline.</p>
+            <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T2 }}>Body</label>
+            <RichTextEditor
+              value={body}
+              onChange={setBody}
+              onImageUpload={uploadImage}
+              minHeight={300}
+              placeholder="Write your newsletter… use the toolbar to format, add links and images."
+            />
+            <p className="text-[11px] mt-1" style={{ color: TM }}>Tip: type <code>{"{name}"}</code> to insert the subscriber's first name.</p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-2 px-6 py-3 sticky bottom-0 bg-white" style={{ borderTop: `1px solid ${BORDER}` }}>
+        <div className="flex items-center justify-between gap-2 px-6 py-3 sticky bottom-0 bg-white z-10" style={{ borderTop: `1px solid ${BORDER}` }}>
           {confirming ? (
             <>
               <span className="text-[12px] font-semibold" style={{ color: BRAND }}>Send to all {total || ""} subscribers?</span>
@@ -162,7 +139,7 @@ export default function NewsletterComposer({ open, onClose, total = 0 }) {
             </>
           ) : (
             <>
-              <span className="text-[11px]" style={{ color: TM }}>Review in Preview before sending.</span>
+              <span className="text-[11px]" style={{ color: TM }}>Review your email before sending.</span>
               <div className="flex gap-2">
                 <button onClick={onClose} className="px-4 py-2 rounded-lg text-[12px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: T2 }}>Close</button>
                 <button onClick={() => { if (!subject.trim() || !body.trim()) { showToast("Add a subject and body first.", "error"); return; } setConfirming(true); }}
