@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   Users, Search, Loader2, Plus, Home, Laptop, Eye, ChevronDown, Download, UserX, X, Trash2, AlertTriangle, StickyNote,
@@ -51,7 +51,12 @@ export default function StudentsList() {
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [courseId, setCourseId] = useState("");
-  const [batchId, setBatchId] = useState("");
+  // Pre-select the batch when arriving from the Batches page
+  // (/dashboard/students?batch_id=<uuid>). The batch dropdown's option value
+  // is the batch_uuid, and the backend accepts a uuid for batch_id, so this
+  // both filters the list and shows the batch as selected.
+  const [searchParams] = useSearchParams();
+  const [batchId, setBatchId] = useState(searchParams.get("batch_id") || "");
   const [feeStatus, setFeeStatus] = useState("");
   const [joined, setJoined] = useState("");
   const [status, setStatus] = useState("");

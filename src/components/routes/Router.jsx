@@ -51,6 +51,7 @@ const EmployeeDetails = lazy(() => import("../employees/employeeDetailsPages/Emp
 const CoursesExpenses = lazy(() => import("../expenses/CoursesExpenses"));
 const WsExpenses = lazy(() => import("../expenses/WsExpenses"));
 const AllExpenses = lazy(() => import("../expenses/AllExpenses"));
+const AllIncome = lazy(() => import("../income/AllIncome"));
 const DeletedExpenses = lazy(() => import("../expenses/DeletedExpenses"));
 const ExpenseDetails = lazy(() => import("../expenses/components/ExpenseModal"));
 const FeesComponent = lazy(() => import("../fees/FeesComponent"));
@@ -125,6 +126,7 @@ import {
   LEDGER_ACCOUNTS,
   COMMISSIONS,
   ALL_EXPENSES,
+  ALL_INCOME,
   DELETED_EXPENSES,
   WHATSAPP_INBOX,
   FINANCE_STATS,
@@ -1594,6 +1596,15 @@ export default function Router() {
           element: (
             <PrivateRoute
               element={<AllExpenses />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: ALL_INCOME,
+          element: (
+            <PrivateRoute
+              element={<AllIncome />}
               isAuthenticated={useCheckAuthToken}
             />
           ),

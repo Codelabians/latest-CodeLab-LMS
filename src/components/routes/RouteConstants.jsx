@@ -93,6 +93,7 @@ export const STUDENT_LOANS = "/dashboard/finance/student-loans";
 export const LEDGER_ACCOUNTS = "/dashboard/finance/ledger";
 export const COMMISSIONS = "/dashboard/finance/commissions";
 export const ALL_EXPENSES = "/dashboard/finance/all-expenses";
+export const ALL_INCOME = "/dashboard/finance/all-income";
 export const DELETED_EXPENSES = "/dashboard/finance/deleted-expenses";
 export const WHATSAPP_INBOX = "/dashboard/whatsapp-inbox";
 export const STUDENT_ENROLL = "/dashboard/enroll/:id";

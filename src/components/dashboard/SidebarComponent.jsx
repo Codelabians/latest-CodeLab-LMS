@@ -136,6 +136,7 @@ import {
   LEDGER_ACCOUNTS,
   COMMISSIONS,
   ALL_EXPENSES,
+  ALL_INCOME,
   DELETED_EXPENSES,
   WHATSAPP_INBOX,
   TECHSCHOOL_EMAIL_TEMPLATES,
@@ -241,6 +242,7 @@ const NAV_SECTIONS = [
           { route: EMPLOYEE_PAYOUTS, label: "Employee Payouts", icon: Banknote, gate: ["get finance-summary"] },
           { route: EXPENSES, label: "Expenses", icon: ArrowDownCircle, gate: ["get expenses", "create expenses", "update expenses", "delete expenses"] },
           { route: ALL_EXPENSES, label: "All Expenses", icon: ArrowDownCircle, gate: ["get expenses", "create expenses", "update expenses", "delete expenses", "get finance-summary"] },
+          { route: ALL_INCOME, label: "All Income", icon: ArrowUpCircle, gate: ["get income", "create income", "update income", "delete income", "get finance-summary"] },
           { route: DELETED_EXPENSES, label: "Deleted Expenses", icon: Trash2, gate: ["get expenses", "update expenses", "delete expenses", "get finance-summary"] },
           { route: INCOME, label: "Income", icon: ArrowUpCircle, gate: ["get income", "create income", "update income", "delete income"] },
           // Refunds now have their own dedicated permission so refund access

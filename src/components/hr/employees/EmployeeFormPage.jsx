@@ -456,6 +456,21 @@ const EmployeeFormPage = () => {
       .map((r) => ({ value: r.id, label: titleCase(r.name), raw: r.name }));
   }, [rolesData]);
 
+  // Create mode: default the primary role to "employee" once the role catalog
+  // loads (HR can still change it). Runs once, never in edit mode.
+  const roleDefaultApplied = useRef(false);
+  useEffect(() => {
+    if (isEdit) { roleDefaultApplied.current = true; return; }
+    if (roleDefaultApplied.current) return;
+    if (selectedRoles.length > 0) { roleDefaultApplied.current = true; return; }
+    if (!roles.length) return;
+    const emp = roles.find((o) => o.raw === "employee");
+    if (emp) {
+      setSelectedRoles([{ id: emp.value, name: emp.label, is_primary: true }]);
+      roleDefaultApplied.current = true;
+    }
+  }, [isEdit, roles, selectedRoles.length]);
+
   const brands = useMemo(
     () => unwrap(brandsData).map((b) => ({ value: b.id, label: b.name })),
     [brandsData]
@@ -918,7 +933,7 @@ const EmployeeFormPage = () => {
       // (Teacher/Employee/Admin/Default) auto-creates the employee_profile
       // via the EnsuresEmployeeProfile trait.
       const created = await createUser({
-        path: "user/create-with-role",
+        path: "user/employees",
         body: {
           firstName,
           lastName,

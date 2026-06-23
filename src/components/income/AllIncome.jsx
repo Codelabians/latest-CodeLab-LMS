@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Loader2, ArrowDownCircle, ChevronLeft, ChevronRight, X, Pencil, Trash2, History, Save, RotateCcw } from "lucide-react";
+import { Search, Loader2, ArrowUpCircle, ChevronLeft, ChevronRight, X, Pencil, Trash2, History, Save, Plus, RotateCcw } from "lucide-react";
 import { useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation } from "../../api/apiSlice";
 import { useExpensePerms, ExpenseHistoryModal } from "../finance/expenseAudit";
-import PaidToField from "../finance/PaidToField";
 import { showToast } from "../ui/common/ShowToast";
 
-/* ---- design tokens (match Finance pages) ---- */
-const BRAND = "#C90606";
+/* ---- design tokens (income = green, mirrors AllExpenses layout) ---- */
+const BRAND = "#15803D";
+const TINT = "#F0FDF4";
+const TINT_BORDER = "#BBF7D0";
 const BORDER = "#EEF2F6";
 const TEXT_PRIMARY = "#0F172A";
 const TEXT_SECONDARY = "#475569";
@@ -14,7 +15,6 @@ const TEXT_MUTED = "#94A3B8";
 const SURFACE_HOVER = "#F8FAFC";
 const money = (n) => "Rs " + Number(n || 0).toLocaleString();
 
-/* Local-date helpers (browser tz; transaction_date is a plain date column). */
 const ymd = (d) => {
   const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   return z.toISOString().slice(0, 10);
@@ -24,7 +24,7 @@ const presetRange = (preset) => {
   const today = ymd(now);
   if (preset === "today") return { from: today, to: today };
   if (preset === "week") {
-    const day = (now.getDay() + 6) % 7; // Monday = 0
+    const day = (now.getDay() + 6) % 7;
     const monday = new Date(now); monday.setDate(now.getDate() - day);
     return { from: ymd(monday), to: today };
   }
@@ -32,7 +32,7 @@ const presetRange = (preset) => {
     const first = new Date(now.getFullYear(), now.getMonth(), 1);
     return { from: ymd(first), to: today };
   }
-  return { from: "", to: "" }; // all / custom
+  return { from: "", to: "" };
 };
 
 const PRESETS = [
@@ -52,28 +52,28 @@ const PAYMENT_METHODS = [
   { v: "other", l: "Other" },
 ];
 
-/* Compact edit modal for a single expense row. */
-function EditExpenseModal({ row, categories, payees, saving, onClose, onSubmit }) {
+const field = "w-full py-2 px-3 text-sm rounded-lg outline-none";
+const fieldStyle = { background: "#fff", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY };
+
+/* Shared add/edit modal for an income row. In create mode it also offers an
+   optional "Received into" account that posts the income to the ledger. */
+function IncomeModal({ row, categories, accounts, saving, onClose, onSubmit }) {
+  const isEdit = !!row;
   const [form, setForm] = useState({
-    amount: row.amount ?? "",
-    transaction_date: row.date ?? "",
-    description: row.description ?? "",
-    category_id: row.categoryId ?? "",
-    payment_method: row.method ?? "",
-    payee_user_id: row.payee_user_id ?? "",
-    payee_ledger_account_id: row.payee_ledger_account_id ?? "",
-    settle_in_ledger: !!row.ledger_settled,
+    amount: row?.amount ?? "",
+    transaction_date: row?.date ?? ymd(new Date()),
+    description: row?.description ?? "",
+    category_id: row?.categoryId ?? "",
+    payment_method: row?.method ?? "",
+    funded_by_account_uuid: "",
   });
-  const employeeOptions = (payees || []).map((p) => ({ value: String(p.id), label: p.name }));
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const field = "w-full py-2 px-3 text-sm rounded-lg outline-none";
-  const fieldStyle = { background: "#fff", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY };
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.45)" }}>
       <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
-          <h2 className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>Edit expense</h2>
+          <h2 className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>{isEdit ? "Edit income" : "Record income"}</h2>
           <button onClick={onClose} className="grid rounded-md w-7 h-7 place-items-center" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><X size={14} /></button>
         </div>
         <div className="p-5 space-y-3">
@@ -92,11 +92,6 @@ function EditExpenseModal({ row, categories, payees, saving, onClose, onSubmit }
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          <PaidToField
-            employeeOptions={employeeOptions}
-            value={{ payee_user_id: form.payee_user_id, payee_ledger_account_id: form.payee_ledger_account_id, settle_in_ledger: form.settle_in_ledger }}
-            onChange={(next) => setForm((f) => ({ ...f, ...next }))}
-          />
           <div>
             <label className="block mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEXT_SECONDARY }}>Method</label>
             <select value={form.payment_method || ""} onChange={(e) => set("payment_method", e.target.value)} className={field} style={fieldStyle}>
@@ -104,6 +99,15 @@ function EditExpenseModal({ row, categories, payees, saving, onClose, onSubmit }
               {PAYMENT_METHODS.map((m) => <option key={m.v} value={m.v}>{m.l}</option>)}
             </select>
           </div>
+          {!isEdit && (
+            <div>
+              <label className="block mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEXT_SECONDARY }}>Received into <span style={{ color: TEXT_MUTED }}>(optional — records in ledger)</span></label>
+              <select value={form.funded_by_account_uuid} onChange={(e) => set("funded_by_account_uuid", e.target.value)} className={field} style={fieldStyle}>
+                <option value="">— Do not post to ledger —</option>
+                {accounts.map((a) => <option key={a.account_uuid} value={a.account_uuid}>{a.name} · {a.kind}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEXT_SECONDARY }}>Description</label>
             <textarea rows={2} value={form.description} onChange={(e) => set("description", e.target.value)} className={`${field} resize-none`} style={fieldStyle} />
@@ -112,7 +116,7 @@ function EditExpenseModal({ row, categories, payees, saving, onClose, onSubmit }
         <div className="flex justify-end gap-2 px-5 py-4" style={{ borderTop: `1px solid ${BORDER}` }}>
           <button onClick={onClose} className="px-4 py-2 text-[13px] font-semibold rounded-lg" style={{ background: SURFACE_HOVER, color: TEXT_PRIMARY }}>Cancel</button>
           <button onClick={() => onSubmit(form)} disabled={saving} className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: BRAND }}>
-            <Save size={14} /> {saving ? "Saving…" : "Save changes"}
+            <Save size={14} /> {saving ? "Saving…" : (isEdit ? "Save changes" : "Record income")}
           </button>
         </div>
       </div>
@@ -124,8 +128,8 @@ function ConfirmDeleteModal({ busy, onClose, onConfirm }) {
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.45)" }}>
       <div className="w-full max-w-sm p-6 text-center bg-white rounded-2xl" style={{ border: `1px solid ${BORDER}` }}>
-        <div className="grid w-12 h-12 mx-auto mb-3 rounded-full place-items-center" style={{ background: "#FEF2F2", color: BRAND }}><Trash2 size={22} /></div>
-        <h2 className="text-[15px] font-bold mb-1" style={{ color: TEXT_PRIMARY }}>Delete this expense?</h2>
+        <div className="grid w-12 h-12 mx-auto mb-3 rounded-full place-items-center" style={{ background: TINT, color: BRAND }}><Trash2 size={22} /></div>
+        <h2 className="text-[15px] font-bold mb-1" style={{ color: TEXT_PRIMARY }}>Delete this income entry?</h2>
         <p className="text-[12.5px] mb-5" style={{ color: TEXT_MUTED }}>Delete moves it to the trash (restorable). Delete permanently removes it for good. Either way the ledger is adjusted.</p>
         <div className="flex flex-col gap-2">
           <button onClick={() => onConfirm(false)} disabled={busy} className="w-full py-2.5 text-[13px] font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: BRAND }}>{busy ? "Working…" : "Delete (move to trash)"}</button>
@@ -137,7 +141,7 @@ function ConfirmDeleteModal({ busy, onClose, onConfirm }) {
   );
 }
 
-export default function AllExpenses() {
+export default function AllIncome() {
   const [preset, setPreset] = useState("month");
   const [from, setFrom] = useState(presetRange("month").from);
   const [to, setTo] = useState(presetRange("month").to);
@@ -147,23 +151,20 @@ export default function AllExpenses() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
 
-  // Row actions: edit (finance), delete (admins), history (anyone with view).
   const { canEdit, canDelete } = useExpensePerms();
+  const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [deleteRow, setDeleteRow] = useState(null);
   const [historyRow, setHistoryRow] = useState(null);
+  const [createTx, { isLoading: creating }] = usePostMutation();
   const [updateTx, { isLoading: updating }] = usePatchMutation();
   const [deleteTx, { isLoading: deleting }] = useDeleteMutation();
   const [restoreTx] = usePostMutation();
   const [showDeleted, setShowDeleted] = useState(false);
 
-  // Apply a preset (custom keeps the existing dates and shows the inputs).
   const choosePreset = (p) => {
     setPreset(p);
-    if (p !== "custom") {
-      const r = presetRange(p);
-      setFrom(r.from); setTo(r.to);
-    }
+    if (p !== "custom") { const r = presetRange(p); setFrom(r.from); setTo(r.to); }
   };
 
   useEffect(() => {
@@ -172,8 +173,7 @@ export default function AllExpenses() {
   }, [search]);
   useEffect(() => { setPage(1); }, [from, to, categoryId, debounced, showDeleted]);
 
-  // Expense categories → dropdown + id→name map.
-  const { data: catData } = useGetQuery({ path: "finance/categories/expense" });
+  const { data: catData } = useGetQuery({ path: "finance/categories/income" });
   const categories = catData?.data || [];
   const catName = useMemo(() => {
     const m = {};
@@ -181,37 +181,27 @@ export default function AllExpenses() {
     return m;
   }, [categories]);
 
-  // Payees (paid-to) → id→name map.
-  const { data: empData } = useGetQuery({ path: "finance/expense-payees" });
-  const payeeName = (id) =>
-    (empData?.data || []).find((e) => String(e.id) === String(id))?.name || (id ? `User #${id}` : "—");
-
-  // External-party ledger accounts → resolve their names for display.
-  const { data: ledgerAcctData } = useGetQuery({ path: "finance/expense-parties" });
-  const ledgerPartyName = (id) => {
-    const a = (ledgerAcctData?.data || []).find((x) => String(x.id) === String(id));
-    return a?.party_label || a?.name || (id ? `Party #${id}` : "—");
-  };
+  // Money accounts for the "Received into" ledger picker.
+  const { data: acctData } = useGetQuery({ path: "finance/ledger/accounts" });
+  const accounts = useMemo(() => (acctData?.data || []).filter((a) => a.is_money), [acctData]);
 
   const baseParams = useMemo(() => ({
-    category_type: "expense",
+    category_type: "income",
     ...(categoryId && { category_id: categoryId }),
     ...(from && { from }),
     ...(to && { to }),
     ...(debounced && { q: debounced }),
   }), [categoryId, from, to, debounced]);
 
-  // Paginated table.
   const listPath = showDeleted ? "finance/deleted" : "finance";
   const listParams = showDeleted
-    ? { category_type: "expense", page, per_page: perPage }
+    ? { category_type: "income", page, per_page: perPage }
     : { ...baseParams, page, per_page: perPage };
   const { data, isLoading, isFetching, refetch } = useGetQuery({
     path: listPath,
     params: listParams,
   }, { refetchOnMountOrArgChange: true });
 
-  // Period totals (sum across the filter, not just this page).
   const { data: totalsData } = useGetQuery({
     path: "finance",
     params: { ...baseParams, page: 1, per_page: 1000 },
@@ -225,10 +215,8 @@ export default function AllExpenses() {
     date: r.transaction_date,
     description: r.description,
     categoryId: r.category_id,
-    payee_user_id: r.payee_user_id,
-    payee_ledger_account_id: r.payee_ledger_account_id,
-    ledger_settled: r.ledger_settled,
     method: r.payment_method,
+    source: r.source_type,
   }));
   const meta = data?.meta?.pagination || {};
   const currentPage = meta.current_page || page;
@@ -242,26 +230,43 @@ export default function AllExpenses() {
   const clearFilters = () => { setSearch(""); setCategoryId(""); choosePreset("all"); };
   const hasFilters = categoryId || debounced || preset !== "all";
 
-  const payees = empData?.data || [];
+  const onAddSave = async (form) => {
+    if (!form.amount || !form.category_id || !form.transaction_date) {
+      showToast("Amount, date and category are required.", "error");
+      return;
+    }
+    const body = {
+      amount: form.amount,
+      transaction_date: form.transaction_date,
+      category_id: form.category_id,
+      description: form.description || "",
+      payment_method: form.payment_method || null,
+      ...(form.funded_by_account_uuid && { funded_by_account_uuid: form.funded_by_account_uuid }),
+    };
+    try {
+      await createTx({ path: "finance/create", body }).unwrap();
+      setAddOpen(false);
+      refetch();
+      showToast("Income recorded.", "success");
+    } catch (e) {
+      showToast(e?.data?.message || "Failed to record income.", "error");
+    }
+  };
 
   const onEditSave = async (form) => {
-    // Only send filled fields (PATCH treats them as 'sometimes').
     const body = {};
     if (form.amount !== "" && form.amount !== null) body.amount = form.amount;
     if (form.transaction_date) body.transaction_date = form.transaction_date;
     if (form.category_id) body.category_id = form.category_id;
     body.description = form.description ?? "";
     body.payment_method = form.payment_method || null;
-    body.payee_user_id = form.payee_user_id || null;
-    body.payee_ledger_account_id = form.payee_ledger_account_id || null;
-    body.settle_in_ledger = !!form.settle_in_ledger;
     try {
       await updateTx({ path: `finance/update/${editRow.uuid}`, body }).unwrap();
       setEditRow(null);
       refetch();
-      showToast("Expense updated.", "success");
+      showToast("Income updated.", "success");
     } catch (e) {
-      showToast(e?.data?.message || "Failed to update expense.", "error");
+      showToast(e?.data?.message || "Failed to update income.", "error");
     }
   };
 
@@ -270,9 +275,9 @@ export default function AllExpenses() {
       await deleteTx({ path: `finance/delete/${deleteRow.uuid}${permanent ? "?permanent=1" : ""}`, body: {} }).unwrap();
       setDeleteRow(null);
       refetch();
-      showToast(permanent ? "Expense permanently deleted." : "Expense moved to trash.", "success");
+      showToast(permanent ? "Income permanently deleted." : "Income moved to trash.", "success");
     } catch (e) {
-      showToast(e?.data?.message || "Failed to delete expense.", "error");
+      showToast(e?.data?.message || "Failed to delete income.", "error");
     }
   };
 
@@ -280,34 +285,41 @@ export default function AllExpenses() {
     try {
       await restoreTx({ path: `finance/restore/${row.uuid}`, body: {} }).unwrap();
       refetch();
-      showToast("Expense restored.", "success");
+      showToast("Income restored.", "success");
     } catch (e) {
-      showToast(e?.data?.message || "Failed to restore expense.", "error");
+      showToast(e?.data?.message || "Failed to restore income.", "error");
     }
   };
 
   return (
     <div className="p-4 sm:p-6" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, background: "#FEF2F2", color: BRAND }}>
-            <ArrowDownCircle size={18} />
+          <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, background: TINT, color: BRAND }}>
+            <ArrowUpCircle size={18} />
           </div>
           <div>
-            <h1 className="text-[18px] font-bold" style={{ color: TEXT_PRIMARY }}>All Expenses</h1>
-            <p className="text-[12px]" style={{ color: TEXT_MUTED }}>Every expense in one table — filter by date, category, or search the description.</p>
+            <h1 className="text-[18px] font-bold" style={{ color: TEXT_PRIMARY }}>All Income</h1>
+            <p className="text-[12px]" style={{ color: TEXT_MUTED }}>Every income entry in one table — filter by date, category, or search the description.</p>
           </div>
         </div>
-        {/* Period total card */}
-        <div className="px-4 py-2 rounded-xl text-right" style={{ background: "#FEF2F2", border: "1px solid #FECACA" }}>
-          <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: BRAND }}>Total ({PRESETS.find((p) => p.v === preset)?.l || "All"})</div>
-          <div className="text-[17px] font-bold" style={{ color: BRAND }}>{money(periodTotal)}</div>
-          <div className="text-[10px]" style={{ color: TEXT_MUTED }}>{periodCount} expense{periodCount === 1 ? "" : "s"}</div>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 rounded-xl text-right" style={{ background: TINT, border: `1px solid ${TINT_BORDER}` }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: BRAND }}>Total ({PRESETS.find((p) => p.v === preset)?.l || "All"})</div>
+            <div className="text-[17px] font-bold" style={{ color: BRAND }}>{money(periodTotal)}</div>
+            <div className="text-[10px]" style={{ color: TEXT_MUTED }}>{periodCount} entr{periodCount === 1 ? "y" : "ies"}</div>
+          </div>
+          <button onClick={() => setShowDeleted((v) => !v)} className="inline-flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: showDeleted ? BRAND : TEXT_SECONDARY, background: showDeleted ? TINT : "#fff" }}>
+            <Trash2 size={14} /> {showDeleted ? "Showing deleted" : "Deleted"}
+          </button>
+          {!showDeleted && (
+            <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-semibold text-white rounded-lg" style={{ background: BRAND }}>
+              <Plus size={15} /> Record income
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="inline-flex items-center gap-1 p-0.5 rounded-lg" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}` }}>
           {PRESETS.map((p) => (
@@ -345,19 +357,15 @@ export default function AllExpenses() {
             <X size={13} /> Clear
           </button>
         )}
-        <button type="button" onClick={() => setShowDeleted((v) => !v)} className="inline-flex items-center gap-1 px-3 py-2 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: showDeleted ? BRAND : TEXT_SECONDARY, background: showDeleted ? "#FEF2F2" : "#fff" }}>
-          <Trash2 size={13} /> {showDeleted ? "Showing deleted" : "Deleted"}
-        </button>
         {isFetching && <Loader2 size={15} className="animate-spin" style={{ color: TEXT_MUTED }} />}
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${BORDER}` }}>
         <table className="w-full text-sm">
           <thead>
             <tr style={{ background: SURFACE_HOVER }}>
-              {["Date", "Category", "Description", "Paid to", "Method", "Amount"].map((h, i) => (
-                <th key={h} className={`px-4 py-3 text-[11px] font-bold uppercase tracking-wide ${i === 5 ? "text-right" : "text-left"}`} style={{ color: TEXT_SECONDARY }}>{h}</th>
+              {["Date", "Category", "Description", "Method", "Amount"].map((h, i) => (
+                <th key={h} className={`px-4 py-3 text-[11px] font-bold uppercase tracking-wide ${i === 4 ? "text-right" : "text-left"}`} style={{ color: TEXT_SECONDARY }}>{h}</th>
               ))}
               <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-right" style={{ color: TEXT_SECONDARY }}>Actions</th>
             </tr>
@@ -366,50 +374,40 @@ export default function AllExpenses() {
             {isLoading ? (
               [0, 1, 2, 3, 4].map((i) => (
                 <tr key={i} style={{ borderTop: `1px solid ${BORDER}` }}>
-                  {[90, 120, 240, 100, 70, 80, 80].map((w, j) => (
+                  {[90, 120, 260, 70, 80, 80].map((w, j) => (
                     <td key={j} className="px-4 py-3"><div className="h-3 rounded" style={{ width: w, background: "#EEF2F6" }} /></td>
                   ))}
                 </tr>
               ))
             ) : rows.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-14 text-center" style={{ color: TEXT_MUTED }}>
-                <ArrowDownCircle size={26} className="mx-auto mb-2 opacity-40" />
-                No expenses for this filter.
+              <tr><td colSpan={6} className="px-4 py-14 text-center" style={{ color: TEXT_MUTED }}>
+                <ArrowUpCircle size={26} className="mx-auto mb-2 opacity-40" />
+                No income for this filter.
               </td></tr>
             ) : (
               rows.map((r) => (
                 <tr key={r.uuid} style={{ borderTop: `1px solid ${BORDER}` }}>
                   <td className="px-4 py-3 whitespace-nowrap" style={{ color: TEXT_SECONDARY }}>{r.date || "—"}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="inline-block px-2 py-0.5 text-[11px] font-semibold rounded-full" style={{ background: "#FEF2F2", color: BRAND }}>
+                    <span className="inline-block px-2 py-0.5 text-[11px] font-semibold rounded-full" style={{ background: TINT, color: BRAND }}>
                       {catName[String(r.categoryId)] || "—"}
                     </span>
                   </td>
                   <td className="px-4 py-3" style={{ color: TEXT_PRIMARY, maxWidth: 420 }}>{r.description || <span style={{ color: TEXT_MUTED }}>—</span>}</td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: TEXT_SECONDARY }}>
-                    {r.payee_ledger_account_id ? (
-                      <span title={r.ledger_settled ? "Settled in ledger" : "Recorded (not settled)"}>
-                        {ledgerPartyName(r.payee_ledger_account_id)}
-                        {r.ledger_settled && <span className="ml-1 text-[10px] font-semibold" style={{ color: BRAND }}>· settled</span>}
-                      </span>
-                    ) : (
-                      payeeName(r.payee_user_id)
-                    )}
-                  </td>
                   <td className="px-4 py-3 whitespace-nowrap capitalize" style={{ color: TEXT_SECONDARY }}>{r.method || "—"}</td>
                   <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{ color: TEXT_PRIMARY }}>{money(r.amount)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1.5">
                       {showDeleted ? (
-                        <button onClick={() => onRestore(r)} title="Restore" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold" style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: BRAND }}><RotateCcw size={12} /> Restore</button>
+                        <button onClick={() => onRestore(r)} title="Restore" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold" style={{ background: TINT, border: `1px solid ${TINT_BORDER}`, color: BRAND }}><RotateCcw size={12} /> Restore</button>
                       ) : (
                         <>
                           <button onClick={() => setHistoryRow(r)} title="Edit history" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><History size={13} /></button>
-                          {canEdit && (
+                          {canEdit && !r.source && (
                             <button onClick={() => setEditRow(r)} title="Edit" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><Pencil size={13} /></button>
                           )}
-                          {canDelete && (
-                            <button onClick={() => setDeleteRow(r)} title="Delete" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: "#FEF2F2", border: `1px solid ${BORDER}`, color: BRAND }}><Trash2 size={13} /></button>
+                          {canDelete && !r.source && (
+                            <button onClick={() => setDeleteRow(r)} title="Delete" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: TINT, border: `1px solid ${BORDER}`, color: BRAND }}><Trash2 size={13} /></button>
                           )}
                         </>
                       )}
@@ -422,7 +420,6 @@ export default function AllExpenses() {
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
         <div className="flex items-center gap-2 text-[12px]" style={{ color: TEXT_MUTED }}>
           <span>{totalCount} total</span>
@@ -444,11 +441,21 @@ export default function AllExpenses() {
         </div>
       </div>
 
+      {addOpen && (
+        <IncomeModal
+          row={null}
+          categories={categories}
+          accounts={accounts}
+          saving={creating}
+          onClose={() => setAddOpen(false)}
+          onSubmit={onAddSave}
+        />
+      )}
       {editRow && (
-        <EditExpenseModal
+        <IncomeModal
           row={editRow}
           categories={categories}
-          payees={payees}
+          accounts={accounts}
           saving={updating}
           onClose={() => setEditRow(null)}
           onSubmit={onEditSave}

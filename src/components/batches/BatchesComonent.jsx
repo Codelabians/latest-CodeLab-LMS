@@ -259,7 +259,7 @@ const BatchesComponent = () => {
     }
   };
 
-  const handleRowClick = (b) => navigate(`/dashboard/batches/${b.batch_uuid}`);
+  const handleRowClick = (b) => navigate(`/dashboard/students?batch_id=${b.batch_uuid}&batch_name=${encodeURIComponent(b.name || b.batch_name || "")}`);
   const handleEdit = (b) => setFormModal({ open: true, mode: "edit", batch: b });
   const openAdd = () => setFormModal({ open: true, mode: "add", batch: null });
   const closeForm = () => setFormModal({ open: false, mode: null, batch: null });
