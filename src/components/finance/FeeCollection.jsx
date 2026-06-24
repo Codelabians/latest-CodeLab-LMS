@@ -5,6 +5,14 @@ import {
 } from "lucide-react";
 import { useGetQuery, usePostMutation, useDownloadChallanMutation } from "../../api/apiSlice";
 import SearchableSelect from "../ui/SearchableSelect";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../features/auth/authSlice";
+
+const hasPermission = (user, perm) => {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return (user.permissions || []).includes(perm);
+};
 
 const BRAND = "#C90606";
 const BORDER = "#EEF2F6";
@@ -33,6 +41,8 @@ const STATUS_STYLE = {
 };
 
 export default function FeeCollection() {
+  const currentUser = useSelector(selectCurrentUser);
+  const canSkipFinance = hasPermission(currentUser, "record historical-payment");
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [feeStatus, setFeeStatus] = useState("all"); // all | pending | overdue
@@ -46,6 +56,18 @@ export default function FeeCollection() {
   // Challan actions (download / email / whatsapp) per installment.
   const [dlChallan] = useDownloadChallanMutation();
   const [sendChallan] = usePostMutation();
+  const [resetInst] = usePostMutation();
+
+  const resetToPending = async (uuid) => {
+    if (!window.confirm("Undo all payments on this installment and set it back to pending? Any finance income/ledger for it is reversed.")) return;
+    try {
+      await resetInst({ path: `finance/installments/${uuid}/reset`, body: {} }).unwrap();
+      notify("Installment reset to pending.");
+      refetch();
+    } catch (e) {
+      notify(e?.data?.message || "Could not reset installment.", false);
+    }
+  };
   const [challanBusy, setChallanBusy] = useState(null);
   const downloadChallanFor = async (uuid) => {
     setChallanBusy(`dl-${uuid}`);
@@ -240,6 +262,14 @@ export default function FeeCollection() {
                                 style={{ background: BRAND }}
                               >Collect</button>
                             )}
+                            {canSkipFinance && i.remaining <= 0 && Number(i.paid) > 0 && (
+                              <button
+                                onClick={() => resetToPending(i.installment_uuid)}
+                                title="Undo payments → pending"
+                                className="px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                style={{ border: "1px solid #FCA5A5", color: "#B91C1C" }}
+                              >Reset</button>
+                            )}
                           </span>
                         </td>
                       </tr>
@@ -256,6 +286,7 @@ export default function FeeCollection() {
         <CollectModal
           installment={collectFor}
           studentUuid={selectedUuid}
+          canSkipFinance={canSkipFinance}
           onClose={() => setCollectFor(null)}
           onDone={(msg) => { notify(msg); setCollectFor(null); refetch(); }}
           onError={(msg) => notify(msg, false)}
@@ -276,8 +307,9 @@ export default function FeeCollection() {
 /* ------------------------------------------------------------------ */
 /* Collect modal — split-tender payment recording                     */
 /* ------------------------------------------------------------------ */
-function CollectModal({ installment, studentUuid, onClose, onDone, onError }) {
+function CollectModal({ installment, studentUuid, onClose, onDone, onError, canSkipFinance }) {
   const remaining = Number(installment.remaining || 0);
+  const [skipFinance, setSkipFinance] = useState(false);
   const [splits, setSplits] = useState([
     { amount: remaining ? String(remaining) : "", payment_method: "cash", paid_at: todayStr(), reference: "" },
   ]);
@@ -303,6 +335,7 @@ function CollectModal({ installment, studentUuid, onClose, onDone, onError }) {
         body: {
           installment_uuid: installment.installment_uuid,
           note: note || undefined,
+          skip_finance: skipFinance || undefined,
           splits: clean.map((s) => ({
             amount: s.amount,
             payment_method: s.payment_method,
@@ -375,6 +408,14 @@ function CollectModal({ installment, studentUuid, onClose, onDone, onError }) {
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. balance to be paid next week"
               className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cellStyle} />
           </div>
+          {canSkipFinance && (
+            <label className="mt-3 flex items-start gap-2 p-3 rounded-lg cursor-pointer" style={{ background: "#FEF9C3", border: "1px solid #FDE68A" }}>
+              <input type="checkbox" checked={skipFinance} onChange={(e) => setSkipFinance(e.target.checked)} className="mt-0.5" />
+              <span className="text-[11.5px]" style={{ color: "#854D0E" }}>
+                <b>Historical — don&apos;t record in finance.</b> Marks the fee paid in the student&apos;s record only; no income or ledger entry is created. Use for back-dated months.
+              </span>
+            </label>
+          )}
 
           <div className="flex items-center justify-between mt-4 p-3 rounded-lg" style={{ background: SURFACE_HOVER }}>
             <span className="text-[12px]" style={{ color: TEXT_SECONDARY }}>Total this payment</span>

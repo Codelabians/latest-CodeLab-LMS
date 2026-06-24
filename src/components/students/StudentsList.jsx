@@ -61,12 +61,14 @@ export default function StudentsList() {
   const [joined, setJoined] = useState("");
   const [status, setStatus] = useState("");
   const [instructorId, setInstructorId] = useState("");
+  const [joinedFrom, setJoinedFrom] = useState("");
+  const [joinedTo, setJoinedTo] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => { setQ(search.trim()); setPage(1); }, 350); return () => clearTimeout(t); }, [search]);
-  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status, instructorId]);
+  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo]);
 
   const params = useMemo(() => {
     const p = { page, per_page: perPage };
@@ -77,8 +79,10 @@ export default function StudentsList() {
     if (joined) p.joined = joined;
     if (status) p.status = status;
     if (instructorId) p.instructor_id = instructorId;
+    if (joinedFrom) p.joined_from = joinedFrom;
+    if (joinedTo) p.joined_to = joinedTo;
     return p;
-  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status, instructorId]);
+  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo]);
 
   const { data, isLoading, isFetching, refetch } = useGetQuery({ path: "/student/students", params });
   const rows = data?.data || [];
@@ -158,8 +162,8 @@ export default function StudentsList() {
     setDownloading(false);
   };
 
-  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); setInstructorId(""); };
-  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status || instructorId);
+  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); setInstructorId(""); setJoinedFrom(""); setJoinedTo(""); };
+  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status || instructorId || joinedFrom || joinedTo);
 
   return (
     <div className="w-full px-6 py-6 min-h-[calc(100vh-4rem)]" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC" }}>
@@ -215,6 +219,10 @@ export default function StudentsList() {
           <option value="this_week">This week</option>
           <option value="this_month">This month</option>
         </Select>
+        <input type="date" value={joinedFrom} onChange={(e) => setJoinedFrom(e.target.value)} title="Joined from"
+          className="py-2 px-2 text-sm rounded-lg outline-none" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" }} />
+        <input type="date" value={joinedTo} onChange={(e) => setJoinedTo(e.target.value)} title="Joined to"
+          className="py-2 px-2 text-sm rounded-lg outline-none" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" }} />
         <Select value={instructorId} onChange={(e) => setInstructorId(e.target.value)} width={150}>
           <option value="">Any instructor</option>
           {teachers.map((t) => (
