@@ -461,13 +461,14 @@ function MovementModal({ accounts, onClose, onDone }) {
     if (toType === "account" && !form.to_account_uuid) return showToast("Pick where the money goes", "error");
     if (toType === "expense" && !form.to_category) return showToast("Pick an expense category", "error");
     if (fromType !== "account" && toType !== "account") return showToast("At least one side must be a cash/bank/person account", "error");
+    if (fromType === "capital" && toType !== "account") return showToast("Capital must go into a cash/bank account", "error");
     if (!form.amount || Number(form.amount) <= 0) return showToast("Enter a valid amount", "error");
 
     const payload = {
       from_kind: fromType === "account" ? "account" : "category",
       to_kind: toType === "account" ? "account" : "category",
       from_account_uuid: fromType === "account" ? form.from_account_uuid : null,
-      from_category: fromType === "income" ? form.from_category : null,
+      from_category: fromType === "income" ? form.from_category : (fromType === "capital" ? "owner_capital" : null),
       to_account_uuid: toType === "account" ? form.to_account_uuid : null,
       to_category: toType === "expense" ? form.to_category : null,
       recipient_name: form.recipient_name || null,
@@ -511,9 +512,11 @@ function MovementModal({ accounts, onClose, onDone }) {
       <div className="space-y-3">
         {/* FROM */}
         <Labeled label="Money comes from">
-          {seg(fromType, (v) => { setFromType(v); setForm((f) => ({ ...f, from_account_uuid: "", from_category: "" })); }, [{ v: "account", l: "An account" }, { v: "income", l: "Income" }])}
+          {seg(fromType, (v) => { setFromType(v); setForm((f) => ({ ...f, from_account_uuid: "", from_category: "" })); }, [{ v: "account", l: "An account" }, { v: "income", l: "Income" }, { v: "capital", l: "Capital" }])}
           <div className="mt-2">
-            {fromType === "account" ? acctSelect(form.from_account_uuid, (v) => setForm((f) => ({ ...f, from_account_uuid: v }))) : (
+            {fromType === "account" ? acctSelect(form.from_account_uuid, (v) => setForm((f) => ({ ...f, from_account_uuid: v }))) : fromType === "capital" ? (
+              <input value={form.recipient_name} onChange={(e) => setForm((f) => ({ ...f, recipient_name: e.target.value }))} placeholder="Who is investing? (e.g. Raheel Saleem)" className="w-full px-3 py-2 text-sm rounded-lg outline-none" style={field} />
+            ) : (
               <select value={form.from_category} onChange={(e) => setForm((f) => ({ ...f, from_category: e.target.value }))} className="w-full px-3 py-2 text-sm rounded-lg outline-none" style={field}>
                 <option value="">Select income source…</option>
                 {incomeCats.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
