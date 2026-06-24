@@ -80,7 +80,7 @@ export default function StudentsList() {
 
   const { data, isLoading, isFetching, refetch } = useGetQuery({ path: "/student/students", params });
   const rows = data?.data || [];
-  const meta = data?.meta || data?.pagination || {};
+  const meta = data?.meta?.pagination || data?.meta || data?.pagination || {};
   const total = meta.total || rows.length;
 
   // Mark-dropout
