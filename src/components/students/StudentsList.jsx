@@ -60,12 +60,13 @@ export default function StudentsList() {
   const [feeStatus, setFeeStatus] = useState("");
   const [joined, setJoined] = useState("");
   const [status, setStatus] = useState("");
+  const [instructorId, setInstructorId] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => { setQ(search.trim()); setPage(1); }, 350); return () => clearTimeout(t); }, [search]);
-  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status]);
+  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status, instructorId]);
 
   const params = useMemo(() => {
     const p = { page, per_page: perPage };
@@ -75,8 +76,9 @@ export default function StudentsList() {
     if (feeStatus) p.fee_status = feeStatus;
     if (joined) p.joined = joined;
     if (status) p.status = status;
+    if (instructorId) p.instructor_id = instructorId;
     return p;
-  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status]);
+  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status, instructorId]);
 
   const { data, isLoading, isFetching, refetch } = useGetQuery({ path: "/student/students", params });
   const rows = data?.data || [];
@@ -130,6 +132,8 @@ export default function StudentsList() {
   const { data: courseData } = useGetQuery({ path: "/course/courses", params: { per_page: 200 } });
   const courses = courseData?.data || [];
   const { data: batchData } = useGetQuery({ path: "/course/batches", params: { per_page: 200 } });
+  const { data: teacherData } = useGetQuery({ path: "/course/teachers" });
+  const teachers = teacherData?.data || [];
   const batches = useMemo(() => {
     const list = batchData?.data || [];
     return courseId ? list.filter((b) => String(b.course_id) === String(courseId)) : list;
@@ -154,8 +158,8 @@ export default function StudentsList() {
     setDownloading(false);
   };
 
-  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); };
-  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status);
+  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); setInstructorId(""); };
+  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status || instructorId);
 
   return (
     <div className="w-full px-6 py-6 min-h-[calc(100vh-4rem)]" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC" }}>
@@ -210,6 +214,12 @@ export default function StudentsList() {
           <option value="today">Joined today</option>
           <option value="this_week">This week</option>
           <option value="this_month">This month</option>
+        </Select>
+        <Select value={instructorId} onChange={(e) => setInstructorId(e.target.value)} width={150}>
+          <option value="">Any instructor</option>
+          {teachers.map((t) => (
+            <option key={t.id} value={String(t.id)}>{t.name || `${t.first_name || ""} ${t.last_name || ""}`.trim() || t.email}</option>
+          ))}
         </Select>
         <Select value={status} onChange={(e) => setStatus(e.target.value)} width={130}>
           <option value="">Any status</option>
