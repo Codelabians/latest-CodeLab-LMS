@@ -57,6 +57,7 @@ export default function FeeCollection() {
   const [dlChallan] = useDownloadChallanMutation();
   const [sendChallan] = usePostMutation();
   const [resetInst] = usePostMutation();
+  const [deleteInst] = usePostMutation();
 
   const resetToPending = async (uuid) => {
     if (!window.confirm("Undo all payments on this installment and set it back to pending? Any finance income/ledger for it is reversed.")) return;
@@ -66,6 +67,17 @@ export default function FeeCollection() {
       refetch();
     } catch (e) {
       notify(e?.data?.message || "Could not reset installment.", false);
+    }
+  };
+
+  const deleteInstallment = async (uuid) => {
+    if (!window.confirm("Delete this fee record permanently? Use this for months the student is not liable for (e.g. approved leave). Any finance income/ledger for it is reversed. This cannot be undone.")) return;
+    try {
+      await deleteInst({ path: `finance/installments/${uuid}/delete`, body: {} }).unwrap();
+      notify("Fee record deleted.");
+      refetch();
+    } catch (e) {
+      notify(e?.data?.message || "Could not delete the fee record.", false);
     }
   };
   const [challanBusy, setChallanBusy] = useState(null);
@@ -269,6 +281,14 @@ export default function FeeCollection() {
                                 className="px-2 py-1.5 rounded-lg text-[11px] font-semibold"
                                 style={{ border: "1px solid #FCA5A5", color: "#B91C1C" }}
                               >Reset</button>
+                            )}
+                            {canSkipFinance && (
+                              <button
+                                onClick={() => deleteInstallment(i.installment_uuid)}
+                                title="Delete this fee record (e.g. leave month)"
+                                className="px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                style={{ border: "1px solid #FCA5A5", background: "#FEF2F2", color: "#B91C1C" }}
+                              >Delete</button>
                             )}
                           </span>
                         </td>
