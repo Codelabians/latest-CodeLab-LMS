@@ -14,7 +14,7 @@ export default function BatchAttendancePage() {
 
   useEffect(() => { if (batches.length && !batchUuid) setBatchUuid(batches[0].batch_uuid); }, [batches, batchUuid]);
 
-  const options = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.course_name ? ` · ${b.course_name}` : ""}` }));
+  const options = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.teacher_name ? ` · ${b.teacher_name}` : ""}${b.course_name ? ` · ${b.course_name}` : ""}` }));
 
   const { data: regData, isFetching } = useGetQuery(
     { path: `/student/batches/${batchUuid}/attendance` },

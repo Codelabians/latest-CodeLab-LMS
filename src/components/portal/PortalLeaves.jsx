@@ -18,7 +18,7 @@ export default function PortalLeaves() {
   const [open, setOpen] = useState(false);
 
   const leaves = data?.data || [];
-  const batches = (prof?.data?.enrollments || []).filter((e) => e.is_active && e.batch?.id).map((e) => ({ id: e.batch.id, label: `${e.course?.name || ""} · ${e.batch?.name || ""}` }));
+  const batches = (prof?.data?.enrollments || []).filter((e) => e.is_active && e.batch?.id).map((e) => ({ id: e.batch.id, label: `${e.course?.name || ""} · ${e.batch?.name || ""}${e.instructor ? ` · ${e.instructor}` : ""}` }));
 
   return (
     <div className="space-y-4">

@@ -196,7 +196,7 @@ export default function StudentDetailPage() {
                 s.registration_no ||
                 ("STU-" + String(s.uuid || "").replace(/-/g, "").slice(0, 8).toUpperCase()),
               roleLine: primaryEnrol.course?.name || "",
-              subLine: primaryEnrol.batch?.name ? `Batch: ${primaryEnrol.batch.name}` : "",
+              subLine: primaryEnrol.batch?.name ? `Batch: ${primaryEnrol.batch.name}${primaryEnrol.instructor ? ` · ${primaryEnrol.instructor}` : ""}` : "",
               dateLabel: "Enrolled",
               dateValue: primaryEnrol.join_date || primaryEnrol.enrolled_at || "",
               email: s.email,
@@ -602,7 +602,7 @@ function SwitchBatchModal({ studentUuid, onClose, onDone, onError }) {
 
   const { data: batchData } = useGetQuery({ path: "/course/batches", params: { per_page: 200 } });
   const batches = batchData?.data || [];
-  const batchOptions = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.course_name ? ` · ${b.course_name}` : ""}${b.timing ? ` · ${b.timing}` : ""}` }));
+  const batchOptions = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.teacher_name ? ` · ${b.teacher_name}` : ""}${b.course_name ? ` · ${b.course_name}` : ""}${b.timing ? ` · ${b.timing}` : ""}` }));
 
   const submit = async () => {
     if (!batchUuid) { onError("Pick the destination batch."); return; }
@@ -681,15 +681,15 @@ function AssignAmbassadorModal({ studentUuid, onClose, onDone, onError }) {
   const [ambUuid, setAmbUuid] = useState(null);
   const [post, { isLoading }] = usePostMutation();
 
-  // Any existing student can be a referrer (brand ambassadors included —
-  // they're just students with the badge). Search the full student list.
-  const { data } = useGetQuery({ path: `student/students?q=${encodeURIComponent(q)}&per_page=50` });
+  // Students AND employees/teachers can be referrers (brand ambassadors
+  // included). referrer-candidates searches both; employees earn cash.
+  const { data } = useGetQuery({ path: `student/referrer-candidates?q=${encodeURIComponent(q)}&per_page=50` });
   const list = data?.data || [];
   const options = list
     .filter((a) => a.uuid !== studentUuid) // can't refer themselves
     .map((a) => ({
       value: a.uuid,
-      label: `${a.name || a.email}${a.is_brand_ambassador ? " · Ambassador" : ""}`,
+      label: `${a.name || a.email}${a.is_brand_ambassador ? " · Ambassador" : a.type === "employee" ? " · Employee" : ""}`,
       avatarUrl: a.image || null,
     }));
 
@@ -709,8 +709,8 @@ function AssignAmbassadorModal({ studentUuid, onClose, onDone, onError }) {
           <button onClick={onClose}><X size={18} style={{ color: "#94A3B8" }} /></button>
         </div>
         <div className="px-5 py-4">
-          <p className="text-[12px] mb-3" style={{ color: "#475569" }}>Record which student referred this one. Any existing student can be a referrer; if they qualify (e.g. a brand ambassador) they earn leaderboard / reward credit.</p>
-          <SearchableSelect options={options} value={ambUuid} onChange={setAmbUuid} onSearch={setQ} showAvatars placeholder="Search students…" label="Referrer" />
+          <p className="text-[12px] mb-3" style={{ color: "#475569" }}>Record who referred this student. Any existing student or employee can be a referrer; if they qualify they earn leaderboard / reward credit (employees are paid in cash).</p>
+          <SearchableSelect options={options} value={ambUuid} onChange={setAmbUuid} onSearch={setQ} showAvatars placeholder="Search students or employees…" label="Referrer" />
         </div>
         <div className="px-5 py-4 flex justify-end gap-2" style={{ borderTop: "1px solid #EEF2F6" }}>
           <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ border: "1px solid #EEF2F6", color: "#475569" }}>Cancel</button>

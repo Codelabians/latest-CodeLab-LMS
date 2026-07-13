@@ -12,7 +12,7 @@ import ForcePasswordReset from "./ForcePasswordReset";
 import BrandMark from "../common/BrandMark";
 import FirstLoginTour from "../common/FirstLoginTour";
 import {
-  PORTAL, PORTAL_ATTENDANCE, PORTAL_FEES, PORTAL_ASSETS, PORTAL_LEAVES, PORTAL_MAKEUPS, PORTAL_ASSIGNMENTS, PORTAL_CONTENT, PORTAL_ANNOUNCEMENTS, PORTAL_REWARDS, PORTAL_PROFILE, PORTAL_RULES, PORTAL_CAREER, PORTAL_QUIZ, PORTAL_LOGIN, PORTAL_COMPLAINTS,
+  PORTAL, PORTAL_ATTENDANCE, PORTAL_FEES, PORTAL_ASSETS, PORTAL_LEAVES, PORTAL_MAKEUPS, PORTAL_ASSIGNMENTS, PORTAL_CONTENT, PORTAL_ANNOUNCEMENTS, PORTAL_REWARDS, PORTAL_PROFILE, PORTAL_RULES, PORTAL_CAREER, PORTAL_QUIZ, PORTAL_LOGIN, PORTAL_COMPLAINTS, TEACHER,
 } from "../routes/RouteConstants";
 
 const BRAND_RED = "#C90606";
@@ -108,6 +108,19 @@ export default function PortalLayout() {
   const { data: me } = useGetQuery({ path: "/user/get-user" }, { skip: !token });
 
   if (!token) return <Navigate to={PORTAL_LOGIN} replace />;
+
+  // Role gate: the student portal is for the "user" (student) role only.
+  // All three logins share the same auth token, so without this check a
+  // staff member signed into the admin panel could open /portal/* URLs.
+  // Falls back to the freshly fetched profile after a page refresh (redux
+  // user may be empty until then — don't redirect while neither is loaded).
+  const roleSource = user?.role || user?.roles ? user : me?.data;
+  if (roleSource) {
+    const roleNames = [roleSource.role, ...(roleSource.roles || [])].filter(Boolean);
+    if (!roleNames.includes("user")) {
+      return <Navigate to={TEACHER} replace />;
+    }
+  }
 
   // Force-reset gate: account created with a temporary password must set
   // their own before they can use the portal.

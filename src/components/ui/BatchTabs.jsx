@@ -37,7 +37,7 @@ const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="cursor-pointer border-b border-rouded shadow-md  px-4 py-2 flex justify-between items-center text-[#100F0F] font-medium w-full"
       >
-        <span>{selectedBatch?.name || "Select Batch"}</span>
+        <span>{selectedBatch ? `${selectedBatch.name}${selectedBatch.teacher_name ? ` · ${selectedBatch.teacher_name}` : ""}` : "Select Batch"}</span>
         <span>{isOpen ? "▲" : "▼"}</span>
       </div>
 
@@ -56,7 +56,7 @@ const BatchTabs = ({ setActiveBatchTab, activeBatchTab }) => {
                     : "hover:bg-[#aa0e0e] hover:text-white"
                 }`}
               >
-                {batch.name}
+                {batch.name}{batch.teacher_name ? ` · ${batch.teacher_name}` : ""}
               </li>
             );
           })}

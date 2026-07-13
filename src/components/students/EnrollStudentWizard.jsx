@@ -147,7 +147,7 @@ export default function EnrollStudentWizard() {
   const cityOptions = (cityData?.data || []).map((c) => ({ value: c.name, label: c.name })).filter((o) => o.value);
   const instOptions = (instData?.data || []).map((i) => ({ value: i.name, label: i.name })).filter((o) => o.value);
   const courseOptions = courses.map((c) => ({ value: String(c.id), label: c.name }));
-  const batchOptions = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.timing ? ` · ${b.timing}` : ""}${b.course_name ? ` · ${b.course_name}` : ""}` }));
+  const batchOptions = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.teacher_name ? ` · ${b.teacher_name}` : ""}${b.timing ? ` · ${b.timing}` : ""}${b.course_name ? ` · ${b.course_name}` : ""}` }));
   const laptops = laptopData?.data || [];
   const accounts = acctData?.data || [];
 

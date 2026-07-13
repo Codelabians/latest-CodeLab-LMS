@@ -172,7 +172,7 @@ export default function PortalDashboard() {
           {up && (
             <div className="bg-white rounded-xl p-4" style={{ border: `1px solid ${BORDER}` }}>
               <div className="flex items-center gap-2 mb-1 text-[12px] font-bold" style={{ color: "#0F172A" }}><CalendarClock size={15} style={{ color: BRAND }} /> Next class</div>
-              <div className="text-[13px]" style={{ color: "#475569" }}>{up.course_name || up.batch_name}{up.batch_name && up.course_name ? ` · ${up.batch_name}` : ""}</div>
+              <div className="text-[13px]" style={{ color: "#475569" }}>{up.course_name || up.batch_name}{up.batch_name && up.course_name ? ` · ${up.batch_name}` : ""}{up.teacher_name ? ` · ${up.teacher_name}` : ""}</div>
               <div className="text-[12px]" style={{ color: "#94A3B8" }}>{up.session_date}{up.mode ? ` · ${up.mode}` : ""}</div>
               {up.meeting_link && <a href={up.meeting_link} target="_blank" rel="noreferrer" className="inline-block mt-2 text-[12px] font-semibold" style={{ color: BRAND }}>Join link →</a>}
             </div>

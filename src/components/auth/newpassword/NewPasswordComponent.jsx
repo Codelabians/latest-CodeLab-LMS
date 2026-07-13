@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Logo from "../../../assets/images/park logo.png";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { usePostMutation } from "../../../api/apiSlice";
 import * as Yup from "yup";
 import { useFormik } from "formik";
@@ -13,6 +14,11 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const ForgetComponent = () => {
   const navigate = useNavigate();
+  // The reset email links here as /newpassword?token=...&email=... — both
+  // are required by the backend reset endpoint alongside the new password.
+  const [searchParams] = useSearchParams();
+  const resetToken = searchParams.get("token") || "";
+  const resetEmail = searchParams.get("email") || "";
   const [passicon, setPassIcon] = useState(false);
   const [confirmPassIcon, setConfirmPassIcon] = useState(false);
   const error = useSelector((state) => state.error.error);
@@ -40,14 +46,21 @@ const ForgetComponent = () => {
       initialValues: { password: "", password_confirmation: "" },
       validationSchema: signInValidation,
       onSubmit: async (values) => {
+        if (!resetToken || !resetEmail) {
+          toast.error("This reset link is invalid or incomplete. Please use the link from your email, or request a new one.");
+          return;
+        }
         try {
           await updatePassword({
-            path: "admin/authentication/reset-password",
-            body: values,
+            path: "admin/authentication/password/reset",
+            body: { ...values, token: resetToken, email: resetEmail },
           }).unwrap();
-          // Navigate to Signin on success
+          toast.success("Password updated. Please sign in with your new password.");
           navigate(SIGNIN);
         } catch (err) {
+          const errs = err?.data?.errors;
+          const firstErr = errs && Object.values(errs)[0]?.[0];
+          toast.error(firstErr || err?.data?.message || "Could not reset password. The link may have expired — request a new one.");
           console.error("Failed to reset password:", err);
         }
       },
@@ -69,6 +82,12 @@ const ForgetComponent = () => {
               Your new password must be different from previously used
               passwords.
             </p>
+            {(!resetToken || !resetEmail) && (
+              <div className="mt-2 mx-5 max-w-sm rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs text-orange-700">
+                This page must be opened from the reset link in your email.
+                If you don&apos;t have one, request it from the Forgot Password page.
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-5 md:w-[65%] mx-auto w-full px-6">

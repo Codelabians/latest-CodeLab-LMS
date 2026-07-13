@@ -409,7 +409,7 @@ const EnrollClassModal = ({
               </div>
             ) : (
               <SearchableSelect
-                options={(batchesData?.data || []).map((batch) => ({ value: batch?.name, label: batch?.name }))}
+                options={(batchesData?.data || []).map((batch) => ({ value: batch?.name, label: `${batch?.name}${batch?.teacher_name ? ` · ${batch.teacher_name}` : ""}` }))}
                 value={selectedBatch?.name || ""}
                 onChange={(v) => handleChange({ target: { name: "batchId", value: v || "" } })}
                 placeholder="Select a Batch" />

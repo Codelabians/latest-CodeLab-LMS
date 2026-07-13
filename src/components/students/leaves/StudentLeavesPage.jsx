@@ -94,7 +94,7 @@ export default function StudentLeavesPage() {
                   return (
                     <tr key={r.id} style={{ borderTop: `1px solid ${BORDER}` }}>
                       <td className="px-3 py-2.5 font-semibold" style={{ color: TEXT_PRIMARY }}>{r.user?.name || `User #${r.user_id}`}</td>
-                      <td className="px-3 py-2.5" style={{ color: TEXT_SECONDARY }}>{r.batch?.name || "—"}</td>
+                      <td className="px-3 py-2.5" style={{ color: TEXT_SECONDARY }}>{r.batch?.name ? `${r.batch.name}${r.batch.teacher_name ? ` · ${r.batch.teacher_name}` : ""}` : "—"}</td>
                       <td className="px-3 py-2.5" style={{ color: TEXT_SECONDARY }}>{LEAVE_TYPE[r.leave_type] || r.leave_type}</td>
                       <td className="px-3 py-2.5" style={{ color: TEXT_SECONDARY }}>
                         {r.start_date} → {r.end_date}
@@ -173,7 +173,7 @@ function ApproveRejectModal({ leave, kind, onClose, onDone }) {
         </div>
         <div className="px-5 py-4 space-y-3">
           <div className="text-[12px]" style={{ color: TEXT_SECONDARY }}>
-            <div><b>{leave.user?.name || `User #${leave.user_id}`}</b> · {leave.batch?.name || "—"}</div>
+            <div><b>{leave.user?.name || `User #${leave.user_id}`}</b> · {leave.batch?.name ? `${leave.batch.name}${leave.batch.teacher_name ? ` · ${leave.batch.teacher_name}` : ""}` : "—"}</div>
             <div>{leave.start_date} → {leave.end_date} · {LEAVE_TYPE[leave.leave_type] || leave.leave_type}</div>
             {isApprove && leave.fee_adjustment_amount > 0 && (
               <div className="mt-1 font-semibold" style={{ color: "#15803D" }}>Approving posts a fee adjustment of − {money(leave.fee_adjustment_amount)}.</div>

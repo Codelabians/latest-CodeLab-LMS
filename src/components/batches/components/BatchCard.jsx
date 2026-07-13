@@ -51,6 +51,9 @@ const BatchCard = ({ batch, index, active, loading, onToggle }) => (
         `}
         >
           {batch.name}
+          {(batch.teacher_name || batch.teacher?.name) && (
+            <span className="font-medium text-gray-400"> · {batch.teacher_name || batch.teacher?.name}</span>
+          )}
         </p>
 
         <div className="flex items-center gap-2 mt-1.5 flex-wrap">

@@ -8,7 +8,7 @@ import { useFormik } from "formik";
 import ForgetImage from "../../../assets/images/forget/forget illustration rohi.png";
 import ForgetImage2 from "../../../assets/images/forget/forget illustration rohi.png";
 import ArrowImage from "../../../assets/images/forget/arrow.png";
-import { SIGNIN, OTP } from "../../routes/RouteConstants";
+import { SIGNIN } from "../../routes/RouteConstants";
 import { toast } from "react-toastify";
 
 const ForgetComponent = () => {
@@ -48,8 +48,11 @@ const ForgetComponent = () => {
           path: "/admin/authentication/forget-password",
           body: values,
         }).unwrap();
-        toast.success(res?.message || "OTP sent successfully!");
-        navigate(OTP);
+        // The backend emails a reset LINK (no OTP system exists) that lands
+        // on /newpassword?token=...&email=... — so just point them at their
+        // inbox and go back to sign-in.
+        toast.success("Password reset link sent — check your email inbox.");
+        navigate(SIGNIN);
       } catch (err) {
         toast.error(err?.data?.message || "Something went wrong");
         console.error("Failed to forget:", err);
@@ -73,7 +76,7 @@ const ForgetComponent = () => {
               Forget Password
             </h1>
             <p className="px-5 text-xs tracking-wide text-gray-500 md:text-sm max-w-sm">
-              Please enter your Email to receive your confirmation code
+              Please enter your email and we&apos;ll send you a password reset link
             </p>
           </div>
 

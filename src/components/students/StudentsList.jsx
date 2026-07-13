@@ -186,7 +186,7 @@ export default function StudentsList() {
         </div>
         <div style={{ minWidth: 150 }}>
           <SearchableSelect
-            options={batches.map((b) => ({ value: String(b.batch_uuid || b.id), label: b.name }))}
+            options={batches.map((b) => ({ value: String(b.batch_uuid || b.id), label: `${b.name}${b.teacher_name ? ` · ${b.teacher_name}` : ""}` }))}
             value={batchId ? String(batchId) : ""}
             onChange={(v) => setBatchId(v || "")}
             placeholder="All batches" />
@@ -238,7 +238,12 @@ export default function StudentsList() {
                           {r.is_hostalize && <Home size={12} style={{ color: "#0891B2" }} title="Hostelite" />}
                           {r.laptop_provided && <Laptop size={12} style={{ color: "#B45309" }} title="Laptop provided" />}
                         </div>
-                        <div className="text-[11px]" style={{ color: TEXT_MUTED }}>{r.email || r.cnic || r.contact || ""}</div>
+                        <div className="text-[11px]" style={{ color: TEXT_MUTED }}>{r.email || r.cnic || ""}</div>
+                        {r.contact && (
+                          <a href={`tel:${r.contact}`} className="text-[11px] font-semibold hover:underline" style={{ color: TEXT_SECONDARY }} onClick={(ev) => ev.stopPropagation()}>
+                            {r.contact}
+                          </a>
+                        )}
                       </div>
                     </div>
                   </td>

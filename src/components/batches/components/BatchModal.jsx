@@ -48,6 +48,9 @@ const validate = (s) => {
   if (s.duration && s.duration.length > 255) {
     errors.duration = "Duration must be 255 characters or fewer";
   }
+  if (s.name && s.name.trim().length > 255) {
+    errors.name = "Batch name must be 255 characters or fewer";
+  }
 
   return errors;
 };
@@ -126,6 +129,7 @@ const BatchModal = ({
   const isEdit = mode === "edit";
 
   const blank = {
+    name: "",               // optional — blank lets the backend auto-generate
     course_id: "",          // course UUID — backend filter accepts both UUID and int
     teacher_id: "",         // teacher id (int as string)
     hall_id: "",            // hall id (int as string)
@@ -157,6 +161,7 @@ const BatchModal = ({
       // course UUID for the dropdown. Look it up from the courses list.
       const matchedCourse = courses.find((c) => c.id === initialBatch.course_id || c.uuid === initialBatch.course_uuid);
       setState({
+        name: initialBatch.name || "",
         course_id: matchedCourse?.uuid || initialBatch.course_uuid || "",
         teacher_id: initialBatch.teacher_id ? String(initialBatch.teacher_id) : "",
         hall_id: initialBatch.hall_id ? String(initialBatch.hall_id) : "",
@@ -221,6 +226,9 @@ const BatchModal = ({
       payload.default_meeting_link = state.default_meeting_link;
     }
     if (state.duration?.trim()) payload.duration = state.duration.trim();
+    // Blank name -> omit: backend auto-generates on create and keeps the
+    // current name on edit. Uniqueness is validated server-side.
+    if (state.name?.trim()) payload.name = state.name.trim();
 
     setServerError("");
     const result = await onSubmit(payload);
@@ -299,7 +307,7 @@ const BatchModal = ({
               <p className="text-[11.5px] mt-0.5" style={{ color: TEXT_MUTED }}>
                 {isEdit
                   ? "Update batch details"
-                  : "Batch name is auto-generated. The curriculum will be snapshotted from the course."}
+                  : "Leave the name blank to auto-generate it. The curriculum will be snapshotted from the course."}
               </p>
             </div>
           </div>
@@ -326,6 +334,26 @@ const BatchModal = ({
           )}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Batch name (optional; must be unique) */}
+            <div className="md:col-span-2">
+              <Field
+                label="Batch name"
+                icon={Hash}
+                error={showErr("name")}
+                helper={isEdit ? "Must be unique across all batches." : "Leave blank to auto-generate (e.g. Batch-07-Jul-2026). Must be unique."}
+              >
+                <input
+                  type="text"
+                  value={state.name}
+                  onChange={(ev) => set("name", ev.target.value)}
+                  onBlur={() => markTouched("name")}
+                  placeholder={isEdit ? "Batch name" : "Auto-generated if left blank"}
+                  maxLength={255}
+                  style={inputStyle(!!showErr("name"))}
+                />
+              </Field>
+            </div>
+
             {/* Course */}
             <Field label="Course" icon={BookOpen} error={showErr("course_id")} required>
               <SearchableSelect

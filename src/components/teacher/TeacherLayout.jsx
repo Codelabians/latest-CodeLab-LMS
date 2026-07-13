@@ -13,7 +13,7 @@ import { EMPLOYMENT_SECTIONS } from "./employmentSections";
 import { firstAccessibleRoute } from "../dashboard/SidebarComponent";
 import {
   TEACHER, TEACHER_ATTENDANCE, TEACHER_MAKEUPS, TEACHER_STUDENTS, TEACHER_ASSIGNMENTS, TEACHER_CONTENT, TEACHER_PERFORMANCE, TEACHER_ANNOUNCEMENTS, TEACHER_REWARDS, TEACHER_EMPLOYMENT, TEACHER_RULES, TEACHER_ASSESSMENT, TEACHER_LOGIN,
-  ADMINDASHBOARD,
+  ADMINDASHBOARD, PORTAL,
 } from "../routes/RouteConstants";
 
 const BRAND_RED = "#C90606";
@@ -93,6 +93,17 @@ export default function TeacherLayout() {
   const { data: ctx } = useGetQuery({ path: "/teacher/me/context" }, { skip: !token });
 
   if (!token) return <Navigate to={TEACHER_LOGIN} replace />;
+
+  // Role gate (mirror of PortalLayout): all logins share one auth token, so
+  // without this a student could open /staff-portal/* URLs. Users whose only
+  // role is "user" (student) belong in the student portal.
+  const roleSource = user?.role || user?.roles ? user : me?.data;
+  if (roleSource) {
+    const roleNames = [roleSource.role, ...(roleSource.roles || [])].filter(Boolean);
+    if (roleNames.length && roleNames.every((r) => r === "user")) {
+      return <Navigate to={PORTAL} replace />;
+    }
+  }
 
   const mustReset = user?.must_reset_password ?? me?.data?.must_reset_password;
   if (mustReset) {

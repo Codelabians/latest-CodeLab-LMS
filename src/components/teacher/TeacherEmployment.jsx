@@ -4,9 +4,9 @@ import {
   Loader2, User, Wallet, Download, Plus, X,
   Mail, Phone, GraduationCap, Briefcase, BadgeCheck, Building2, ShieldCheck, CalendarRange,
   FileText, FileSignature, CheckCircle2, AlertTriangle, Eraser, MapPin,
-  Coins, Landmark, Boxes,
+  Coins, Landmark, Boxes, Pencil, IdCard, Users2,
 } from "lucide-react";
-import { useGetQuery, usePostMutation } from "../../api/apiSlice";
+import { useGetQuery, usePostMutation, usePatchMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
 import { EMPLOYMENT_SECTIONS } from "./employmentSections";
 
@@ -275,7 +275,8 @@ function CardBox({ title, icon: Icon, children }) {
 }
 
 function ProfileTab() {
-  const { data, isLoading } = useGetQuery({ path: "/teacher/me/profile" }, { refetchOnMountOrArgChange: true });
+  const { data, isLoading, refetch } = useGetQuery({ path: "/teacher/me/profile" }, { refetchOnMountOrArgChange: true });
+  const [editOpen, setEditOpen] = useState(false);
   const d = data?.data || {};
   if (isLoading) return <Spinner />;
   if (!d.has_profile) {
@@ -311,9 +312,14 @@ function ProfileTab() {
               <span className="capitalize inline-flex items-center gap-1"><Building2 size={11} /> {cap(d.work_location)}</span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: "#94A3B8" }}>Basic salary</div>
-            <div className="text-[20px] font-bold" style={{ color: "#15803D" }}>{d.basic_salary != null ? money(d.basic_salary) : "—"}</div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="text-right">
+              <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: "#94A3B8" }}>Basic salary</div>
+              <div className="text-[20px] font-bold" style={{ color: "#15803D" }}>{d.basic_salary != null ? money(d.basic_salary) : "—"}</div>
+            </div>
+            <button onClick={() => setEditOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white" style={{ background: BRAND }}>
+              <Pencil size={12} /> Edit profile
+            </button>
           </div>
         </div>
       </div>
@@ -329,11 +335,136 @@ function ProfileTab() {
         </CardBox>
         <CardBox title="Personal" icon={User}>
           <InfoRow icon={Mail} label="Email" value={d.email} />
+          <InfoRow icon={Mail} label="Personal email" value={d.personal_email} />
           <InfoRow icon={Phone} label="Phone" value={d.contact} />
+          <InfoRow icon={CalendarRange} label="Date of birth" value={dt(d.dob)} />
+          <InfoRow icon={IdCard} label="CNIC" value={d.cnic} />
           <div style={{ marginBottom: -8 }}>
-            <InfoRow icon={GraduationCap} label="Qualification" value={d.highest_qualification} />
+            <InfoRow icon={MapPin} label="Address" value={[d.address, d.city].filter(Boolean).join(", ") || null} />
           </div>
         </CardBox>
+        <CardBox title="Family & Other" icon={Users2}>
+          <InfoRow icon={User} label="Marital status" value={cap(d.marital_status)} />
+          <InfoRow icon={User} label="Spouse" value={d.spouse_name} />
+          <div style={{ marginBottom: -8 }}>
+            <InfoRow icon={Users2} label="Dependents" value={d.dependents_count} />
+          </div>
+        </CardBox>
+        <CardBox title="Education" icon={GraduationCap}>
+          <InfoRow icon={GraduationCap} label="Qualification" value={d.highest_qualification} />
+          <InfoRow icon={Building2} label="University" value={d.university_name} />
+          <div style={{ marginBottom: -8 }}>
+            <InfoRow icon={CalendarRange} label="Graduation year" value={d.graduation_year} />
+          </div>
+        </CardBox>
+      </div>
+
+      {editOpen && <EditProfileModal profile={d} onClose={() => setEditOpen(false)} onDone={() => { setEditOpen(false); refetch(); }} />}
+    </div>
+  );
+}
+
+/*
+ * Self-service edit of personal details. The backend whitelist
+ * (PATCH /teacher/me/profile) is the source of truth — HR-owned fields
+ * (salary, designation, employment dates) are not editable here.
+ */
+const EDIT_FIELDS = [
+  ["first_name", "First name"], ["last_name", "Last name"],
+  ["contact", "Phone"], ["personal_email", "Personal email", "email"],
+  ["dob", "Date of birth", "date"], ["cnic", "CNIC"],
+  ["address", "Address"], ["city", "City"],
+  ["blood_group", "Blood group"], ["religion", "Religion"],
+  ["nationality", "Nationality"], ["spouse_name", "Spouse name"],
+  ["spouse_phone", "Spouse phone"], ["dependents_count", "Dependents", "number"],
+  ["university_name", "University"], ["graduation_year", "Graduation year", "number"],
+];
+
+function EditProfileModal({ profile, onClose, onDone }) {
+  const [patch, { isLoading }] = usePatchMutation();
+  const [form, setForm] = useState(() => {
+    const f = { gender: profile.gender || "", marital_status: profile.marital_status || "" };
+    EDIT_FIELDS.forEach(([k]) => { f[k] = profile[k] ?? ""; });
+    f.dob = profile.dob ? String(profile.dob).slice(0, 10) : "";
+    return f;
+  });
+  const upd = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const submit = async () => {
+    if (!String(form.first_name).trim() || !String(form.last_name).trim()) {
+      showToast("First and last name are required.", "error");
+      return;
+    }
+    // Required strings are skipped when blank; optional blanks clear the field.
+    const body = {};
+    Object.entries(form).forEach(([k, v]) => {
+      const val = typeof v === "string" ? v.trim() : v;
+      if (val === "" || val == null) {
+        if (k !== "first_name" && k !== "last_name") body[k] = null;
+      } else {
+        body[k] = val;
+      }
+    });
+    try {
+      await patch({ path: "teacher/me/profile", body }).unwrap();
+      showToast("Profile updated.", "success");
+      onDone();
+    } catch (e) {
+      const errs = e?.data?.errors;
+      const firstErr = errs && Object.values(errs)[0]?.[0];
+      showToast(firstErr || e?.data?.message || "Could not update profile.", "error");
+    }
+  };
+
+  const input = (k, type = "text") => (
+    <input type={type} value={form[k]} onChange={upd(k)} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.45)" }}>
+      <div className="bg-white rounded-2xl w-full max-w-lg flex flex-col" style={{ fontFamily: "'Montserrat', sans-serif", maxHeight: "90vh" }}>
+        <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: `1px solid ${BORDER}` }}>
+          <span className="text-[15px] font-bold flex items-center gap-2" style={{ color: "#0F172A" }}><Pencil size={16} /> Edit profile</span>
+          <button onClick={onClose}><X size={18} style={{ color: "#94A3B8" }} /></button>
+        </div>
+        <div className="px-5 py-4 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2.5">
+            {EDIT_FIELDS.map(([k, label, type]) => (
+              <div key={k}>
+                <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>{label}</label>
+                {input(k, type)}
+              </div>
+            ))}
+            <div>
+              <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Gender</label>
+              <select value={form.gender} onChange={upd("gender")} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }}>
+                <option value="">—</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Marital status</label>
+              <select value={form.marital_status} onChange={upd("marital_status")} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }}>
+                <option value="">—</option>
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="widowed">Widowed</option>
+                <option value="separated">Separated</option>
+              </select>
+            </div>
+          </div>
+          <p className="text-[11px] mt-3" style={{ color: "#94A3B8" }}>
+            Employment details (designation, salary, contract dates) are managed by HR and can&apos;t be edited here.
+          </p>
+        </div>
+        <div className="px-5 py-4 flex justify-end gap-2 flex-shrink-0" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: "#475569" }}>Cancel</button>
+          <button onClick={submit} disabled={isLoading} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style={{ background: BRAND, opacity: isLoading ? 0.6 : 1 }}>
+            {isLoading && <Loader2 size={15} className="animate-spin" />} Save changes
+          </button>
+        </div>
       </div>
     </div>
   );

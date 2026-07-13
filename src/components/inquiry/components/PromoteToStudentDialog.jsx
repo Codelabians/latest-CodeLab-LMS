@@ -100,7 +100,7 @@ const PromoteToStudentDialog = ({ open, inquiry, onCancel, onConfirm, isLoading 
   const institutes = (instData?.data || []).map((i) => i.name).filter(Boolean);
   const cityOptions = cities.map((c) => ({ value: c, label: c }));
   const instOptions = institutes.map((i) => ({ value: i, label: i }));
-  const batchOptions = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.timing ? ` · ${b.timing}` : ""}${b.course_name ? ` · ${b.course_name}` : ""}` }));
+  const batchOptions = batches.map((b) => ({ value: b.batch_uuid, label: `${b.name}${b.teacher_name ? ` · ${b.teacher_name}` : ""}${b.timing ? ` · ${b.timing}` : ""}${b.course_name ? ` · ${b.course_name}` : ""}` }));
 
   if (!open || !inquiry) return null;
   const name = `${inquiry.first_name || ""} ${inquiry.last_name || ""}`.trim();

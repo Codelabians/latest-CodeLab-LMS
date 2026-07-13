@@ -65,7 +65,7 @@ export default function PortalFees() {
           <div key={i} className="bg-white rounded-xl p-4" style={{ border: `1px solid ${BORDER}` }}>
             <div className="flex items-center gap-2 mb-3">
               <span className="grid place-items-center rounded-lg" style={{ width: 28, height: 28, background: "#FEF2F2", color: BRAND }}><BookOpen size={14} /></span>
-              <div className="font-bold text-[13px]" style={{ color: "#0F172A" }}>{e.course?.name || "—"} <span className="font-normal text-[11px]" style={{ color: "#94A3B8" }}>· {e.batch?.name}</span></div>
+              <div className="font-bold text-[13px]" style={{ color: "#0F172A" }}>{e.course?.name || "—"} <span className="font-normal text-[11px]" style={{ color: "#94A3B8" }}>· {e.batch?.name}{e.instructor ? ` · ${e.instructor}` : ""}</span></div>
             </div>
             {schedule.length === 0 ? (
               <div className="text-[12px]" style={{ color: "#94A3B8" }}>No fee schedule.</div>
