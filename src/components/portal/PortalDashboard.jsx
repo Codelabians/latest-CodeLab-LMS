@@ -151,7 +151,9 @@ export default function PortalDashboard() {
             )}
             <div className="flex items-center justify-between pt-1.5 mt-1.5" style={{ borderTop: `1px solid ${BORDER}` }}>
               <span className="text-[13px] font-bold" style={{ color: "#0F172A" }}>Estimated total</span>
-              <span className="text-[15px] font-bold" style={{ color: BRAND }}>{money(nextFee.total)}</span>
+              {nextFee.is_waived
+                ? <span className="text-[12px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#F5F3FF", color: "#6D28D9" }}>Waived{nextFee.scholarship_program ? ` · ${nextFee.scholarship_program}` : ""}</span>
+                : <span className="text-[15px] font-bold" style={{ color: BRAND }}>{money(nextFee.total)}</span>}
             </div>
           </div>
           <p className="text-[10.5px] mt-2" style={{ color: "#94A3B8" }}>Your next monthly bill, generated automatically on the 1st.</p>

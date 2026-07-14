@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Plus, X, FileText, GraduationCap, ExternalLink, Pencil, Trash2, Link2 } from "lucide-react";
+import { Loader2, Plus, X, FileText, GraduationCap, ExternalLink, Pencil, Trash2, Link2, Paperclip } from "lucide-react";
 import { useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
 import SearchableSelect from "../ui/SearchableSelect";
@@ -47,7 +47,11 @@ export default function TeacherAssignments() {
             <tbody>
               {items.map((a) => (
                 <tr key={a.assignments_uuid} style={{ borderTop: `1px solid ${BORDER}` }}>
-                  <td className="px-4 py-2.5 font-semibold" style={{ color: "#0F172A" }}>{a.title}{a.url ? <a href={a.url} target="_blank" rel="noreferrer" className="ml-2 inline-flex" style={{ color: BRAND }}><ExternalLink size={12} /></a> : null}</td>
+                  <td className="px-4 py-2.5 font-semibold" style={{ color: "#0F172A" }}>
+                    {a.title}
+                    {a.document_url ? <a href={a.document_url} target="_blank" rel="noreferrer" title="PDF document" className="ml-2 inline-flex" style={{ color: BRAND }}><Paperclip size={12} /></a> : null}
+                    {Array.isArray(a.links) && a.links.length ? <a href={a.links[0]} target="_blank" rel="noreferrer" title={a.links.length + " link(s)"} className="ml-1 inline-flex items-center" style={{ color: BRAND }}><Link2 size={12} />{a.links.length > 1 ? <span className="text-[10px] ml-0.5">{a.links.length}</span> : null}</a> : (a.url ? <a href={a.url} target="_blank" rel="noreferrer" className="ml-1 inline-flex" style={{ color: BRAND }}><ExternalLink size={12} /></a> : null)}
+                  </td>
                   <td className="px-4 py-2.5" style={{ color: "#475569" }}>{a.batch || "—"}</td>
                   <td className="px-4 py-2.5" style={{ color: "#475569" }}>{a.lecture || "—"}</td>
                   <td className="px-4 py-2.5" style={{ color: "#94A3B8" }}>{(a.deadline || "").slice(0, 10) || "—"}</td>
@@ -77,8 +81,13 @@ function CreateAssignmentModal({ onClose, onDone }) {
   const { data: rosterData } = useGetQuery({ path: "/teacher/attendance-roster" });
   const batches = rosterData?.data || [];
   const [post, { isLoading }] = usePostMutation();
-  const [f, setF] = useState({ batch_uuid: "", lecture_id: "", title: "", description: "", deadline: "", url: "" });
+  const [f, setF] = useState({ batch_uuid: "", lecture_id: "", title: "", description: "", deadline: "" });
+  const [links, setLinks] = useState([""]);
+  const [pdf, setPdf] = useState(null);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const setLink = (i, v) => setLinks((p) => p.map((l, idx) => (idx === i ? v : l)));
+  const addLink = () => setLinks((p) => [...p, ""]);
+  const removeLink = (i) => setLinks((p) => (p.length > 1 ? p.filter((_, idx) => idx !== i) : [""]));
 
   useEffect(() => { if (batches.length && !f.batch_uuid) set("batch_uuid", batches[0].batch_uuid); }, [batches]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -96,8 +105,27 @@ function CreateAssignmentModal({ onClose, onDone }) {
     if (!f.title.trim()) missing.push("title");
     if (!f.deadline) missing.push("deadline");
     if (missing.length) { showToast(`Please fill: ${missing.join(", ")}.`, "error"); return; }
+
+    const cleanLinks = links.map((l) => l.trim()).filter(Boolean);
+    if (!f.description.trim() && !pdf && cleanLinks.length === 0) {
+      showToast("Add a description, attach a PDF, or add at least one link.", "error");
+      return;
+    }
     try {
-      await post({ path: "teacher/assignments", body: { batch_id: batch.batch_id, lecture_id: Number(f.lecture_id), title: f.title, description: f.description || undefined, deadline: f.deadline, url: f.url || undefined } }).unwrap();
+      let body;
+      if (pdf) {
+        body = new FormData();
+        body.append("batch_id", batch.batch_id);
+        body.append("lecture_id", Number(f.lecture_id));
+        body.append("title", f.title);
+        if (f.description.trim()) body.append("description", f.description);
+        body.append("deadline", f.deadline);
+        cleanLinks.forEach((l) => body.append("links[]", l));
+        body.append("file", pdf);
+      } else {
+        body = { batch_id: batch.batch_id, lecture_id: Number(f.lecture_id), title: f.title, description: f.description || undefined, deadline: f.deadline, links: cleanLinks };
+      }
+      await post({ path: "teacher/assignments", body }).unwrap();
       showToast("Assignment created.", "success");
       onDone();
     } catch (e) { showToast(e?.data?.message || "Could not create assignment.", "error"); }
@@ -134,18 +162,34 @@ function CreateAssignmentModal({ onClose, onDone }) {
             <input value={f.title} onChange={(e) => set("title", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} placeholder="e.g. Build a todo app" />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Description</label>
+            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Description <span style={{ color: "#94A3B8" }}>(optional if you attach a PDF or link)</span></label>
             <textarea value={f.description} onChange={(e) => set("description", e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} placeholder="What to do…" />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Deadline</label>
-              <input type="date" value={f.deadline} onChange={(e) => set("deadline", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} />
+          <div>
+            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Attach PDF <span style={{ color: "#94A3B8" }}>(optional — use instead of a description)</span></label>
+            <input type="file" accept="application/pdf,.pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="w-full text-[12px]" />
+            {pdf && (
+              <div className="mt-1 text-[11px] flex items-center gap-1" style={{ color: "#475569" }}>
+                <Paperclip size={12} /> {pdf.name}
+                <button type="button" onClick={() => setPdf(null)} className="ml-1" style={{ color: BRAND }}><X size={12} /></button>
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Links <span style={{ color: "#94A3B8" }}>(optional — add multiple)</span></label>
+            <div className="space-y-2">
+              {links.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input value={l} onChange={(e) => setLink(i, e.target.value)} className="flex-1 px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} placeholder="https://…" />
+                  <button type="button" onClick={() => removeLink(i)} title="Remove link" className="p-2 rounded-lg" style={{ border: `1px solid ${BORDER}`, color: BRAND }}><X size={12} /></button>
+                </div>
+              ))}
             </div>
-            <div>
-              <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Resource URL (optional)</label>
-              <input value={f.url} onChange={(e) => set("url", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} placeholder="https://…" />
-            </div>
+            <button type="button" onClick={addLink} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: BRAND }}><Plus size={12} /> Add link</button>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Deadline</label>
+            <input type="date" value={f.deadline} onChange={(e) => set("deadline", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} />
           </div>
         </div>
         <div className="px-5 py-4 flex justify-end gap-2 sticky bottom-0 bg-white" style={{ borderTop: `1px solid ${BORDER}` }}>
@@ -161,19 +205,45 @@ function CreateAssignmentModal({ onClose, onDone }) {
 
 function EditAssignmentModal({ assignment, onClose, onDone }) {
   const [patch, { isLoading }] = usePatchMutation();
+  const [post, { isLoading: posting }] = usePostMutation();
   const [f, setF] = useState({
     title: assignment.title || "",
     description: assignment.description || "",
     deadline: assignment.deadline ? String(assignment.deadline).slice(0, 10) : "",
-    url: assignment.url || "",
   });
+  const [links, setLinks] = useState(
+    Array.isArray(assignment.links) && assignment.links.length
+      ? assignment.links
+      : (assignment.url ? [assignment.url] : [""]),
+  );
+  const [pdf, setPdf] = useState(null);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const setLink = (i, v) => setLinks((p) => p.map((l, idx) => (idx === i ? v : l)));
+  const addLink = () => setLinks((p) => [...p, ""]);
+  const removeLink = (i) => setLinks((p) => (p.length > 1 ? p.filter((_, idx) => idx !== i) : [""]));
   const cell = { background: "#F8FAFC", border: `1px solid ${BORDER}`, color: "#0F172A" };
 
   const submit = async () => {
     if (!f.title.trim() || !f.deadline) { showToast("Title and deadline are required.", "error"); return; }
+    const cleanLinks = links.map((l) => l.trim()).filter(Boolean);
+    if (!f.description.trim() && !pdf && cleanLinks.length === 0 && !assignment.document_url) {
+      showToast("Add a description, attach a PDF, or add at least one link.", "error");
+      return;
+    }
     try {
-      await patch({ path: `teacher/assignments/${assignment.assignments_uuid}`, body: { title: f.title, description: f.description || undefined, deadline: f.deadline, url: f.url || undefined } }).unwrap();
+      if (pdf) {
+        // Multipart PATCH must be sent as POST + _method spoofing.
+        const body = new FormData();
+        body.append("_method", "PATCH");
+        body.append("title", f.title);
+        if (f.description.trim()) body.append("description", f.description);
+        body.append("deadline", f.deadline);
+        cleanLinks.forEach((l) => body.append("links[]", l));
+        body.append("file", pdf);
+        await post({ path: `teacher/assignments/${assignment.assignments_uuid}`, body }).unwrap();
+      } else {
+        await patch({ path: `teacher/assignments/${assignment.assignments_uuid}`, body: { title: f.title, description: f.description || undefined, deadline: f.deadline, links: cleanLinks } }).unwrap();
+      }
       showToast("Assignment updated.", "success");
       onDone();
     } catch (e) { showToast(e?.data?.message || "Could not update.", "error"); }
@@ -188,15 +258,39 @@ function EditAssignmentModal({ assignment, onClose, onDone }) {
         </div>
         <div className="px-5 py-4 space-y-3">
           <div><label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Title</label><input value={f.title} onChange={(e) => set("title", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} /></div>
-          <div><label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Description</label><textarea value={f.description} onChange={(e) => set("description", e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} /></div>
-          <div className="grid grid-cols-2 gap-2">
-            <div><label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Deadline</label><input type="date" value={f.deadline} onChange={(e) => set("deadline", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} /></div>
-            <div><label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Resource URL</label><input value={f.url} onChange={(e) => set("url", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} placeholder="https://…" /></div>
+          <div><label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Description <span style={{ color: "#94A3B8" }}>(optional if a PDF or link is set)</span></label><textarea value={f.description} onChange={(e) => set("description", e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} /></div>
+          <div>
+            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Attach PDF <span style={{ color: "#94A3B8" }}>(optional)</span></label>
+            {assignment.document_url && !pdf && (
+              <div className="mb-1 text-[11px] flex items-center gap-1" style={{ color: "#475569" }}>
+                <Paperclip size={12} /> <a href={assignment.document_url} target="_blank" rel="noreferrer" style={{ color: BRAND }}>Current PDF</a> <span style={{ color: "#94A3B8" }}>— upload to replace</span>
+              </div>
+            )}
+            <input type="file" accept="application/pdf,.pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="w-full text-[12px]" />
+            {pdf && (
+              <div className="mt-1 text-[11px] flex items-center gap-1" style={{ color: "#475569" }}>
+                <Paperclip size={12} /> {pdf.name}
+                <button type="button" onClick={() => setPdf(null)} className="ml-1" style={{ color: BRAND }}><X size={12} /></button>
+              </div>
+            )}
           </div>
+          <div>
+            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Links <span style={{ color: "#94A3B8" }}>(add multiple)</span></label>
+            <div className="space-y-2">
+              {links.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input value={l} onChange={(e) => setLink(i, e.target.value)} className="flex-1 px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} placeholder="https://…" />
+                  <button type="button" onClick={() => removeLink(i)} title="Remove link" className="p-2 rounded-lg" style={{ border: `1px solid ${BORDER}`, color: BRAND }}><X size={12} /></button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addLink} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: BRAND }}><Plus size={12} /> Add link</button>
+          </div>
+          <div><label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Deadline</label><input type="date" value={f.deadline} onChange={(e) => set("deadline", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell} /></div>
         </div>
         <div className="px-5 py-4 flex justify-end gap-2" style={{ borderTop: `1px solid ${BORDER}` }}>
           <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: "#475569" }}>Cancel</button>
-          <button onClick={submit} disabled={isLoading} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style={{ background: BRAND, opacity: isLoading ? 0.6 : 1 }}>{isLoading && <Loader2 size={15} className="animate-spin" />} Update</button>
+          <button onClick={submit} disabled={isLoading || posting} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style={{ background: BRAND, opacity: (isLoading || posting) ? 0.6 : 1 }}>{(isLoading || posting) && <Loader2 size={15} className="animate-spin" />} Update</button>
         </div>
       </div>
     </div>

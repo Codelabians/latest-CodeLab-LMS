@@ -8,6 +8,7 @@ import {
   Plus,
   X,
   ChevronRight,
+  Paperclip,
 } from "lucide-react";
 
 import { useGetQuery, usePostMutation } from "../../../api/apiSlice";
@@ -60,11 +61,19 @@ function NewLoanModal({ onClose, onDone }) {
   const [count, setCount] = useState("3");
   const [startMonth, setStartMonth] = useState(thisYearMonth());
   const [reason, setReason] = useState("");
+  const [payerType, setPayerType] = useState("office");
+  const [fundedAccount, setFundedAccount] = useState("");
+  const [proofFile, setProofFile] = useState(null);
 
   const { data: profilesResp, isFetching: loadingEmp } = useGetQuery({
     path: "employee/profiles?status=active&per_page=200",
   });
   const employees = useMemo(() => profilesResp?.data || [], [profilesResp]);
+
+  const { data: ledgerResp } = useGetQuery({ path: "finance/ledger/account-options" });
+  const officeAccts = useMemo(() => (ledgerResp?.data || []).filter((a) => a.is_money), [ledgerResp]);
+  const personAccts = useMemo(() => (ledgerResp?.data || []).filter((a) => a.is_person), [ledgerResp]);
+  const sourceAccts = payerType === "person" ? personAccts : officeAccts;
 
   const perInstallment = useMemo(() => {
     const p = parseFloat(principal);
@@ -78,16 +87,19 @@ function NewLoanModal({ onClose, onDone }) {
     if (!profileUuid) return showToast("error", "Pick an employee.");
     if (!(parseFloat(principal) > 0)) return showToast("error", "Principal must be greater than 0.");
     if (!/^\d{4}-\d{2}$/.test(startMonth)) return showToast("error", "Start month must be YYYY-MM.");
+    if (payerType === "person" && !fundedAccount) return showToast("error", "Pick the person who is giving this loan.");
     setBusy(true);
     try {
+      const fd = new FormData();
+      fd.append("principal_amount", String(parseFloat(principal)));
+      fd.append("installment_count", String(parseInt(count, 10)));
+      fd.append("start_year_month", startMonth);
+      if (reason.trim()) fd.append("reason", reason.trim());
+      if (fundedAccount) fd.append("funded_by_account_uuid", fundedAccount);
+      if (proofFile) fd.append("proof", proofFile);
       const res = await post({
         path: `employee/profiles/${profileUuid}/loans`,
-        body: {
-          principal_amount: parseFloat(principal),
-          installment_count: parseInt(count, 10),
-          start_year_month: startMonth,
-          reason: reason.trim() || undefined,
-        },
+        body: fd,
       }).unwrap();
       showToast("success", res?.message || "Loan created.");
       onDone?.();
@@ -143,6 +155,35 @@ function NewLoanModal({ onClose, onDone }) {
             <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={255}
                    className="w-full px-3 py-2 text-sm border rounded-lg outline-none" style={{ borderColor: BORDER }} />
           </div>
+          <div>
+            <label className="block text-[11px] font-medium mb-1.5" style={{ color: TEXT_SECONDARY }}>Given from</label>
+            <div className="inline-flex p-0.5 mb-2 rounded-lg" style={{ background: SURFACE_ALT }}>
+              {[{ v: "office", l: "Office account" }, { v: "person", l: "A person" }].map((o) => (
+                <button key={o.v} type="button"
+                        onClick={() => { setPayerType(o.v); setFundedAccount(""); }}
+                        className="px-3 py-1.5 text-[12px] font-medium rounded-md"
+                        style={payerType === o.v ? { background: "#fff", color: BRAND_RED } : { color: TEXT_MUTED }}>
+                  {o.l}
+                </button>
+              ))}
+            </div>
+            <select value={fundedAccount} onChange={(e) => setFundedAccount(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border rounded-lg outline-none" style={{ borderColor: BORDER }}>
+              <option value="">{payerType === "person" ? "Select a person…" : "Default cash account"}</option>
+              {sourceAccts.map((a) => (
+                <option key={a.account_uuid} value={a.account_uuid}>{a.name}</option>
+              ))}
+            </select>
+            <p className="text-[10.5px] mt-1" style={{ color: TEXT_MUTED }}>
+              {payerType === "person"
+                ? "The person fronting the cash — the office will owe them."
+                : "The office account this loan money leaves from."}
+            </p>
+          </div>
+          <label className="flex items-center gap-2 px-3 py-2 text-[12px] border rounded-lg cursor-pointer" style={{ borderColor: BORDER, color: TEXT_SECONDARY }}>
+            <Paperclip size={13} /> {proofFile ? proofFile.name : "Attach proof image (optional)"}
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => setProofFile(e.target.files?.[0] || null)} />
+          </label>
           {perInstallment !== null && (
             <div className="p-3 text-[12px] rounded-lg" style={{ background: BRAND_RED_TINT, color: BRAND_RED }}>
               ≈ PKR {fmt(perInstallment)} / month, interest-free. The final installment absorbs any rounding.

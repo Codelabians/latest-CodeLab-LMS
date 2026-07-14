@@ -40,10 +40,11 @@ const PromoteToStudentDialog = ({ open, inquiry, onCancel, onConfirm, isLoading 
   const [payRef, setPayRef] = useState("");
   const [err, setErr] = useState("");
   const [stu, setStu] = useState({});
+  const [scholarshipProgram, setScholarshipProgram] = useState("");
 
   useEffect(() => {
     if (open) {
-      setBatchUuid(""); setJoiningDate(todayStr()); setEnrollmentDue(""); setMonthlyDue("");
+      setBatchUuid(""); setJoiningDate(todayStr()); setEnrollmentDue(""); setMonthlyDue(""); setScholarshipProgram("");
       setHostalize(false); setNeedsLaptop((inquiry?.is_laptop_demanded === "Yes")); setLaptopUuid("");
       setLaptopFullCourse(true); setLaptopDays(""); setLaptopDiscountType(""); setLaptopDiscountValue("");
       setPayNow(false); setPayMethod("cash"); setPayAccount(""); setPayAmount(""); setPayRef(""); setErr("");
@@ -88,6 +89,7 @@ const PromoteToStudentDialog = ({ open, inquiry, onCancel, onConfirm, isLoading 
   const { data: acctData } = useGetQuery({ path: "/finance/payment-accounts/active" }, { skip: !open || !payNow });
   const { data: cityData } = useGetQuery({ path: "/core/cities/active" }, { skip: !open });
   const { data: instData } = useGetQuery({ path: "/employee/institutes" }, { skip: !open });
+  const { data: progData } = useGetQuery({ path: "student/scholarship-programs/active" }, { skip: !open });
 
   const batches = useMemo(() => {
     const list = batchData?.data || [];
@@ -122,6 +124,7 @@ const PromoteToStudentDialog = ({ open, inquiry, onCancel, onConfirm, isLoading 
     };
     if (enrollmentDue) body.enrollment_due_date = enrollmentDue;
     if (monthlyDue) body.first_monthly_due_date = monthlyDue;
+    if (scholarshipProgram) body.scholarship_program_uuid = scholarshipProgram;
     if (needsLaptop && laptopUuid) {
       body.laptop_inventory_uuid = laptopUuid;
       body.laptop_full_course = laptopFullCourse;
@@ -170,6 +173,16 @@ const PromoteToStudentDialog = ({ open, inquiry, onCancel, onConfirm, isLoading 
               <label className="block mb-1 text-xs font-semibold" style={{ color: TEXT_SECONDARY }}>Batch *</label>
               <SearchableSelect options={batchOptions} value={batchUuid} onChange={(v) => setBatchUuid(v || "")} placeholder="Search a batch…" />
               {batches.length === 0 && <p className="mt-1 text-[11px]" style={{ color: "#B45309" }}>No active batch for this course yet — create one under Batches first.</p>}
+            </div>
+            <div className="col-span-2">
+              <label className="block mb-1 text-xs font-semibold" style={{ color: TEXT_SECONDARY }}>Scholarship / NGO program (optional)</label>
+              <SearchableSelect
+                options={(progData?.data || []).map((pr) => ({ value: pr.uuid, label: `${pr.name} — monthly Rs ${Number(pr.monthly_fee_override || 0).toLocaleString()}` }))}
+                value={scholarshipProgram}
+                onChange={(v) => setScholarshipProgram(v || "")}
+                placeholder="No program"
+              />
+              {scholarshipProgram && <p className="mt-1 text-[11px]" style={{ color: "#6D28D9" }}>Fees will be re-billed to this program&apos;s rate; the waived difference is tracked as its subsidy.</p>}
             </div>
             <div>
               <label className="block mb-1 text-xs font-semibold" style={{ color: TEXT_SECONDARY }}>Joining date *</label>

@@ -22,6 +22,8 @@ import {
   useGetQuery,
   usePostMutation,
 } from "../../../api/apiSlice";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../features/auth/authSlice";
 import DeleteModal from "../../ui/DeleteModal";
 import ChallanApprovalModal from "../ChallanApprovalModal";
 import StudentFeeEdit from "./StudentFeeEdit";
@@ -51,7 +53,15 @@ const fmtDateTime = (value) => {
 
 const StudentFeeTab = () => {
   const { id } = useParams();
+  const currentUser = useSelector(selectCurrentUser);
+  const canManageRecords =
+    currentUser?.role === "admin" ||
+    (currentUser?.permissions || []).includes("record historical-payment");
   const [refundFee] = usePostMutation();
+  const [resetInst] = usePostMutation();
+  const [deleteInst] = usePostMutation();
+  const [breakInst] = usePostMutation();
+  const [waiveInst] = usePostMutation();
 
   const [downloadChallan, { isLoading: isDownloading }] =
     useDownloadChallanMutation();
@@ -91,6 +101,48 @@ const StudentFeeTab = () => {
     } catch (error) {
       console.error("Error processing refund:", error);
       toast.error(error?.data?.message || "Failed to process refund");
+    }
+  };
+
+  const handleResetInstallment = async (installmentUuid) => {
+    if (!window.confirm("Undo all payments on this installment and set it back to pending? Any finance income/ledger for it is reversed.")) return;
+    try {
+      await resetInst({ path: `finance/installments/${installmentUuid}/reset`, body: {} }).unwrap();
+      toast.success("Installment reset to pending.");
+      refetchStudents();
+    } catch (error) {
+      toast.error(error?.data?.message || "Could not reset installment.");
+    }
+  };
+
+  const handleDeleteInstallment = async (installmentUuid) => {
+    if (!window.confirm("Delete this fee record permanently? Use this for months the student is not liable for (e.g. approved leave). Any finance income/ledger for it is reversed. This cannot be undone.")) return;
+    try {
+      await deleteInst({ path: `finance/installments/${installmentUuid}/delete`, body: {} }).unwrap();
+      toast.success("Fee record deleted.");
+      refetchStudents();
+    } catch (error) {
+      toast.error(error?.data?.message || "Could not delete the fee record.");
+    }
+  };
+
+  const handleToggleBreak = async (installmentUuid) => {
+    try {
+      const res = await breakInst({ path: `finance/installments/${installmentUuid}/toggle-break`, body: {} }).unwrap();
+      toast.success(res?.message || "Break status updated.");
+      refetchStudents();
+    } catch (error) {
+      toast.error(error?.data?.message || "Could not update break status.");
+    }
+  };
+
+  const handleToggleWaive = async (installmentUuid) => {
+    try {
+      const res = await waiveInst({ path: `finance/installments/${installmentUuid}/toggle-waive`, body: {} }).unwrap();
+      toast.success(res?.message || "Waiver updated.");
+      refetchStudents();
+    } catch (error) {
+      toast.error(error?.data?.message || "Could not update waiver.");
     }
   };
 
@@ -165,7 +217,7 @@ const StudentFeeTab = () => {
                 : 0;
           totalPaid += paidForInst;
 
-          if (installment.is_overdue && installment.status !== "paid") {
+          if (installment.is_overdue && installment.status !== "paid" && installment.status !== "break" && installment.status !== "waived") {
             overdueCount++;
           }
 
@@ -554,8 +606,14 @@ const StudentFeeTab = () => {
                     const dueDate = installment.due_date
                       ? new Date(installment.due_date)
                       : null;
-                    const paidDate = installment.paid_date
-                      ? new Date(installment.paid_date)
+                    const paidAtFallback = (installment.payments || [])
+                      .map((p) => p.paid_at)
+                      .filter(Boolean)
+                      .sort()
+                      .pop();
+                    const paidDateSource = installment.paid_date || paidAtFallback;
+                    const paidDate = paidDateSource
+                      ? new Date(String(paidDateSource).replace(" ", "T"))
                       : null;
 
                     const isAccessible = canAccessInstallment(
@@ -564,7 +622,23 @@ const StudentFeeTab = () => {
                     );
 
                     let statusConfig;
-                    if (installment.status === "paid") {
+                    if (installment.status === "break") {
+                      statusConfig = {
+                        bg: "bg-blue-50",
+                        border: "border-blue-200",
+                        badge: "bg-blue-100 text-blue-700",
+                        label: "On break",
+                        icon: "⏸",
+                      };
+                    } else if (installment.status === "waived") {
+                      statusConfig = {
+                        bg: "bg-violet-50",
+                        border: "border-violet-200",
+                        badge: "bg-violet-100 text-violet-700",
+                        label: "Waived",
+                        icon: "✦",
+                      };
+                    } else if (installment.status === "paid") {
                       statusConfig = {
                         bg: "bg-green-50",
                         border: "border-green-200",
@@ -745,6 +819,95 @@ const StudentFeeTab = () => {
                                 Record
                               </button>
                             )}
+
+                            {canManageRecords &&
+                              installment.status === "paid" && (
+                                <button
+                                  onClick={() =>
+                                    handleResetInstallment(
+                                      installment.installment_uuid,
+                                    )
+                                  }
+                                  className="px-3 py-2 rounded-lg text-sm font-semibold shadow-md bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
+                                  title="Undo payments → pending"
+                                >
+                                  Reset
+                                </button>
+                              )}
+
+                            {canManageRecords && (
+                              <button
+                                onClick={() =>
+                                  handleDeleteInstallment(
+                                    installment.installment_uuid,
+                                  )
+                                }
+                                className="px-3 py-2 rounded-lg text-sm font-semibold shadow-md bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                                title="Delete this fee record (e.g. leave month)"
+                              >
+                                Delete
+                              </button>
+                            )}
+
+                            {canManageRecords &&
+                              installment.status === "break" && (
+                                <button
+                                  onClick={() =>
+                                    handleToggleBreak(
+                                      installment.installment_uuid,
+                                    )
+                                  }
+                                  className="px-3 py-2 rounded-lg text-sm font-semibold shadow-md bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                                  title="Remove break → pending"
+                                >
+                                  Unbreak
+                                </button>
+                              )}
+                            {canManageRecords &&
+                              installment.status !== "break" &&
+                              installment.status !== "paid" && (
+                                <button
+                                  onClick={() =>
+                                    handleToggleBreak(
+                                      installment.installment_uuid,
+                                    )
+                                  }
+                                  className="px-3 py-2 rounded-lg text-sm font-semibold shadow-md bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                                  title="Student on break — not owed for this month"
+                                >
+                                  Break
+                                </button>
+                              )}
+
+                            {canManageRecords &&
+                              installment.status === "waived" && (
+                                <button
+                                  onClick={() =>
+                                    handleToggleWaive(
+                                      installment.installment_uuid,
+                                    )
+                                  }
+                                  className="px-3 py-2 rounded-lg text-sm font-semibold shadow-md bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors"
+                                  title="Remove waiver → pending"
+                                >
+                                  Unwaive
+                                </button>
+                              )}
+                            {canManageRecords &&
+                              installment.status !== "waived" &&
+                              installment.status !== "paid" && (
+                                <button
+                                  onClick={() =>
+                                    handleToggleWaive(
+                                      installment.installment_uuid,
+                                    )
+                                  }
+                                  className="px-3 py-2 rounded-lg text-sm font-semibold shadow-md bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors"
+                                  title="Waive this fee — relief, not owed"
+                                >
+                                  Waive
+                                </button>
+                              )}
                           </div>
                         </div>
 

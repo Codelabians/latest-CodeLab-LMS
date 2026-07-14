@@ -32,6 +32,9 @@ const LedgerAccounts = lazy(() => import("../finance/LedgerAccounts"));
 const Commissions = lazy(() => import("../finance/Commissions"));
 const WhatsAppInbox = lazy(() => import("../communication/WhatsAppInbox"));
 const PaymentAccounts = lazy(() => import("../finance/PaymentAccounts"));
+const ScholarshipPrograms = lazy(() => import("../finance/ScholarshipPrograms"));
+const FeeStatusList = lazy(() => import("../finance/FeeStatusList"));
+const StudentsOnBreak = lazy(() => import("../students/StudentsOnBreak"));
 const EnrollStudentWizard = lazy(() => import("../students/EnrollStudentWizard"));
 const SignInHero = lazy(() => import("../auth/SignIn/SignInHero"));
 const SignUpHero = lazy(() => import("../auth/SignUp/SignUpHero"));
@@ -51,6 +54,7 @@ const EmployeeDetails = lazy(() => import("../employees/employeeDetailsPages/Emp
 const CoursesExpenses = lazy(() => import("../expenses/CoursesExpenses"));
 const WsExpenses = lazy(() => import("../expenses/WsExpenses"));
 const AllExpenses = lazy(() => import("../expenses/AllExpenses"));
+const AllIncome = lazy(() => import("../income/AllIncome"));
 const DeletedExpenses = lazy(() => import("../expenses/DeletedExpenses"));
 const ExpenseDetails = lazy(() => import("../expenses/components/ExpenseModal"));
 const FeesComponent = lazy(() => import("../fees/FeesComponent"));
@@ -125,11 +129,15 @@ import {
   LEDGER_ACCOUNTS,
   COMMISSIONS,
   ALL_EXPENSES,
+  ALL_INCOME,
   DELETED_EXPENSES,
   WHATSAPP_INBOX,
   FINANCE_STATS,
   EMPLOYEE_PAYOUTS,
   PAYMENT_ACCOUNTS,
+  SCHOLARSHIP_PROGRAMS,
+  FEE_STATUS,
+  STUDENTS_ON_BREAK,
   STUDENT_ENROLL,
   STUDENT_ADD,
   TECHSCHOOL_EMAIL_TEMPLATES,
@@ -1563,6 +1571,33 @@ export default function Router() {
           ),
         },
         {
+          path: SCHOLARSHIP_PROGRAMS,
+          element: (
+            <PrivateRoute
+              element={<ScholarshipPrograms />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: FEE_STATUS,
+          element: (
+            <PrivateRoute
+              element={<FeeStatusList />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: STUDENTS_ON_BREAK,
+          element: (
+            <PrivateRoute
+              element={<StudentsOnBreak />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
           path: STUDENT_LOANS,
           element: (
             <PrivateRoute
@@ -1594,6 +1629,15 @@ export default function Router() {
           element: (
             <PrivateRoute
               element={<AllExpenses />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: ALL_INCOME,
+          element: (
+            <PrivateRoute
+              element={<AllIncome />}
               isAuthenticated={useCheckAuthToken}
             />
           ),

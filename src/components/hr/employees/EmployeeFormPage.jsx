@@ -410,6 +410,16 @@ const EmployeeFormPage = () => {
   // Cycle helpers for prev/next buttons
   const tabIndex = TABS.findIndex((t) => t.id === activeTab);
   const goTab = (dir) => {
+    // Moving forward: validate the current tab first so problems are fixed
+    // in place instead of letting the user reach the end and get bounced
+    // back to the first page. Backward navigation is always allowed.
+    if (dir > 0) {
+      const stepError = validateTab(activeTab);
+      if (stepError) {
+        showToast(stepError, "error");
+        return;
+      }
+    }
     const i = Math.max(0, Math.min(TABS.length - 1, tabIndex + dir));
     setActiveTab(TABS[i].id);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -445,6 +455,21 @@ const EmployeeFormPage = () => {
       .filter((r) => !hidden.includes(r.name))
       .map((r) => ({ value: r.id, label: titleCase(r.name), raw: r.name }));
   }, [rolesData]);
+
+  // Create mode: default the primary role to "employee" once the role catalog
+  // loads (HR can still change it). Runs once, never in edit mode.
+  const roleDefaultApplied = useRef(false);
+  useEffect(() => {
+    if (isEdit) { roleDefaultApplied.current = true; return; }
+    if (roleDefaultApplied.current) return;
+    if (selectedRoles.length > 0) { roleDefaultApplied.current = true; return; }
+    if (!roles.length) return;
+    const emp = roles.find((o) => o.raw === "employee");
+    if (emp) {
+      setSelectedRoles([{ id: emp.value, name: emp.label, is_primary: true }]);
+      roleDefaultApplied.current = true;
+    }
+  }, [isEdit, roles, selectedRoles.length]);
 
   const brands = useMemo(
     () => unwrap(brandsData).map((b) => ({ value: b.id, label: b.name })),
@@ -670,22 +695,56 @@ const EmployeeFormPage = () => {
     );
   }
 
+  // Per-tab validation, mirroring the backend CreateEmployeeRequest rules.
+  // All backend-required fields live on the Basics tab; the other tabs have
+  // no required fields for user creation, so they pass. Returns an error
+  // string for the given tab, or null when that tab is valid.
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const BLOCKED_ROLE_NAMES = ["admin", "ceo", "coo"]; // matches backend blocklist
+  const validateTab = (tabId) => {
+    if (tabId === "basics") {
+      if (!firstName || firstName.trim().length < 3) return "First name (3+ characters) is required.";
+      if (firstName.length > 99)                     return "First name must be at most 99 characters.";
+      if (!lastName || lastName.trim().length < 3)   return "Last name (3+ characters) is required.";
+      if (lastName.length > 99)                      return "Last name must be at most 99 characters.";
+      if (!email)                                    return "Email is required.";
+      if (!EMAIL_RE.test(email))                     return "Enter a valid email address.";
+      if (!contact)                                  return "Phone number is required.";
+      if (password && password.length < 6)           return "Password must be at least 6 characters.";
+      if (selectedRoles.length === 0)                return "At least one role is required.";
+      if (!selectedRoles.some((r) => r.is_primary))  return "Mark one role as primary.";
+      const primary = selectedRoles.find((r) => r.is_primary);
+      const primaryName = String(primary?.name || primary?.slug || "").toLowerCase();
+      if (primaryName && BLOCKED_ROLE_NAMES.includes(primaryName)) {
+        return "You are not allowed to assign this role.";
+      }
+    }
+    return null;
+  };
+
+  // Full-form validation: walk every tab in order and return the first
+  // failing tab so handleSubmit can focus it. Driven by validateTab so the
+  // step-by-step and final checks never drift apart.
   const validate = () => {
-    // Every required field is on the Basics tab, so a validation failure
-    // always sends the user back there. If/when other tabs gain required
-    // fields, return the tab id alongside the message.
-    if (!firstName || firstName.length < 3) return { tab: "basics", message: "First name (3+ chars) is required." };
-    if (!lastName  || lastName.length  < 3) return { tab: "basics", message: "Last name (3+ chars) is required." };
-    if (!email)                              return { tab: "basics", message: "Email is required." };
-    if (!contact)                            return { tab: "basics", message: "Phone number is required." };
-    if (selectedRoles.length === 0)          return { tab: "basics", message: "At least one role is required." };
-    if (!selectedRoles.some((r) => r.is_primary)) return { tab: "basics", message: "Mark one role as primary." };
-    if (password && password.length < 6)     return { tab: "basics", message: "Password must be at least 6 characters." };
+    for (const t of TABS) {
+      const message = validateTab(t.id);
+      if (message) return { tab: t.id, message };
+    }
     return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Create flow: never fire the request before the final (Schedule) tab.
+    // The submit button only renders on the last tab, but an Enter keypress
+    // on an earlier tab (e.g. Org, the second-last) would otherwise submit
+    // the form prematurely and skip the scheduler. Treat any such early
+    // submit as a "Next" so the user can finish setting the schedule.
+    if (!isEdit && tabIndex < TABS.length - 1) {
+      goTab(1);
+      return;
+    }
 
     // In edit mode the validation rules are looser (no password required) —
     // but we DO still require at least one role + a primary marked, since
@@ -735,6 +794,17 @@ const EmployeeFormPage = () => {
           pf_number: pfNumber || undefined,
           tax_filing_status: taxFilingStatus || undefined,
           personal_email: personalEmail || undefined,
+          // Identity fields — applied to the users row by the employee
+          // endpoint (UPDATE_EMPLOYEE). No separate user-endpoint call.
+          first_name: firstName || undefined,
+          last_name: lastName || undefined,
+          email: email || undefined,
+          contact: contact || undefined,
+          cnic: cnic || undefined,
+          father_name: fatherName || undefined,
+          dob: dob || undefined,
+          gender: gender || undefined,
+          address: address || undefined,
         };
         Object.keys(profilePatch).forEach((k) => profilePatch[k] === undefined && delete profilePatch[k]);
         await patchProfile({
@@ -742,40 +812,12 @@ const EmployeeFormPage = () => {
           body: profilePatch,
         }).unwrap();
 
-        /* ─── Step B: PATCH user (users row — identity + father_name + dob + address) ─── */
-        // The legacy admin user-update endpoint is /api/user/{type}/{uuid}
-        // and uses CAMELCASE keys via UserUpdateRequest::rules() — sending
-        // snake_case here silently drops the fields. Also `email` is
-        // marked required by the FormRequest, so we always echo it back.
+        /* ─── Step B: identity now travels with Step A ─── */
+        // Name / email / contact / cnic / father / dob / gender / address are
+        // included in the profile PATCH above and applied to the users row by
+        // the employee endpoint (UPDATE_EMPLOYEE). No user-endpoint call here,
+        // so HR needs no `users`/`teacher` permission to edit an employee.
         const userKey = editProfileData?.data?.user?.uuid || editProfileData?.data?.user?.id;
-        const typeSlug = editProfileData?.data?.user?.role_name || "employee";
-        if (userKey) {
-          try {
-            const userPatch = {
-              email:        email,        // required by FormRequest
-              firstName:    firstName    || undefined,
-              lastName:     lastName     || undefined,
-              contact:      contact      || undefined,
-              cnic:         cnic         || undefined,
-              fatherName:   fatherName   || undefined,
-              dob:          dob          || undefined,
-              gender:       gender       || undefined,
-              address:      address      || undefined,
-            };
-            Object.keys(userPatch).forEach((k) => userPatch[k] === undefined && delete userPatch[k]);
-            await patchUser({
-              path: `user/${typeSlug}/${userKey}`,
-              body: userPatch,
-            }).unwrap();
-          } catch (e) {
-            console.warn("[edit] patchUser failed", e);
-            // Don't block the rest of the save — surface a soft warning.
-            showToast(
-              "Profile saved, but identity fields (father name / DOB / address) may not have persisted.",
-              "warning",
-            );
-          }
-        }
 
         /* ─── Step C: sync roles / departments / services / offices ─── */
         // Each sync endpoint wipes the pivot for this user and re-inserts.
@@ -874,7 +916,7 @@ const EmployeeFormPage = () => {
       // (Teacher/Employee/Admin/Default) auto-creates the employee_profile
       // via the EnsuresEmployeeProfile trait.
       const created = await createUser({
-        path: "user/create-with-role",
+        path: "user/employees",
         body: {
           firstName,
           lastName,
@@ -1019,28 +1061,26 @@ const EmployeeFormPage = () => {
         // so PATCH them in afterwards via the admin user-update route. That
         // endpoint uses CAMELCASE keys via UserUpdateRequest and requires
         // `email` — see edit-mode for the same shape.
-        if (fatherName || dob || gender || address) {
+        if (fatherName || dob || gender || address || contact || cnic) {
           try {
-            const primary = selectedRoles.find((r) => r.is_primary);
-            const primaryRoleObj = roles.find((r) => String(r.value) === String(primary?.id));
-            const typeSlug = primaryRoleObj?.raw || "employee";
-            const userPatch = {
-              email,                              // required by FormRequest
-              firstName:  firstName  || undefined,
-              lastName:   lastName   || undefined,
-              contact:    contact    || undefined,
-              cnic:       cnic       || undefined,
-              fatherName: fatherName || undefined,
-              dob:        dob        || undefined,
-              gender:     gender     || undefined,
-              address:    address    || undefined,
+            // Applied to the users row via the employee endpoint
+            // (UPDATE_EMPLOYEE) — no `users`/`teacher` permission needed.
+            const idPatch = {
+              first_name:  firstName  || undefined,
+              last_name:   lastName   || undefined,
+              contact:     contact    || undefined,
+              cnic:        cnic       || undefined,
+              father_name: fatherName || undefined,
+              dob:         dob        || undefined,
+              gender:      gender     || undefined,
+              address:     address    || undefined,
             };
-            Object.keys(userPatch).forEach((k) => userPatch[k] === undefined && delete userPatch[k]);
-            await patchUser({
-              path: `user/${typeSlug}/${userKey}`,
-              body: userPatch,
+            Object.keys(idPatch).forEach((k) => idPatch[k] === undefined && delete idPatch[k]);
+            await patchProfile({
+              path: `employee/profiles/${targetUuid}`,
+              body: idPatch,
             }).unwrap();
-          } catch (e) { console.warn("[create] post-create user PATCH failed", e); }
+          } catch (e) { console.warn("[create] post-create identity PATCH failed", e); }
         }
 
         /* ─── Step 5: emergency contact (if filled) ─── */
@@ -2024,47 +2064,68 @@ const EmployeeFormPage = () => {
                   {shifts.length > 0 && (
                     <div className="p-3 space-y-2">
                       {shifts.map((s, idx) => (
-                        <div
-                          key={idx}
-                          className="grid grid-cols-1 gap-2 md:grid-cols-[120px_120px_1fr_40px] md:items-center"
-                        >
-                          <input
-                            type="time"
-                            value={s.start || ""}
-                            onChange={(e) => updateShift(idx, { start: e.target.value })}
-                            className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
-                            style={inputStyle}
-                          />
-                          <input
-                            type="time"
-                            value={s.end || ""}
-                            onChange={(e) => updateShift(idx, { end: e.target.value })}
-                            className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
-                            style={inputStyle}
-                          />
-                          <select
-                            value={s.office_slug || ""}
-                            onChange={(e) => updateShift(idx, { office_slug: e.target.value })}
-                            className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
-                            style={inputStyle}
-                          >
-                            <option value="">— pick office —</option>
-                            {offices.map((o) => (
-                              <option key={o.id} value={o.slug}>
-                                {o.name}{o.type === "partner" && o.partner_company ? ` (${o.partner_company})` : ""}
-                              </option>
+                        <div key={idx} className="border rounded-md p-2 space-y-2" style={{ borderColor: BORDER }}>
+                          <div className="grid grid-cols-1 gap-2 md:grid-cols-[120px_120px_1fr_40px] md:items-center">
+                            <input
+                              type="time"
+                              value={s.start || ""}
+                              onChange={(e) => updateShift(idx, { start: e.target.value })}
+                              className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                              style={inputStyle}
+                            />
+                            <input
+                              type="time"
+                              value={s.end || ""}
+                              onChange={(e) => updateShift(idx, { end: e.target.value })}
+                              className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                              style={inputStyle}
+                            />
+                            <select
+                              value={s.office_slug || ""}
+                              onChange={(e) => updateShift(idx, { office_slug: e.target.value })}
+                              className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                              style={inputStyle}
+                            >
+                              <option value="">— pick office —</option>
+                              {offices.map((o) => (
+                                <option key={o.id} value={o.slug}>
+                                  {o.name}{o.type === "partner" && o.partner_company ? ` (${o.partner_company})` : ""}
+                                </option>
+                              ))}
+                              <option value="remote">Remote / work from home</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => removeShift(idx)}
+                              className="px-2 py-1 text-xs rounded-md hover:bg-slate-100"
+                              style={{ color: TEXT_MUTED, border: `1px solid ${BORDER}` }}
+                              title="Remove this shift"
+                            >
+                              <X size={11} />
+                            </button>
+                          </div>
+                          {/* Per-shift attendance rules — used by the attendance engine. */}
+                          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                            {[
+                              ["grace_minutes", "Grace (min)", 15],
+                              ["half_day_after_minutes", "Half-day after (min)", 120],
+                              ["expected_break_minutes", "Break allowed (min)", 60],
+                              ["max_break_minutes", "Max break (min)", 90],
+                            ].map(([k, lbl, ph]) => (
+                              <label key={k} className="block">
+                                <span className="block text-[10px] mb-0.5" style={{ color: TEXT_MUTED }}>{lbl}</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={s[k] ?? ""}
+                                  placeholder={String(ph)}
+                                  onChange={(e) => updateShift(idx, { [k]: e.target.value === "" ? null : Number(e.target.value) })}
+                                  className="w-full px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                                  style={inputStyle}
+                                />
+                              </label>
                             ))}
-                            <option value="remote">Remote / work from home</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => removeShift(idx)}
-                            className="px-2 py-1 text-xs rounded-md hover:bg-slate-100"
-                            style={{ color: TEXT_MUTED, border: `1px solid ${BORDER}` }}
-                            title="Remove this shift"
-                          >
-                            <X size={11} />
-                          </button>
+                          </div>
                         </div>
                       ))}
                     </div>

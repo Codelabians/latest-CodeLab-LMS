@@ -22,13 +22,11 @@ const validate = (s) => {
   const errors = {};
 
   if (!s.course_id) errors.course_id = "Please pick a course";
-  if (!s.teacher_id) errors.teacher_id = "Please pick a teacher";
-  if (!s.hall_id) errors.hall_id = "Please pick a hall";
   if (!s.date) errors.date = "Pick a start date";
   if (!s.time_slot) errors.time_slot = "Pick a time slot";
 
-  if (!s.start_time) errors.start_time = "Start time is required";
-  if (!s.end_time) errors.end_time = "End time is required";
+  // Teacher, hall and start/end time are optional. Only check time order
+  // when both ends are supplied.
   if (s.start_time && s.end_time && s.end_time <= s.start_time) {
     errors.end_time = "End time must be after start time";
   }
@@ -212,13 +210,13 @@ const BatchModal = ({
 
     const payload = {
       course_id: courseRow.id,                       // INT — what backend wants
-      teacher_id: Number(state.teacher_id),
-      // BatchRequest validation declares hall_id as `string|exists:halls,id`,
-      // so send the id as a string even though it represents a numeric FK.
-      hall_id: String(state.hall_id),
+      teacher_id: state.teacher_id ? Number(state.teacher_id) : null,
+      // Optional now — send the id as a string when present (BatchRequest
+      // declares hall_id as nullable|string|exists:halls,id), else null.
+      hall_id: state.hall_id ? String(state.hall_id) : null,
       date: state.date,
       time_slot: state.time_slot,
-      timing: `${state.start_time} to ${state.end_time}`,
+      timing: (state.start_time && state.end_time) ? `${state.start_time} to ${state.end_time}` : null,
       mode: state.mode,
       is_active: !!state.is_active,
     };
@@ -373,7 +371,7 @@ const BatchModal = ({
             </Field>
 
             {/* Teacher (with avatar) */}
-            <Field label="Teacher" icon={UserCheck} error={showErr("teacher_id")} required>
+            <Field label="Teacher" icon={UserCheck} error={showErr("teacher_id")}>
               <SearchableSelect
                 options={teacherOptions}
                 value={state.teacher_id}
@@ -386,7 +384,7 @@ const BatchModal = ({
             </Field>
 
             {/* Hall */}
-            <Field label="Hall" icon={MapPin} error={showErr("hall_id")} required>
+            <Field label="Hall" icon={MapPin} error={showErr("hall_id")}>
               <SearchableSelect
                 options={hallOptions}
                 value={state.hall_id}
@@ -438,7 +436,7 @@ const BatchModal = ({
             </Field>
 
             {/* Start + end time */}
-            <Field label="Start time" icon={Clock} error={showErr("start_time")} required>
+            <Field label="Start time" icon={Clock} error={showErr("start_time")}>
               <input
                 type="time"
                 value={state.start_time}
@@ -448,7 +446,7 @@ const BatchModal = ({
                 style={inputStyle(!!showErr("start_time"))}
               />
             </Field>
-            <Field label="End time" icon={Clock} error={showErr("end_time")} required>
+            <Field label="End time" icon={Clock} error={showErr("end_time")}>
               <input
                 type="time"
                 value={state.end_time}

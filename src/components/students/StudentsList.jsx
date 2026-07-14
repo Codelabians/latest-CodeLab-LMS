@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
-  Users, Search, Loader2, Plus, Home, Laptop, Eye, ChevronDown, Download, UserX, X, Trash2, AlertTriangle,
+  Users, Search, Loader2, Plus, Home, Laptop, Eye, ChevronDown, Download, UserX, X, Trash2, AlertTriangle, StickyNote,
 } from "lucide-react";
 import { useGetQuery, useLazyGetQuery, usePostMutation, useDeleteMutation } from "../../api/apiSlice";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { downloadCSV } from "../../api/fileDownload";
 import SimplePagination from "../ui/SimplePagination";
 import SearchableSelect from "../ui/SearchableSelect";
+import LeadNotesModal from "../ui/LeadNotesModal";
+import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../hooks/useRememberFilters";
 import { STUDENT_ADD, STUDENT } from "../routes/RouteConstants";
 
 const hasPermission = (user, perm) => {
@@ -29,7 +31,11 @@ const FEE_BADGE = {
   paid:     { bg: "#F0FDF4", fg: "#15803D", label: "Paid" },
   pending:  { bg: "#FFFBEB", fg: "#B45309", label: "Pending" },
   overdue:  { bg: "#FEF2F2", fg: BRAND_RED, label: "Overdue" },
+  waived:   { bg: "#F5F3FF", fg: "#6D28D9", label: "Waived" },
+  break:    { bg: "#EFF6FF", fg: "#1D4ED8", label: "On break" },
   refunded: { bg: "#F5F3FF", fg: "#6D28D9", label: "Refunded" },
+  on_break: { bg: "#EFF6FF", fg: "#1D4ED8", label: "On break" },
+  dropped_out: { bg: "#F1F5F9", fg: "#64748B", label: "Dropped out" },
 };
 
 const Select = ({ value, onChange, children, width }) => (
@@ -47,19 +53,36 @@ export default function StudentsList() {
   const navigate = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
   const canPurge = hasPermission(currentUser, "purge student");
-  const [search, setSearch] = useState("");
-  const [q, setQ] = useState("");
-  const [courseId, setCourseId] = useState("");
-  const [batchId, setBatchId] = useState("");
-  const [feeStatus, setFeeStatus] = useState("");
-  const [joined, setJoined] = useState("");
-  const [status, setStatus] = useState("");
+  const remembered = loadRememberedFilters("students") || {};
+  const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("students"));
+  const [search, setSearch] = useState(remembered.search ?? "");
+  const [q, setQ] = useState(remembered.search ?? "");
+  const [courseId, setCourseId] = useState(remembered.courseId ?? "");
+  // Pre-select the batch when arriving from the Batches page
+  // (/dashboard/students?batch_id=<uuid>). The batch dropdown's option value
+  // is the batch_uuid, and the backend accepts a uuid for batch_id, so this
+  // both filters the list and shows the batch as selected.
+  const [searchParams] = useSearchParams();
+  const [batchId, setBatchId] = useState(searchParams.get("batch_id") || remembered.batchId || "");
+  const [feeStatus, setFeeStatus] = useState(remembered.feeStatus ?? "");
+  const [joined, setJoined] = useState(remembered.joined ?? "");
+  const [status, setStatus] = useState(remembered.status ?? "");
+  const [instructorId, setInstructorId] = useState(remembered.instructorId ?? "");
+  const [joinedFrom, setJoinedFrom] = useState(remembered.joinedFrom ?? "");
+  const [joinedTo, setJoinedTo] = useState(remembered.joinedTo ?? "");
+  const [scholarship, setScholarship] = useState(remembered.scholarship ?? "");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(15);
+  const [perPage, setPerPage] = useState(remembered.perPage ?? 15);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => { setQ(search.trim()); setPage(1); }, 350); return () => clearTimeout(t); }, [search]);
-  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status]);
+  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship]);
+
+  useEffect(() => {
+    saveRememberedFilters("students", rememberFilters, {
+      search, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship, perPage,
+    });
+  }, [rememberFilters, search, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship, perPage]);
 
   const params = useMemo(() => {
     const p = { page, per_page: perPage };
@@ -69,12 +92,16 @@ export default function StudentsList() {
     if (feeStatus) p.fee_status = feeStatus;
     if (joined) p.joined = joined;
     if (status) p.status = status;
+    if (instructorId) p.instructor_id = instructorId;
+    if (joinedFrom) p.joined_from = joinedFrom;
+    if (joinedTo) p.joined_to = joinedTo;
+    if (scholarship) p.scholarship_program = scholarship;
     return p;
-  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status]);
+  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship]);
 
   const { data, isLoading, isFetching, refetch } = useGetQuery({ path: "/student/students", params });
   const rows = data?.data || [];
-  const meta = data?.meta || data?.pagination || {};
+  const meta = data?.meta?.pagination || data?.meta || data?.pagination || {};
   const total = meta.total || rows.length;
 
   // Mark-dropout
@@ -105,6 +132,7 @@ export default function StudentsList() {
   const [purgeTarget, setPurgeTarget] = useState(null); // student row
   const [purgeConfirm, setPurgeConfirm] = useState("");
   const [purgeErr, setPurgeErr] = useState(null);
+  const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
   const [purgeUser, { isLoading: purging }] = useDeleteMutation();
   const openPurge = (row) => { setPurgeTarget(row); setPurgeConfirm(""); setPurgeErr(null); };
   const submitPurge = async () => {
@@ -123,6 +151,10 @@ export default function StudentsList() {
   const { data: courseData } = useGetQuery({ path: "/course/courses", params: { per_page: 200 } });
   const courses = courseData?.data || [];
   const { data: batchData } = useGetQuery({ path: "/course/batches", params: { per_page: 200 } });
+  const { data: teacherData } = useGetQuery({ path: "/course/teachers" });
+  const teachers = teacherData?.data || [];
+  const { data: progData } = useGetQuery({ path: "student/scholarship-programs/active" });
+  const programs = progData?.data || [];
   const batches = useMemo(() => {
     const list = batchData?.data || [];
     return courseId ? list.filter((b) => String(b.course_id) === String(courseId)) : list;
@@ -147,8 +179,8 @@ export default function StudentsList() {
     setDownloading(false);
   };
 
-  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); };
-  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status);
+  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); setInstructorId(""); setJoinedFrom(""); setJoinedTo(""); setScholarship(""); };
+  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status || instructorId || joinedFrom || joinedTo || scholarship);
 
   return (
     <div className="w-full px-6 py-6 min-h-[calc(100vh-4rem)]" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC" }}>
@@ -195,6 +227,8 @@ export default function StudentsList() {
           <option value="">Any fee</option>
           <option value="pending">Pending</option>
           <option value="overdue">Overdue</option>
+          <option value="waived">Waived</option>
+          <option value="refunded">Refunded</option>
           <option value="paid">Paid</option>
           <option value="refunded">Refunded</option>
         </Select>
@@ -204,12 +238,33 @@ export default function StudentsList() {
           <option value="this_week">This week</option>
           <option value="this_month">This month</option>
         </Select>
+        <input type="date" value={joinedFrom} onChange={(e) => setJoinedFrom(e.target.value)} title="Joined from"
+          className="py-2 px-2 text-sm rounded-lg outline-none" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" }} />
+        <input type="date" value={joinedTo} onChange={(e) => setJoinedTo(e.target.value)} title="Joined to"
+          className="py-2 px-2 text-sm rounded-lg outline-none" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" }} />
+        <Select value={instructorId} onChange={(e) => setInstructorId(e.target.value)} width={150}>
+          <option value="">Any instructor</option>
+          {teachers.map((t) => (
+            <option key={t.id} value={String(t.id)}>{t.name || `${t.first_name || ""} ${t.last_name || ""}`.trim() || t.email}</option>
+          ))}
+        </Select>
+        <Select value={scholarship} onChange={(e) => setScholarship(e.target.value)} width={170}>
+          <option value="">Any program</option>
+          <option value="none">No program</option>
+          {programs.map((pr) => (
+            <option key={pr.uuid} value={pr.uuid}>{pr.name}</option>
+          ))}
+        </Select>
         <Select value={status} onChange={(e) => setStatus(e.target.value)} width={130}>
           <option value="">Any status</option>
           <option value="enrolled">Enrolled</option>
           <option value="active">Active</option>
           <option value="dropped_out">Dropped out</option>
         </Select>
+        <label className="inline-flex items-center gap-1.5 text-[12px] font-medium cursor-pointer select-none" style={{ color: "#475569" }} title="Keep these filters next time you open this page">
+          <input type="checkbox" checked={rememberFilters} onChange={(e) => setRememberFilters(e.target.checked)} />
+          Remember filters
+        </label>
         {hasFilters && <button onClick={clearFilters} className="text-[12px] font-semibold" style={{ color: BRAND_RED }}>Clear</button>}
       </div>
 
@@ -244,6 +299,11 @@ export default function StudentsList() {
                             {r.contact}
                           </a>
                         )}
+                        {r.latest_note?.body && (
+                          <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: TEXT_SECONDARY, maxWidth: 260 }} title={r.latest_note.body}>
+                            <StickyNote size={10} strokeWidth={2} /> <span className="truncate">{r.latest_note.body}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -264,10 +324,19 @@ export default function StudentsList() {
                   <td className="px-4 py-3">
                     <span className="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: fee.bg, color: fee.fg }}>{fee.label}</span>
                     {r.pending > 0 && <div className="mt-1 text-[11px]" style={{ color: TEXT_MUTED }}>Rs {Number(r.pending).toLocaleString()} due</div>}
+                    {(r.enrollment_fee != null || r.monthly_fee != null) && (
+                      <div className="mt-1 text-[11px] font-semibold" style={{ color: TEXT_PRIMARY }}>
+                        {r.enrollment_fee != null ? `Enroll Rs ${Number(r.enrollment_fee).toLocaleString()}` : ""}
+                        {r.enrollment_fee != null && r.monthly_fee != null ? " · " : ""}
+                        {r.monthly_fee != null ? `Rs ${Number(r.monthly_fee).toLocaleString()}/mo` : ""}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-[12px] capitalize" style={{ color: TEXT_SECONDARY }}>{(r.status || "").replace(/_/g, " ")}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-1.5">
+                      <button onClick={() => setNotesModal({ open: true, id: r.id, name: r.name })} title="Notes & reminders"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#B45309" }}><StickyNote size={14} /></button>
                       <button onClick={() => navigate(`${STUDENT}/${r.uuid}`)} title="View student"
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#1D4ED8" }}><Eye size={14} /> View</button>
                       {(r.status || "").toLowerCase() !== "dropout" ? (
@@ -359,6 +428,7 @@ export default function StudentsList() {
           </div>
         </div>
       )}
+      <LeadNotesModal open={notesModal.open} type="student" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
     </div>
   );
 }

@@ -2,6 +2,14 @@ import { Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useGetQuery, usePostMutation } from "../../../api/apiSlice";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../features/auth/authSlice";
+
+const hasPermission = (user, perm) => {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return (user.permissions || []).includes(perm);
+};
 
 /**
  * Record a payment (partial or split-tender) against a single installment.
@@ -37,6 +45,9 @@ const RecordPaymentModal = ({
   onRecorded,
 }) => {
   const [recordPayment, { isLoading: isSaving }] = usePostMutation();
+  const currentUser = useSelector(selectCurrentUser);
+  const canSkipFinance = hasPermission(currentUser, "record historical-payment");
+  const [skipFinance, setSkipFinance] = useState(false);
 
   const remaining = useMemo(() => {
     if (!installment) return 0;
@@ -63,6 +74,7 @@ const RecordPaymentModal = ({
       setPaidAt(today());
       setNotes("");
       setExtendDueDateTo("");
+      setSkipFinance(false);
       setLines([
         {
           amount: remaining ? String(remaining) : "",
@@ -116,6 +128,7 @@ const RecordPaymentModal = ({
       paid_at: paidAt ? `${paidAt} 00:00:00` : undefined,
       notes: notes || undefined,
       extend_due_date_to: extendDueDateTo || undefined,
+      skip_finance: skipFinance || undefined,
       allocations: cleaned.map((l) => ({
         installment_uuid: installment.installment_uuid,
         amount: l.amount,
@@ -316,6 +329,15 @@ const RecordPaymentModal = ({
               placeholder="e.g. Paid at front desk"
             />
           </div>
+
+          {canSkipFinance && (
+            <label className="flex items-start gap-2 p-3 rounded-lg cursor-pointer" style={{ background: "#FEF9C3", border: "1px solid #FDE68A" }}>
+              <input type="checkbox" checked={skipFinance} onChange={(e) => setSkipFinance(e.target.checked)} className="mt-0.5" />
+              <span className="text-xs text-[#854D0E]">
+                <b>Historical — don&apos;t record in finance.</b> Marks the fee paid in the student&apos;s record only; no income or ledger entry is created. Use for back-dated months.
+              </span>
+            </label>
+          )}
         </div>
 
         {/* Footer */}

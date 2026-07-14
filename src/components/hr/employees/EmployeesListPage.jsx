@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../../hooks/useRememberFilters";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,9 +13,13 @@ import {
   Briefcase,
   MapPin,
   Clock,
+  StickyNote,
+  KeyRound,
 } from "lucide-react";
 
-import { useGetQuery } from "../../../api/apiSlice";
+import { useGetQuery, usePostMutation } from "../../../api/apiSlice";
+import { showToast } from "../../ui/common/ShowToast";
+import LeadNotesModal from "../../ui/LeadNotesModal";
 import { selectCurrentUser } from "../../../features/auth/authSlice";
 import { HR_EMPLOYEE_DETAIL, HR_EMPLOYEE_NEW } from "../../routes/RouteConstants";
 import SearchableSelect from "../../ui/SearchableSelect";
@@ -136,17 +141,45 @@ const EmployeesListPage = () => {
   const navigate = useNavigate();
   const canCreate = hasPermission(user, "create employee");
 
-  const [search, setSearch] = useState("");
+  const remembered = loadRememberedFilters("employees") || {};
+  const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("employees"));
+  const [search, setSearch] = useState(remembered.search ?? "");
   // Default to active-only — HR almost always wants the current workforce.
   // Ex-employees are still reachable via the Status filter (Separated /
   // Terminated) or by clearing the chip to "All statuses".
-  const [status, setStatus] = useState("active");
-  const [employmentType, setEmploymentType] = useState("");
-  const [workLocation, setWorkLocation] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [serviceId, setServiceId] = useState("");
+  const [status, setStatus] = useState(remembered.status ?? "active");
+  const [employmentType, setEmploymentType] = useState(remembered.employmentType ?? "");
+  const [workLocation, setWorkLocation] = useState(remembered.workLocation ?? "");
+  const [departmentId, setDepartmentId] = useState(remembered.departmentId ?? "");
+  const [serviceId, setServiceId] = useState(remembered.serviceId ?? "");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(remembered.perPage ?? 10);
+
+  useEffect(() => {
+    saveRememberedFilters("employees", rememberFilters, {
+      search, status, employmentType, workLocation, departmentId, serviceId, perPage,
+    });
+  }, [rememberFilters, search, status, employmentType, workLocation, departmentId, serviceId, perPage]);
+  const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
+
+  // Send (reset + email) login credentials for an employee. Reuses the same
+  // backend endpoint as the admin/user screen — it resolves users by uuid,
+  // resets the password and emails a role-correct sign-in link.
+  const [resend] = usePostMutation();
+  const [resendingUuid, setResendingUuid] = useState(null);
+  const doResendCredentials = async (r) => {
+    if (!r.user_uuid) { showToast("This employee has no linked user account.", "error"); return; }
+    if (!window.confirm(`Email fresh login details to ${r.email || r.full_name}? Their current password will be reset.`)) return;
+    setResendingUuid(r.user_uuid);
+    try {
+      const res = await resend({ path: `employee/profiles/${r.uuid}/resend-credentials`, body: {} }).unwrap();
+      showToast(res?.message || res?.data || "Login details sent.", "success");
+    } catch (e) {
+      showToast(e?.data?.message || "Could not send login details.", "error");
+    } finally {
+      setResendingUuid(null);
+    }
+  };
 
   // Catalogs for the dept + service dropdowns. Cheap to fetch — both are
   // small admin-curated lists.
@@ -313,6 +346,10 @@ const EmployeesListPage = () => {
               }))}
             />
           </label>
+          <label className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none" style={{ color: TEXT_SECONDARY }} title="Keep these filters next time you open this page">
+            <input type="checkbox" checked={rememberFilters} onChange={(e) => setRememberFilters(e.target.checked)} />
+            Remember filters
+          </label>
         </div>
       </div>
 
@@ -385,7 +422,17 @@ const EmployeesListPage = () => {
                     </div>
                   </td>
                   <td className="px-4 py-3"><StatusChip status={r.employment_status} /></td>
-                  <td className="px-4 py-3"><ReadyChip ready={r.payroll_ready} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <ReadyChip ready={r.payroll_ready} />
+                      <button onClick={(e) => { e.stopPropagation(); setNotesModal({ open: true, id: r.user_id, name: r.full_name }); }} title="Notes & reminders"
+                        className="inline-flex items-center justify-center rounded-md" style={{ width: 28, height: 28, color: "#B45309", background: "#FFFBEB", border: "1px solid #FDE68A" }}><StickyNote size={14} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); doResendCredentials(r); }} disabled={resendingUuid === r.user_uuid} title="Send login credentials"
+                        className="inline-flex items-center justify-center rounded-md disabled:opacity-50" style={{ width: 28, height: 28, color: "#1D4ED8", background: "#EFF6FF", border: "1px solid #BFDBFE" }}>
+                        {resendingUuid === r.user_uuid ? <Loader2 size={14} className="animate-spin" /> : <KeyRound size={14} />}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -402,6 +449,8 @@ const EmployeesListPage = () => {
         onPageChange={setPage}
         onPerPageChange={setPerPage}
       />
+
+      <LeadNotesModal open={notesModal.open} type="employee" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
     </div>
   );
 };

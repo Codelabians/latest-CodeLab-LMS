@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Loader2, ArrowDownCircle, ChevronLeft, ChevronRight, X, Pencil, Trash2, History, Save } from "lucide-react";
-import { useGetQuery, usePatchMutation, useDeleteMutation } from "../../api/apiSlice";
+import { Search, Loader2, ArrowDownCircle, ChevronLeft, ChevronRight, X, Pencil, Trash2, History, Save, RotateCcw } from "lucide-react";
+import { useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation } from "../../api/apiSlice";
 import { useExpensePerms, ExpenseHistoryModal } from "../finance/expenseAudit";
 import PaidToField from "../finance/PaidToField";
 import { showToast } from "../ui/common/ShowToast";
@@ -126,10 +126,11 @@ function ConfirmDeleteModal({ busy, onClose, onConfirm }) {
       <div className="w-full max-w-sm p-6 text-center bg-white rounded-2xl" style={{ border: `1px solid ${BORDER}` }}>
         <div className="grid w-12 h-12 mx-auto mb-3 rounded-full place-items-center" style={{ background: "#FEF2F2", color: BRAND }}><Trash2 size={22} /></div>
         <h2 className="text-[15px] font-bold mb-1" style={{ color: TEXT_PRIMARY }}>Delete this expense?</h2>
-        <p className="text-[12.5px] mb-5" style={{ color: TEXT_MUTED }}>This action cannot be undone. It will be recorded in the deleted-expenses log.</p>
-        <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 text-[13px] font-semibold rounded-lg" style={{ background: SURFACE_HOVER, color: TEXT_PRIMARY }}>Cancel</button>
-          <button onClick={onConfirm} disabled={busy} className="flex-1 py-2.5 text-[13px] font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: BRAND }}>{busy ? "Deleting…" : "Delete"}</button>
+        <p className="text-[12.5px] mb-5" style={{ color: TEXT_MUTED }}>Delete moves it to the trash (restorable). Delete permanently removes it for good. Either way the ledger is adjusted.</p>
+        <div className="flex flex-col gap-2">
+          <button onClick={() => onConfirm(false)} disabled={busy} className="w-full py-2.5 text-[13px] font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: BRAND }}>{busy ? "Working…" : "Delete (move to trash)"}</button>
+          <button onClick={() => onConfirm(true)} disabled={busy} className="w-full py-2.5 text-[13px] font-semibold rounded-lg disabled:opacity-50" style={{ border: "1px solid #FCA5A5", color: "#B91C1C", background: "#FEF2F2" }}>Delete permanently</button>
+          <button onClick={onClose} className="w-full py-2.5 text-[13px] font-semibold rounded-lg" style={{ background: SURFACE_HOVER, color: TEXT_PRIMARY }}>Cancel</button>
         </div>
       </div>
     </div>
@@ -153,6 +154,8 @@ export default function AllExpenses() {
   const [historyRow, setHistoryRow] = useState(null);
   const [updateTx, { isLoading: updating }] = usePatchMutation();
   const [deleteTx, { isLoading: deleting }] = useDeleteMutation();
+  const [restoreTx] = usePostMutation();
+  const [showDeleted, setShowDeleted] = useState(false);
 
   // Apply a preset (custom keeps the existing dates and shows the inputs).
   const choosePreset = (p) => {
@@ -167,7 +170,7 @@ export default function AllExpenses() {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
     return () => clearTimeout(t);
   }, [search]);
-  useEffect(() => { setPage(1); }, [from, to, categoryId, debounced]);
+  useEffect(() => { setPage(1); }, [from, to, categoryId, debounced, showDeleted]);
 
   // Expense categories → dropdown + id→name map.
   const { data: catData } = useGetQuery({ path: "finance/categories/expense" });
@@ -199,9 +202,13 @@ export default function AllExpenses() {
   }), [categoryId, from, to, debounced]);
 
   // Paginated table.
+  const listPath = showDeleted ? "finance/deleted" : "finance";
+  const listParams = showDeleted
+    ? { category_type: "expense", page, per_page: perPage }
+    : { ...baseParams, page, per_page: perPage };
   const { data, isLoading, isFetching, refetch } = useGetQuery({
-    path: "finance",
-    params: { ...baseParams, page, per_page: perPage },
+    path: listPath,
+    params: listParams,
   }, { refetchOnMountOrArgChange: true });
 
   // Period totals (sum across the filter, not just this page).
@@ -258,14 +265,24 @@ export default function AllExpenses() {
     }
   };
 
-  const onDeleteConfirm = async () => {
+  const onDeleteConfirm = async (permanent = false) => {
     try {
-      await deleteTx({ path: `finance/delete/${deleteRow.uuid}`, body: {} }).unwrap();
+      await deleteTx({ path: `finance/delete/${deleteRow.uuid}${permanent ? "?permanent=1" : ""}`, body: {} }).unwrap();
       setDeleteRow(null);
       refetch();
-      showToast("Expense deleted.", "success");
+      showToast(permanent ? "Expense permanently deleted." : "Expense moved to trash.", "success");
     } catch (e) {
       showToast(e?.data?.message || "Failed to delete expense.", "error");
+    }
+  };
+
+  const onRestore = async (row) => {
+    try {
+      await restoreTx({ path: `finance/restore/${row.uuid}`, body: {} }).unwrap();
+      refetch();
+      showToast("Expense restored.", "success");
+    } catch (e) {
+      showToast(e?.data?.message || "Failed to restore expense.", "error");
     }
   };
 
@@ -328,6 +345,9 @@ export default function AllExpenses() {
             <X size={13} /> Clear
           </button>
         )}
+        <button type="button" onClick={() => setShowDeleted((v) => !v)} className="inline-flex items-center gap-1 px-3 py-2 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: showDeleted ? BRAND : TEXT_SECONDARY, background: showDeleted ? "#FEF2F2" : "#fff" }}>
+          <Trash2 size={13} /> {showDeleted ? "Showing deleted" : "Deleted"}
+        </button>
         {isFetching && <Loader2 size={15} className="animate-spin" style={{ color: TEXT_MUTED }} />}
       </div>
 
@@ -380,12 +400,18 @@ export default function AllExpenses() {
                   <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{ color: TEXT_PRIMARY }}>{money(r.amount)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1.5">
-                      <button onClick={() => setHistoryRow(r)} title="Edit history" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><History size={13} /></button>
-                      {canEdit && (
-                        <button onClick={() => setEditRow(r)} title="Edit" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><Pencil size={13} /></button>
-                      )}
-                      {canDelete && (
-                        <button onClick={() => setDeleteRow(r)} title="Delete" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: "#FEF2F2", border: `1px solid ${BORDER}`, color: BRAND }}><Trash2 size={13} /></button>
+                      {showDeleted ? (
+                        <button onClick={() => onRestore(r)} title="Restore" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold" style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: BRAND }}><RotateCcw size={12} /> Restore</button>
+                      ) : (
+                        <>
+                          <button onClick={() => setHistoryRow(r)} title="Edit history" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><History size={13} /></button>
+                          {canEdit && (
+                            <button onClick={() => setEditRow(r)} title="Edit" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><Pencil size={13} /></button>
+                          )}
+                          {canDelete && (
+                            <button onClick={() => setDeleteRow(r)} title="Delete" className="grid rounded-md w-7 h-7 place-items-center" style={{ background: "#FEF2F2", border: `1px solid ${BORDER}`, color: BRAND }}><Trash2 size={13} /></button>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>

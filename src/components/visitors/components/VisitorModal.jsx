@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useGetQuery } from "../../../api/apiSlice";
 import {
   X, UserSearch, Phone, Mail, BookOpen, MessageSquare,
   CalendarClock, Loader2, Bell, Instagram, UserCheck, Tag, Layers,
+  Laptop, Percent,
 } from "lucide-react";
 import SearchableSelect from "../../ui/SearchableSelect";
 
@@ -116,6 +118,11 @@ const VisitorModal = ({
     instagram_handle: "",
     reminder_date: "",
     reminder_note: "",
+    enrollment_discount: "",
+    monthly_discount: "",
+    discount_reason: "",
+    laptop_required: false,
+    laptop_fee: "",
   };
 
   const [state, setState] = useState(blank);
@@ -145,6 +152,11 @@ const VisitorModal = ({
         instagram_handle: initialVisitor.instagram_handle || "",
         reminder_date: initialVisitor.reminder_date || "",
         reminder_note: initialVisitor.reminder_note || "",
+        enrollment_discount: initialVisitor.enrollment_discount ?? "",
+        monthly_discount: initialVisitor.monthly_discount ?? "",
+        discount_reason: initialVisitor.discount_reason || "",
+        laptop_required: !!initialVisitor.laptop_required,
+        laptop_fee: initialVisitor.laptop_fee ?? "",
       });
     } else {
       setState(blank);
@@ -181,6 +193,32 @@ const VisitorModal = ({
     [courses]
   );
 
+  // Org-wide default discounts (percent). We convert them to a Rs amount
+  // based on the selected course’s fees and seed the discount fields, but
+  // only when the user (or saved record) has not already set a value — so
+  // staff can always override. Discounts are stored/sent in Rs.
+  const { data: discSettings } = useGetQuery({ path: "finance/fee-discount-settings" });
+  const defEnrPct = discSettings?.data?.enrollment_discount_percent ?? 0;
+  const defMonPct = discSettings?.data?.monthly_discount_percent ?? 0;
+  const selCourse = useMemo(
+    () => courses.find((c) => String(c.id) === String(state.interested_course_id)),
+    [courses, state.interested_course_id]
+  );
+  useEffect(() => {
+    if (!isOpen || !selCourse) return;
+    setState((p) => {
+      const next = { ...p };
+      if (p.enrollment_discount === "" || p.enrollment_discount === null || p.enrollment_discount === undefined) {
+        next.enrollment_discount = defEnrPct ? String(Math.round((Number(selCourse.enrollment_fee) || 0) * defEnrPct / 100)) : p.enrollment_discount;
+      }
+      if (p.monthly_discount === "" || p.monthly_discount === null || p.monthly_discount === undefined) {
+        next.monthly_discount = defMonPct ? String(Math.round((Number(selCourse.monthly_fee) || 0) * defMonPct / 100)) : p.monthly_discount;
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selCourse, defEnrPct, defMonPct, isOpen]);
+
   const referrerOptions = useMemo(
     () => referrerUsers.map((u) => ({
       value: String(u.id),
@@ -211,6 +249,11 @@ const VisitorModal = ({
     if (state.instagram_handle.trim()) payload.instagram_handle = state.instagram_handle.trim();
     if (state.reminder_date) payload.reminder_date = state.reminder_date;
     if (state.reminder_note.trim()) payload.reminder_note = state.reminder_note.trim();
+    if (state.enrollment_discount !== "") payload.enrollment_discount = Number(state.enrollment_discount) || 0;
+    if (state.monthly_discount !== "") payload.monthly_discount = Number(state.monthly_discount) || 0;
+    if (state.discount_reason.trim()) payload.discount_reason = state.discount_reason.trim();
+    payload.laptop_required = !!state.laptop_required;
+    payload.laptop_fee = state.laptop_required && state.laptop_fee !== "" ? (Number(state.laptop_fee) || 0) : 0;
 
     setServerError("");
     const result = await onSubmit(payload);
@@ -403,6 +446,35 @@ const VisitorModal = ({
               <input type="text" value={state.reminder_note} onChange={(ev) => set("reminder_note", ev.target.value)} disabled={isLoading} style={inputStyle(!!showErr("reminder_note"))} />
             </Field>
           </div>
+          {/* Discount & laptop */}
+          <div className="mb-2 mt-5">
+            <h4 className="text-[12px] font-bold uppercase tracking-wider" style={{ color: TEXT_MUTED, letterSpacing: "0.08em" }}>
+              Discount & laptop (what we offer)
+            </h4>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Field label="Enrollment discount (Rs)" icon={Percent} helper="Defaults from settings · editable · in Rs">
+              <input type="number" min="0" value={state.enrollment_discount} onChange={(ev) => set("enrollment_discount", ev.target.value)} disabled={isLoading} placeholder="0" style={inputStyle(false)} />
+            </Field>
+            <Field label="Monthly discount (Rs)" icon={Percent} helper="Defaults from settings · editable · in Rs">
+              <input type="number" min="0" value={state.monthly_discount} onChange={(ev) => set("monthly_discount", ev.target.value)} disabled={isLoading} placeholder="0" style={inputStyle(false)} />
+            </Field>
+            <Field label="Discount reason" icon={MessageSquare} helper="Why this discount">
+              <input type="text" value={state.discount_reason} onChange={(ev) => set("discount_reason", ev.target.value)} disabled={isLoading} placeholder="e.g. sibling discount" style={inputStyle(false)} />
+            </Field>
+          </div>
+          <label className="flex items-center gap-2 mt-3 px-3 py-2.5 rounded-lg cursor-pointer" style={{ background: state.laptop_required ? "#EFF6FF" : SURFACE_HOVER, border: `1px solid ${state.laptop_required ? "#BFDBFE" : BORDER}` }}>
+            <input type="checkbox" checked={state.laptop_required} onChange={(ev) => set("laptop_required", ev.target.checked)} disabled={isLoading} />
+            <Laptop size={15} strokeWidth={2} style={{ color: state.laptop_required ? "#1D4ED8" : TEXT_SECONDARY }} />
+            <div className="text-[13px] font-semibold" style={{ color: state.laptop_required ? "#1D4ED8" : TEXT_PRIMARY }}>Wants a laptop (adds a monthly laptop fee)</div>
+          </label>
+          {state.laptop_required && (
+            <div className="grid grid-cols-1 gap-3 mt-3 md:grid-cols-2">
+              <Field label="Monthly laptop fee (Rs)" icon={Laptop} helper="Added on top of the monthly fee">
+                <input type="number" min="0" value={state.laptop_fee} onChange={(ev) => set("laptop_fee", ev.target.value)} disabled={isLoading} placeholder="0" style={inputStyle(false)} />
+              </Field>
+            </div>
+          )}
         </form>
 
         {/* Footer */}

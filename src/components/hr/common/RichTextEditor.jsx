@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Node, mergeAttributes } from "@tiptap/core";
 import { useEffect, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import {
   Bold,
@@ -19,6 +20,8 @@ import {
   Code,
   Minus,
   Sparkles,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 
 /* ───────────────────── brand tokens (matches Categories/Company) ──── */
@@ -30,6 +33,29 @@ const TEXT_MUTED = "#94A3B8";
 const BORDER = "#EEF2F6";
 const SURFACE = "#FFFFFF";
 const SURFACE_ALT = "#F8FAFC";
+
+/* Minimal inline image node (no extra dependency) so images survive in the
+   schema and can be inserted at the cursor. Opt-in via the onImageUpload prop. */
+const InlineImage = Node.create({
+  name: "image",
+  group: "block",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: "" },
+      style: { default: "max-width:100%;height:auto;border-radius:8px;margin:12px 0;" },
+    };
+  },
+  parseHTML() { return [{ tag: "img[src]" }]; },
+  renderHTML({ HTMLAttributes }) { return ["img", mergeAttributes(HTMLAttributes)]; },
+  addCommands() {
+    return {
+      setImage: (attrs) => ({ commands }) => commands.insertContent({ type: this.name, attrs }),
+    };
+  },
+});
 
 /* ───────────────────── toolbar button ──────────────────────────────── */
 const ToolbarBtn = ({ onClick, active, disabled, title, children }) => (
@@ -93,8 +119,11 @@ const RichTextEditor = forwardRef(function RichTextEditor({
   // this handler. Parent owns the picker modal; on selection it calls
   // editorRef.current.insertText('{var_name}') to drop it at the cursor.
   onRequestInsertVariable = null,
+  onImageUpload = null,
 }, ref) {
   const [focused, setFocused] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const imgInputRef = useRef(null);
   const lastEmittedRef = useRef(value);
 
   const editor = useEditor({
@@ -115,6 +144,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({
         placeholder,
         emptyEditorClass: "is-editor-empty",
       }),
+      InlineImage,
     ],
     content: value || "",
     onUpdate: ({ editor: e }) => {
@@ -183,6 +213,19 @@ const RichTextEditor = forwardRef(function RichTextEditor({
       return;
     }
     editor.chain().focus().extendMarkRange("link").setLink({ href: next }).run();
+  };
+
+  const handleImagePick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !onImageUpload) return;
+    setUploadingImg(true);
+    try {
+      const url = await onImageUpload(file);
+      if (url) editor.chain().focus().setImage({ src: url, alt: "" }).run();
+    } finally {
+      setUploadingImg(false);
+    }
   };
 
   const focusedBorder = focused ? BRAND_RED : BORDER;
@@ -314,6 +357,17 @@ const RichTextEditor = forwardRef(function RichTextEditor({
             <LinkIcon size={15} strokeWidth={2.25} />
           </ToolbarBtn>
 
+          {onImageUpload && (
+            <ToolbarBtn
+              onClick={() => imgInputRef.current?.click()}
+              disabled={disabled || uploadingImg}
+              title="Insert image"
+            >
+              {uploadingImg ? <Loader2 size={15} className="animate-spin" /> : <ImageIcon size={15} strokeWidth={2.25} />}
+            </ToolbarBtn>
+          )}
+          <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
+
           {onRequestInsertVariable && (
             <>
               <Divider />
@@ -415,6 +469,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({
           border-top: 1px solid ${BORDER};
           margin: 12px 0;
         }
+        .rte-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0; }
         .rte-content a {
           color: ${BRAND_RED};
           text-decoration: underline;

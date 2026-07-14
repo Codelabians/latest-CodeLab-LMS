@@ -5,7 +5,7 @@ import {
   Plus, Search, Pencil, Trash2, ClipboardList,
   ChevronLeft, ChevronRight, AlertTriangle, Loader2, X,
   Send, FileText, GraduationCap, ArrowUpDown, ArrowUp, ArrowDown,
-  Mail, Phone, Download, Bell, FileSpreadsheet,
+  Mail, Phone, Download, Bell, FileSpreadsheet, StickyNote, Users,
 } from "lucide-react";
 import {
   useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation, useLazyGetQuery,
@@ -19,8 +19,12 @@ import SendChallanDialog from "./components/SendChallanDialog";
 import ImportInquiriesModal from "./components/ImportInquiriesModal";
 import UpdateInquiryReminderDialog from "./components/UpdateInquiryReminderDialog";
 import ChallanHistoryModal from "../ui/ChallanHistoryModal";
+import LeadNotesModal from "../ui/LeadNotesModal";
+import AssignGroupDialog from "../ui/AssignGroupDialog";
+import GroupsModal from "../ui/GroupsModal";
 import SimplePagination from "../ui/SimplePagination";
 import LeadStatsStrip from "../ui/LeadStatsStrip";
+import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../hooks/useRememberFilters";
 
 /* ───────────────── brand tokens ───────────────── */
 const BRAND_RED = "#C90606";
@@ -44,6 +48,7 @@ const STATUS_CFG = {
   pending:  { fg: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE", label: "Pending" },
   enrolled: { fg: "#15803D", bg: "#F0FDF4", border: "#BBF7D0", label: "Enrolled" },
   dropout:  { fg: TEXT_SECONDARY, bg: "#F1F5F9", border: BORDER, label: "Dropout" },
+  cold:     { fg: "#0369A1", bg: "#F0F9FF", border: "#BAE6FD", label: "Cold" },
 };
 const StatusPill = ({ status }) => {
   const cfg = STATUS_CFG[status] || STATUS_CFG.pending;
@@ -148,25 +153,32 @@ const InquiriesComponent = () => {
   const navigate = useNavigate();
 
   /* state */
+  const remembered = loadRememberedFilters("inquiries") || {};
+  const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("inquiries"));
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sort, setSort] = useState({ field: null, dir: "asc" });
+  const [perPage, setPerPage] = useState(remembered.perPage ?? 10);
+  const [search, setSearch] = useState(remembered.search ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(remembered.search ?? "");
+  const [sort, setSort] = useState(remembered.sort ?? { field: null, dir: "asc" });
 
   // filters
-  const [courseId, setCourseId] = useState("");
-  const [status, setStatus] = useState("");
-  const [shift, setShift] = useState("");
-  const [source, setSource] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [followUp, setFollowUp] = useState(""); // "" | "true" | "false" → has_reminder
+  const [courseId, setCourseId] = useState(remembered.courseId ?? "");
+  const [status, setStatus] = useState(remembered.status ?? "");
+  const [shift, setShift] = useState(remembered.shift ?? "");
+  const [source, setSource] = useState(remembered.source ?? "");
+  const [fromDate, setFromDate] = useState(remembered.fromDate ?? "");
+  const [toDate, setToDate] = useState(remembered.toDate ?? "");
+  const [followUp, setFollowUp] = useState(remembered.followUp ?? ""); // "" | "true" | "false" → has_reminder
+  const [reminderOn, setReminderOn] = useState(remembered.reminderOn ?? ""); // YYYY-MM-DD
 
   // dialogs (modal-based) — add/edit moved to a dedicated /create + /:id/edit page.
   const [deleteDialog, setDeleteDialog] = useState({ open: false, inquiry: null });
   const [challanDialog, setChallanDialog] = useState({ open: false, inquiry: null, mode: "send" });
   const [challanLog, setChallanLog] = useState({ open: false, id: null, name: "" });
+  const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
+  const [groupDialog, setGroupDialog] = useState({ open: false, entity: null });
+  const [groupsOpen, setGroupsOpen] = useState(false);
   const [reminderDialog, setReminderDialog] = useState({ open: false, inquiry: null });
   const [importOpen, setImportOpen] = useState(false);
 
@@ -199,12 +211,20 @@ const InquiriesComponent = () => {
     if (shift)           p["filters[shift]"] = shift;
     if (source)          p["filters[source]"] = source;
     if (followUp !== "") p["filters[has_reminder]"] = followUp; // needs / no follow-up
-    if (fromDate)        p.from = fromDate;
-    if (toDate)          p.to = toDate;
+    if (reminderOn) p["filters[reminder_on]"] = reminderOn;
+    if (fromDate)        p["filters[created_from]"] = fromDate;
+    if (toDate)          p["filters[created_to]"] = toDate;
     return p;
-  }, [page, perPage, debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate]);
+  }, [page, perPage, debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
+
+  // Persist filters when "Remember filters" is on (cleared when turned off).
+  useEffect(() => {
+    saveRememberedFilters("inquiries", rememberFilters, {
+      search, courseId, status, shift, source, fromDate, toDate, followUp, reminderOn, sort, perPage,
+    });
+  }, [rememberFilters, search, courseId, status, shift, source, fromDate, toDate, followUp, reminderOn, sort, perPage]);
 
   const { data, error, isLoading, isFetching, refetch } = useGetQuery(
     { path: "/student/inquiry", params: queryParams },
@@ -381,9 +401,9 @@ const InquiriesComponent = () => {
   );
 
   const [reportOpen, setReportOpen] = useState(false);
-  const hasActiveFilters = !!(courseId || status || shift || source || followUp || fromDate || toDate || debouncedSearch);
+  const hasActiveFilters = !!(courseId || status || shift || source || followUp || fromDate || toDate || reminderOn || debouncedSearch);
   const clearFilters = () => {
-    setCourseId(""); setStatus(""); setShift(""); setSource(""); setFollowUp(""); setFromDate(""); setToDate(""); setSearch("");
+    setCourseId(""); setStatus(""); setShift(""); setSource(""); setFollowUp(""); setFromDate(""); setToDate(""); setReminderOn(""); setSearch("");
   };
 
   const isEmpty = !isLoading && !error && rows.length === 0;
@@ -478,6 +498,7 @@ const InquiriesComponent = () => {
             { v: "pending", l: "Pending" },
             { v: "enrolled", l: "Enrolled" },
             { v: "dropout", l: "Dropout" },
+            { v: "cold", l: "Cold" },
           ].map((o) => (
             <button key={o.v} type="button" onClick={() => setStatus(o.v)}
               className="px-3 py-1 text-xs font-semibold transition rounded-md"
@@ -529,6 +550,17 @@ const InquiriesComponent = () => {
           ))}
         </div>
 
+        {/* Reminder set for a specific date (e.g. today) */}
+        <div className="inline-flex items-center gap-1.5">
+          <input type="date" value={reminderOn} onChange={(e) => setReminderOn(e.target.value)} title="Show leads with a reminder on this date"
+            className="px-2.5 py-1.5 text-xs rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }} />
+          <button type="button" onClick={() => setReminderOn(new Date().toISOString().slice(0, 10))}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg"
+            style={{ background: reminderOn === new Date().toISOString().slice(0, 10) ? BRAND_RED : SURFACE_HOVER, color: reminderOn === new Date().toISOString().slice(0, 10) ? "#fff" : TEXT_SECONDARY, border: `1px solid ${BORDER}` }}>
+            Reminders today
+          </button>
+        </div>
+
         {/* Date range */}
         <input
           type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} title="From"
@@ -542,13 +574,21 @@ const InquiriesComponent = () => {
           style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" }}
         />
 
+        <label className="inline-flex items-center gap-1.5 text-[12px] font-medium cursor-pointer select-none" style={{ color: TEXT_SECONDARY }} title="Keep these filters next time you open this page">
+          <input type="checkbox" checked={rememberFilters} onChange={(e) => setRememberFilters(e.target.checked)} />
+          Remember filters
+        </label>
         {hasActiveFilters && (
           <button type="button" onClick={clearFilters} className="text-[12px] font-semibold transition" style={{ color: BRAND_RED }}>
             Clear filters
           </button>
         )}
+        <button onClick={() => setGroupsOpen(true)}
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg" style={{ background: "#F5F3FF", color: "#7C3AED", border: "1px solid #DDD6FE" }} title="View groups">
+          <Users size={14} /> Groups
+        </button>
         <button onClick={() => setReportOpen(true)}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: "#0F172A" }} title="Download report">
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: "#0F172A" }} title="Download report">
           <Download size={14} /> Report
         </button>
         <div className="text-[12px]" style={{ color: TEXT_MUTED }}>
@@ -646,6 +686,16 @@ const InquiriesComponent = () => {
                         <Mail size={10} strokeWidth={2} />
                         {v.email}
                       </div>
+                      {v.latest_note?.body && (
+                        <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: TEXT_SECONDARY, maxWidth: 240 }} title={v.latest_note.body}>
+                          <StickyNote size={10} strokeWidth={2} /> <span className="truncate">{v.latest_note.body}</span>
+                        </div>
+                      )}
+                      {v.fees && (v.fees.net_enrollment > 0 || v.fees.net_monthly > 0) && (
+                        <div className="text-[11px] mt-0.5 font-semibold" style={{ color: "#15803D" }}>
+                          Fee: Rs {Number(v.fees.net_enrollment).toLocaleString()} + Rs {Number(v.fees.net_monthly).toLocaleString()}/mo
+                        </div>
+                      )}
                       <ChallanStatusBadge row={v} onClick={() => setChallanLog({ open: true, id: v.id, name: `${v.first_name || ""} ${v.last_name || ""}`.trim() })} />
                     </td>
                     <td className="px-4 py-3">
@@ -671,6 +721,18 @@ const InquiriesComponent = () => {
                     </td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-1.5">
+                        <button type="button" onClick={() => setNotesModal({ open: true, id: v.id, name: `${v.first_name || ""} ${v.last_name || ""}`.trim() })} title="Notes & reminders"
+                          className="flex items-center justify-center transition rounded-md"
+                          style={{ width: 30, height: 30, color: "#B45309", background: "#FFFBEB", border: "1px solid #FDE68A" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF3C7"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "#FFFBEB"; }}
+                        ><StickyNote size={14} strokeWidth={2.2} /></button>
+                        <button type="button" onClick={() => setGroupDialog({ open: true, entity: { id: v.id, name: `${v.first_name || ""} ${v.last_name || ""}`.trim(), group_id: v.group_id } })} title="Group"
+                          className="flex items-center justify-center transition rounded-md"
+                          style={{ width: 30, height: 30, color: "#7C3AED", background: "#F5F3FF", border: "1px solid #DDD6FE" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#EDE9FE"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "#F5F3FF"; }}
+                        ><Users size={14} strokeWidth={2.2} /></button>
                         {canChallan && !isEnrolled && (
                           <button type="button" onClick={() => openChallan(v)} title="Send fee challan"
                             className="flex items-center justify-center transition rounded-md"
@@ -753,6 +815,17 @@ const InquiriesComponent = () => {
         onConfirm={handleConfirmChallan}
         isLoading={challanLoading}
       />
+      <LeadNotesModal
+        open={notesModal.open}
+        type="inquiry"
+        id={notesModal.id}
+        name={notesModal.name}
+        onClose={() => setNotesModal({ open: false, id: null, name: "" })}
+      />
+
+      <AssignGroupDialog open={groupDialog.open} type="inquiry" entity={groupDialog.entity} onChanged={refetch} onClose={() => setGroupDialog({ open: false, entity: null })} />
+      <GroupsModal open={groupsOpen} onClose={() => setGroupsOpen(false)} />
+
       <ChallanHistoryModal
         open={challanLog.open}
         type="inquiry"

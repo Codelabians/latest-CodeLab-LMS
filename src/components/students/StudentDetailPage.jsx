@@ -4,10 +4,12 @@ import {
   ChevronLeft, Loader2, Home, Laptop, Pencil, Wallet, CalendarCheck, GraduationCap,
   Mail, Phone, CreditCard, MapPin, User, BookOpen, Layers, Award, ArrowRightLeft,
   CheckCircle2, AlertTriangle, X, Repeat, History, UserPlus, RotateCcw,
-  ChevronDown, ChevronRight, Plus, FileText, Gift, Send, Download, MessageCircle,
+  ChevronDown, ChevronRight, Plus, FileText, Gift, Send, Download, MessageCircle, PauseCircle,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as ReTooltip } from "recharts";
 import { useGetQuery, usePostMutation, usePatchMutation, useDownloadChallanMutation } from "../../api/apiSlice";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../features/auth/authSlice";
 import { STUDENTS_EDIT } from "../routes/RouteConstants";
 import PrintIdCard from "../common/PrintIdCard";
 import SearchableSelect from "../ui/SearchableSelect";
@@ -23,7 +25,7 @@ const BORDER = "#EEF2F6";
 const SURFACE_HOVER = "#F8FAFC";
 
 const money = (n) => "Rs " + Number(n || 0).toLocaleString();
-const STATUS_BADGE = { paid: { bg: "#F0FDF4", fg: "#15803D" }, pending: { bg: "#FFFBEB", fg: "#B45309" }, overdue: { bg: "#FEF2F2", fg: BRAND_RED } };
+const STATUS_BADGE = { paid: { bg: "#F0FDF4", fg: "#15803D" }, pending: { bg: "#FFFBEB", fg: "#B45309" }, overdue: { bg: "#FEF2F2", fg: BRAND_RED }, break: { bg: "#EFF6FF", fg: "#1D4ED8" }, waived: { bg: "#F5F3FF", fg: "#6D28D9" } };
 const METHOD_LABELS = { cash: "Cash", jazzcash: "JazzCash", easypaisa: "EasyPaisa", bank_transfer: "Bank Transfer", cheque: "Cheque", other: "Other" };
 const fmtDateTime = (v) => {
   if (!v) return "—";
@@ -56,6 +58,38 @@ export default function StudentDetailPage() {
   const [challanBusy, setChallanBusy] = useState(null);
   const toggleRow = (k) => setOpenRows((p) => ({ ...p, [k]: !p[k] }));
   const notify = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 2800); };
+  const currentUser = useSelector(selectCurrentUser);
+  const canManageRecords = currentUser?.role === "admin" || (currentUser?.permissions || []).includes("record historical-payment");
+
+  const resetInstallment = async (uuid) => {
+    if (!window.confirm("Undo all payments on this installment and set it back to pending? Any finance income/ledger for it is reversed.")) return;
+    try {
+      await post({ path: `finance/installments/${uuid}/reset`, body: {} }).unwrap();
+      notify("Installment reset to pending."); refetch();
+    } catch (e) { notify(e?.data?.message || "Could not reset installment.", false); }
+  };
+
+  const toggleBreak = async (uuid) => {
+    try {
+      const res = await post({ path: `finance/installments/${uuid}/toggle-break`, body: {} }).unwrap();
+      notify(res?.message || "Break status updated."); refetch();
+    } catch (e) { notify(e?.data?.message || "Could not update break status.", false); }
+  };
+
+  const toggleWaive = async (uuid) => {
+    try {
+      const res = await post({ path: `finance/installments/${uuid}/toggle-waive`, body: {} }).unwrap();
+      notify(res?.message || "Waiver updated."); refetch();
+    } catch (e) { notify(e?.data?.message || "Could not update waiver.", false); }
+  };
+
+  const deleteInstallment = async (uuid) => {
+    if (!window.confirm("Delete this fee record permanently? Use this for months the student is not liable for (e.g. approved leave). Any finance income/ledger for it is reversed. This cannot be undone.")) return;
+    try {
+      await post({ path: `finance/installments/${uuid}/delete`, body: {} }).unwrap();
+      notify("Fee record deleted."); refetch();
+    } catch (e) { notify(e?.data?.message || "Could not delete the fee record.", false); }
+  };
 
   const downloadChallanFor = async (uuid) => {
     setChallanBusy(`dl-${uuid}`);
@@ -71,6 +105,20 @@ export default function StudentDetailPage() {
       notify(res?.message || (channel === "email" ? "Challan emailed." : "Challan sent on WhatsApp."));
     } catch (e) { notify(e?.data?.message || `Could not send the challan via ${channel}.`, false); }
     finally { setChallanBusy(null); }
+  };
+
+  const toggleStudentBreak = async () => {
+    const onBreak = !!(data?.data?.student?.on_break);
+    if (onBreak) {
+      if (!window.confirm("Resume this student from break? Their monthly billing restarts and frozen fees become due again.")) return;
+      try { await post({ path: `/student/${id}/resume-break`, body: {} }).unwrap(); notify("Resumed from break."); refetch(); }
+      catch (e) { notify(e?.data?.message || "Action failed.", false); }
+    } else {
+      const note = window.prompt("Put this student on break (indefinite pause). Their billing is frozen until you resume. Add a note (optional):", "");
+      if (note === null) return;
+      try { await post({ path: `/student/${id}/put-on-break`, body: { note: note || undefined } }).unwrap(); notify("Student put on break."); refetch(); }
+      catch (e) { notify(e?.data?.message || "Action failed.", false); }
+    }
   };
 
   const toggleAlumni = async (makeAlumni) => {
@@ -151,6 +199,12 @@ export default function StudentDetailPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-[18px] font-bold" style={{ color: TEXT_PRIMARY }}>{s.name}</h1>
               <span className="px-2 py-0.5 rounded-full text-[11px] font-bold capitalize" style={{ background: SURFACE_HOVER, color: TEXT_SECONDARY }}>{(s.status || "").replace(/_/g, " ")}</span>
+              {s.on_break && (
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#EFF6FF", color: "#1D4ED8" }} title={s.break_since ? `On break since ${s.break_since}` : "On break"}>On break</span>
+              )}
+              {s.scholarship_program && (
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#F5F3FF", color: "#6D28D9" }} title={`Scholarship: monthly Rs ${Number(s.scholarship_program.monthly_fee_override||0).toLocaleString()}`}>{s.scholarship_program.name}</span>
+              )}
               {s.is_hostalize && <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#0891B2" }}><Home size={12} /> Hostelite</span>}
               {s.laptop_provided && <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#B45309" }}><Laptop size={12} /> Laptop</span>}
               {s.is_alumni && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#EDE9FE", color: "#6D28D9" }}><GraduationCap size={12} /> Alumni</span>}
@@ -213,6 +267,9 @@ export default function StudentDetailPage() {
           {s.is_alumni
             ? <button disabled={posting} onClick={() => toggleAlumni(false)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><RotateCcw size={14} /> Remove alumni</button>
             : <button disabled={posting} onClick={() => toggleAlumni(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-white" style={{ background: "#6D28D9" }}><GraduationCap size={14} /> Mark alumni</button>}
+          {s.on_break
+            ? <button disabled={posting} onClick={toggleStudentBreak} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-white" style={{ background: "#15803D" }}><RotateCcw size={14} /> Resume</button>
+            : <button disabled={posting} onClick={toggleStudentBreak} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#1D4ED8" }}><PauseCircle size={14} /> Put on break</button>}
           <button onClick={() => navigate(STUDENTS_EDIT.replace(":studentUuid", s.uuid))} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }}><Pencil size={14} /> Edit</button>
         </div>
       </div>
@@ -244,7 +301,9 @@ export default function StudentDetailPage() {
             )}
             <div className="flex items-center justify-between pt-1.5 mt-1.5" style={{ borderTop: `1px solid ${BORDER}` }}>
               <span className="text-[13px] font-bold" style={{ color: TEXT_PRIMARY }}>Estimated total</span>
-              <span className="text-[15px] font-bold" style={{ color: BRAND_RED }}>{money(nextFee.total)}</span>
+              {nextFee.is_waived
+                ? <span className="text-[12px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#F5F3FF", color: "#6D28D9" }}>Waived{nextFee.scholarship_program ? ` · ${nextFee.scholarship_program}` : ""}</span>
+                : <span className="text-[15px] font-bold" style={{ color: BRAND_RED }}>{money(nextFee.total)}</span>}
             </div>
           </div>
           <p className="text-[10.5px] mt-2" style={{ color: TEXT_MUTED }}>Projection of the next monthly bill — generated automatically on the 1st.</p>
@@ -404,9 +463,9 @@ export default function StudentDetailPage() {
                             )}
                           </td>
                           <td className="px-2 py-2 text-[12px]" style={{ color: TEXT_MUTED }}>{(r.due_date || "").slice(0, 10) || "—"}</td>
-                          <td className="px-2 py-2"><span className="px-2 py-0.5 rounded-full text-[11px] font-bold capitalize" style={{ background: b.bg, color: b.fg }}>{r.status}</span></td>
-                          <td className="px-2 py-2 text-right whitespace-nowrap">
-                            <span className="inline-flex items-center gap-1.5 justify-end">
+                          <td className="px-2 py-2"><span className="px-2 py-0.5 rounded-full text-[11px] font-bold capitalize" style={{ background: b.bg, color: b.fg }}>{r.status === "break" ? "On break" : r.status}</span></td>
+                          <td className="px-2 py-2 text-right align-middle" style={{ minWidth: 230 }}>
+                            <span className="flex flex-wrap items-center gap-1.5 justify-end">
                               <button onClick={() => downloadChallanFor(r.installment_uuid)} disabled={challanBusy === `dl-${r.installment_uuid}`} title="Download challan" className="inline-flex items-center p-1.5 rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#15803D" }}>
                                 {challanBusy === `dl-${r.installment_uuid}` ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
                               </button>
@@ -438,6 +497,66 @@ export default function StudentDetailPage() {
                                     <Plus size={12} /> Record
                                   </button>
                                 </>
+                              )}
+                              {canManageRecords && r.status === "paid" && (
+                                <button
+                                  onClick={() => resetInstallment(r.installment_uuid)}
+                                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                  style={{ border: "1px solid #FCD34D", color: "#B45309", background: "#FFFBEB" }}
+                                  title="Undo payments → pending"
+                                >
+                                  <RotateCcw size={12} /> Reset
+                                </button>
+                              )}
+                              {canManageRecords && (
+                                <button
+                                  onClick={() => deleteInstallment(r.installment_uuid)}
+                                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                  style={{ border: "1px solid #FCA5A5", color: "#B91C1C", background: BRAND_RED_TINT }}
+                                  title="Delete this fee record (e.g. leave month)"
+                                >
+                                  <X size={12} /> Delete
+                                </button>
+                              )}
+                              {canManageRecords && r.status === "break" && (
+                                <button
+                                  onClick={() => toggleBreak(r.installment_uuid)}
+                                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                  style={{ border: "1px solid #BFDBFE", background: "#EFF6FF", color: "#1D4ED8" }}
+                                  title="Remove break → pending"
+                                >
+                                  <Repeat size={12} /> Unbreak
+                                </button>
+                              )}
+                              {canManageRecords && r.status !== "break" && r.status !== "paid" && (
+                                <button
+                                  onClick={() => toggleBreak(r.installment_uuid)}
+                                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                  style={{ border: "1px solid #BFDBFE", background: "#EFF6FF", color: "#1D4ED8" }}
+                                  title="Student on break — not owed for this month"
+                                >
+                                  <Repeat size={12} /> Break
+                                </button>
+                              )}
+                              {canManageRecords && r.status === "waived" && (
+                                <button
+                                  onClick={() => toggleWaive(r.installment_uuid)}
+                                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                  style={{ border: "1px solid #DDD6FE", background: "#F5F3FF", color: "#6D28D9" }}
+                                  title="Remove waiver → pending"
+                                >
+                                  <Gift size={12} /> Unwaive
+                                </button>
+                              )}
+                              {canManageRecords && r.status !== "waived" && r.status !== "paid" && (
+                                <button
+                                  onClick={() => toggleWaive(r.installment_uuid)}
+                                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                  style={{ border: "1px solid #DDD6FE", background: "#F5F3FF", color: "#6D28D9" }}
+                                  title="Waive this fee — relief, not owed"
+                                >
+                                  <Gift size={12} /> Waive
+                                </button>
                               )}
                             </span>
                           </td>
