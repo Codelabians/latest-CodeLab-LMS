@@ -10,6 +10,7 @@ import { downloadCSV } from "../../api/fileDownload";
 import SimplePagination from "../ui/SimplePagination";
 import SearchableSelect from "../ui/SearchableSelect";
 import LeadNotesModal from "../ui/LeadNotesModal";
+import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../hooks/useRememberFilters";
 import { STUDENT_ADD, STUDENT } from "../routes/RouteConstants";
 
 const hasPermission = (user, perm) => {
@@ -30,7 +31,11 @@ const FEE_BADGE = {
   paid:     { bg: "#F0FDF4", fg: "#15803D", label: "Paid" },
   pending:  { bg: "#FFFBEB", fg: "#B45309", label: "Pending" },
   overdue:  { bg: "#FEF2F2", fg: BRAND_RED, label: "Overdue" },
+  waived:   { bg: "#F5F3FF", fg: "#6D28D9", label: "Waived" },
+  break:    { bg: "#EFF6FF", fg: "#1D4ED8", label: "On break" },
   refunded: { bg: "#F5F3FF", fg: "#6D28D9", label: "Refunded" },
+  on_break: { bg: "#EFF6FF", fg: "#1D4ED8", label: "On break" },
+  dropped_out: { bg: "#F1F5F9", fg: "#64748B", label: "Dropped out" },
 };
 
 const Select = ({ value, onChange, children, width }) => (
@@ -48,27 +53,36 @@ export default function StudentsList() {
   const navigate = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
   const canPurge = hasPermission(currentUser, "purge student");
-  const [search, setSearch] = useState("");
-  const [q, setQ] = useState("");
-  const [courseId, setCourseId] = useState("");
+  const remembered = loadRememberedFilters("students") || {};
+  const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("students"));
+  const [search, setSearch] = useState(remembered.search ?? "");
+  const [q, setQ] = useState(remembered.search ?? "");
+  const [courseId, setCourseId] = useState(remembered.courseId ?? "");
   // Pre-select the batch when arriving from the Batches page
   // (/dashboard/students?batch_id=<uuid>). The batch dropdown's option value
   // is the batch_uuid, and the backend accepts a uuid for batch_id, so this
   // both filters the list and shows the batch as selected.
   const [searchParams] = useSearchParams();
-  const [batchId, setBatchId] = useState(searchParams.get("batch_id") || "");
-  const [feeStatus, setFeeStatus] = useState("");
-  const [joined, setJoined] = useState("");
-  const [status, setStatus] = useState("");
-  const [instructorId, setInstructorId] = useState("");
-  const [joinedFrom, setJoinedFrom] = useState("");
-  const [joinedTo, setJoinedTo] = useState("");
+  const [batchId, setBatchId] = useState(searchParams.get("batch_id") || remembered.batchId || "");
+  const [feeStatus, setFeeStatus] = useState(remembered.feeStatus ?? "");
+  const [joined, setJoined] = useState(remembered.joined ?? "");
+  const [status, setStatus] = useState(remembered.status ?? "");
+  const [instructorId, setInstructorId] = useState(remembered.instructorId ?? "");
+  const [joinedFrom, setJoinedFrom] = useState(remembered.joinedFrom ?? "");
+  const [joinedTo, setJoinedTo] = useState(remembered.joinedTo ?? "");
+  const [scholarship, setScholarship] = useState(remembered.scholarship ?? "");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(15);
+  const [perPage, setPerPage] = useState(remembered.perPage ?? 15);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => { setQ(search.trim()); setPage(1); }, 350); return () => clearTimeout(t); }, [search]);
-  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo]);
+  useEffect(() => { setPage(1); }, [courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship]);
+
+  useEffect(() => {
+    saveRememberedFilters("students", rememberFilters, {
+      search, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship, perPage,
+    });
+  }, [rememberFilters, search, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship, perPage]);
 
   const params = useMemo(() => {
     const p = { page, per_page: perPage };
@@ -81,8 +95,9 @@ export default function StudentsList() {
     if (instructorId) p.instructor_id = instructorId;
     if (joinedFrom) p.joined_from = joinedFrom;
     if (joinedTo) p.joined_to = joinedTo;
+    if (scholarship) p.scholarship_program = scholarship;
     return p;
-  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo]);
+  }, [page, perPage, q, courseId, batchId, feeStatus, joined, status, instructorId, joinedFrom, joinedTo, scholarship]);
 
   const { data, isLoading, isFetching, refetch } = useGetQuery({ path: "/student/students", params });
   const rows = data?.data || [];
@@ -138,6 +153,8 @@ export default function StudentsList() {
   const { data: batchData } = useGetQuery({ path: "/course/batches", params: { per_page: 200 } });
   const { data: teacherData } = useGetQuery({ path: "/course/teachers" });
   const teachers = teacherData?.data || [];
+  const { data: progData } = useGetQuery({ path: "student/scholarship-programs/active" });
+  const programs = progData?.data || [];
   const batches = useMemo(() => {
     const list = batchData?.data || [];
     return courseId ? list.filter((b) => String(b.course_id) === String(courseId)) : list;
@@ -162,8 +179,8 @@ export default function StudentsList() {
     setDownloading(false);
   };
 
-  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); setInstructorId(""); setJoinedFrom(""); setJoinedTo(""); };
-  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status || instructorId || joinedFrom || joinedTo);
+  const clearFilters = () => { setSearch(""); setQ(""); setCourseId(""); setBatchId(""); setFeeStatus(""); setJoined(""); setStatus(""); setInstructorId(""); setJoinedFrom(""); setJoinedTo(""); setScholarship(""); };
+  const hasFilters = !!(q || courseId || batchId || feeStatus || joined || status || instructorId || joinedFrom || joinedTo || scholarship);
 
   return (
     <div className="w-full px-6 py-6 min-h-[calc(100vh-4rem)]" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC" }}>
@@ -210,6 +227,8 @@ export default function StudentsList() {
           <option value="">Any fee</option>
           <option value="pending">Pending</option>
           <option value="overdue">Overdue</option>
+          <option value="waived">Waived</option>
+          <option value="refunded">Refunded</option>
           <option value="paid">Paid</option>
           <option value="refunded">Refunded</option>
         </Select>
@@ -229,12 +248,23 @@ export default function StudentsList() {
             <option key={t.id} value={String(t.id)}>{t.name || `${t.first_name || ""} ${t.last_name || ""}`.trim() || t.email}</option>
           ))}
         </Select>
+        <Select value={scholarship} onChange={(e) => setScholarship(e.target.value)} width={170}>
+          <option value="">Any program</option>
+          <option value="none">No program</option>
+          {programs.map((pr) => (
+            <option key={pr.uuid} value={pr.uuid}>{pr.name}</option>
+          ))}
+        </Select>
         <Select value={status} onChange={(e) => setStatus(e.target.value)} width={130}>
           <option value="">Any status</option>
           <option value="enrolled">Enrolled</option>
           <option value="active">Active</option>
           <option value="dropped_out">Dropped out</option>
         </Select>
+        <label className="inline-flex items-center gap-1.5 text-[12px] font-medium cursor-pointer select-none" style={{ color: "#475569" }} title="Keep these filters next time you open this page">
+          <input type="checkbox" checked={rememberFilters} onChange={(e) => setRememberFilters(e.target.checked)} />
+          Remember filters
+        </label>
         {hasFilters && <button onClick={clearFilters} className="text-[12px] font-semibold" style={{ color: BRAND_RED }}>Clear</button>}
       </div>
 

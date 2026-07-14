@@ -794,6 +794,17 @@ const EmployeeFormPage = () => {
           pf_number: pfNumber || undefined,
           tax_filing_status: taxFilingStatus || undefined,
           personal_email: personalEmail || undefined,
+          // Identity fields — applied to the users row by the employee
+          // endpoint (UPDATE_EMPLOYEE). No separate user-endpoint call.
+          first_name: firstName || undefined,
+          last_name: lastName || undefined,
+          email: email || undefined,
+          contact: contact || undefined,
+          cnic: cnic || undefined,
+          father_name: fatherName || undefined,
+          dob: dob || undefined,
+          gender: gender || undefined,
+          address: address || undefined,
         };
         Object.keys(profilePatch).forEach((k) => profilePatch[k] === undefined && delete profilePatch[k]);
         await patchProfile({
@@ -801,40 +812,12 @@ const EmployeeFormPage = () => {
           body: profilePatch,
         }).unwrap();
 
-        /* ─── Step B: PATCH user (users row — identity + father_name + dob + address) ─── */
-        // The legacy admin user-update endpoint is /api/user/{type}/{uuid}
-        // and uses CAMELCASE keys via UserUpdateRequest::rules() — sending
-        // snake_case here silently drops the fields. Also `email` is
-        // marked required by the FormRequest, so we always echo it back.
+        /* ─── Step B: identity now travels with Step A ─── */
+        // Name / email / contact / cnic / father / dob / gender / address are
+        // included in the profile PATCH above and applied to the users row by
+        // the employee endpoint (UPDATE_EMPLOYEE). No user-endpoint call here,
+        // so HR needs no `users`/`teacher` permission to edit an employee.
         const userKey = editProfileData?.data?.user?.uuid || editProfileData?.data?.user?.id;
-        const typeSlug = editProfileData?.data?.user?.role_name || "employee";
-        if (userKey) {
-          try {
-            const userPatch = {
-              email:        email,        // required by FormRequest
-              firstName:    firstName    || undefined,
-              lastName:     lastName     || undefined,
-              contact:      contact      || undefined,
-              cnic:         cnic         || undefined,
-              fatherName:   fatherName   || undefined,
-              dob:          dob          || undefined,
-              gender:       gender       || undefined,
-              address:      address      || undefined,
-            };
-            Object.keys(userPatch).forEach((k) => userPatch[k] === undefined && delete userPatch[k]);
-            await patchUser({
-              path: `user/${typeSlug}/${userKey}`,
-              body: userPatch,
-            }).unwrap();
-          } catch (e) {
-            console.warn("[edit] patchUser failed", e);
-            // Don't block the rest of the save — surface a soft warning.
-            showToast(
-              "Profile saved, but identity fields (father name / DOB / address) may not have persisted.",
-              "warning",
-            );
-          }
-        }
 
         /* ─── Step C: sync roles / departments / services / offices ─── */
         // Each sync endpoint wipes the pivot for this user and re-inserts.
@@ -1078,28 +1061,26 @@ const EmployeeFormPage = () => {
         // so PATCH them in afterwards via the admin user-update route. That
         // endpoint uses CAMELCASE keys via UserUpdateRequest and requires
         // `email` — see edit-mode for the same shape.
-        if (fatherName || dob || gender || address) {
+        if (fatherName || dob || gender || address || contact || cnic) {
           try {
-            const primary = selectedRoles.find((r) => r.is_primary);
-            const primaryRoleObj = roles.find((r) => String(r.value) === String(primary?.id));
-            const typeSlug = primaryRoleObj?.raw || "employee";
-            const userPatch = {
-              email,                              // required by FormRequest
-              firstName:  firstName  || undefined,
-              lastName:   lastName   || undefined,
-              contact:    contact    || undefined,
-              cnic:       cnic       || undefined,
-              fatherName: fatherName || undefined,
-              dob:        dob        || undefined,
-              gender:     gender     || undefined,
-              address:    address    || undefined,
+            // Applied to the users row via the employee endpoint
+            // (UPDATE_EMPLOYEE) — no `users`/`teacher` permission needed.
+            const idPatch = {
+              first_name:  firstName  || undefined,
+              last_name:   lastName   || undefined,
+              contact:     contact    || undefined,
+              cnic:        cnic       || undefined,
+              father_name: fatherName || undefined,
+              dob:         dob        || undefined,
+              gender:      gender     || undefined,
+              address:     address    || undefined,
             };
-            Object.keys(userPatch).forEach((k) => userPatch[k] === undefined && delete userPatch[k]);
-            await patchUser({
-              path: `user/${typeSlug}/${userKey}`,
-              body: userPatch,
+            Object.keys(idPatch).forEach((k) => idPatch[k] === undefined && delete idPatch[k]);
+            await patchProfile({
+              path: `employee/profiles/${targetUuid}`,
+              body: idPatch,
             }).unwrap();
-          } catch (e) { console.warn("[create] post-create user PATCH failed", e); }
+          } catch (e) { console.warn("[create] post-create identity PATCH failed", e); }
         }
 
         /* ─── Step 5: emergency contact (if filled) ─── */
@@ -2083,47 +2064,68 @@ const EmployeeFormPage = () => {
                   {shifts.length > 0 && (
                     <div className="p-3 space-y-2">
                       {shifts.map((s, idx) => (
-                        <div
-                          key={idx}
-                          className="grid grid-cols-1 gap-2 md:grid-cols-[120px_120px_1fr_40px] md:items-center"
-                        >
-                          <input
-                            type="time"
-                            value={s.start || ""}
-                            onChange={(e) => updateShift(idx, { start: e.target.value })}
-                            className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
-                            style={inputStyle}
-                          />
-                          <input
-                            type="time"
-                            value={s.end || ""}
-                            onChange={(e) => updateShift(idx, { end: e.target.value })}
-                            className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
-                            style={inputStyle}
-                          />
-                          <select
-                            value={s.office_slug || ""}
-                            onChange={(e) => updateShift(idx, { office_slug: e.target.value })}
-                            className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
-                            style={inputStyle}
-                          >
-                            <option value="">— pick office —</option>
-                            {offices.map((o) => (
-                              <option key={o.id} value={o.slug}>
-                                {o.name}{o.type === "partner" && o.partner_company ? ` (${o.partner_company})` : ""}
-                              </option>
+                        <div key={idx} className="border rounded-md p-2 space-y-2" style={{ borderColor: BORDER }}>
+                          <div className="grid grid-cols-1 gap-2 md:grid-cols-[120px_120px_1fr_40px] md:items-center">
+                            <input
+                              type="time"
+                              value={s.start || ""}
+                              onChange={(e) => updateShift(idx, { start: e.target.value })}
+                              className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                              style={inputStyle}
+                            />
+                            <input
+                              type="time"
+                              value={s.end || ""}
+                              onChange={(e) => updateShift(idx, { end: e.target.value })}
+                              className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                              style={inputStyle}
+                            />
+                            <select
+                              value={s.office_slug || ""}
+                              onChange={(e) => updateShift(idx, { office_slug: e.target.value })}
+                              className="px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                              style={inputStyle}
+                            >
+                              <option value="">— pick office —</option>
+                              {offices.map((o) => (
+                                <option key={o.id} value={o.slug}>
+                                  {o.name}{o.type === "partner" && o.partner_company ? ` (${o.partner_company})` : ""}
+                                </option>
+                              ))}
+                              <option value="remote">Remote / work from home</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => removeShift(idx)}
+                              className="px-2 py-1 text-xs rounded-md hover:bg-slate-100"
+                              style={{ color: TEXT_MUTED, border: `1px solid ${BORDER}` }}
+                              title="Remove this shift"
+                            >
+                              <X size={11} />
+                            </button>
+                          </div>
+                          {/* Per-shift attendance rules — used by the attendance engine. */}
+                          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                            {[
+                              ["grace_minutes", "Grace (min)", 15],
+                              ["half_day_after_minutes", "Half-day after (min)", 120],
+                              ["expected_break_minutes", "Break allowed (min)", 60],
+                              ["max_break_minutes", "Max break (min)", 90],
+                            ].map(([k, lbl, ph]) => (
+                              <label key={k} className="block">
+                                <span className="block text-[10px] mb-0.5" style={{ color: TEXT_MUTED }}>{lbl}</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={s[k] ?? ""}
+                                  placeholder={String(ph)}
+                                  onChange={(e) => updateShift(idx, { [k]: e.target.value === "" ? null : Number(e.target.value) })}
+                                  className="w-full px-2 py-1.5 text-xs border rounded outline-none focus:ring-2 focus:ring-red-100"
+                                  style={inputStyle}
+                                />
+                              </label>
                             ))}
-                            <option value="remote">Remote / work from home</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => removeShift(idx)}
-                            className="px-2 py-1 text-xs rounded-md hover:bg-slate-100"
-                            style={{ color: TEXT_MUTED, border: `1px solid ${BORDER}` }}
-                            title="Remove this shift"
-                          >
-                            <X size={11} />
-                          </button>
+                          </div>
                         </div>
                       ))}
                     </div>

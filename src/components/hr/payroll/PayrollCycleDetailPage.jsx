@@ -20,6 +20,8 @@ import {
   Download,
   Pencil,
   Paperclip,
+  CalendarRange,
+  Trash2,
 } from "lucide-react";
 
 import {
@@ -261,6 +263,39 @@ function LineItemModal({ title, types, onClose, onSubmit, fields = [] }) {
           </button>
         </footer>
       </form>
+    </div>
+  );
+}
+
+function ChangeMonthModal({ current, onClose, onSubmit }) {
+  const [ym, setYm] = useState(current || "");
+  const [saving, setSaving] = useState(false);
+  const submit = async () => {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(ym)) { showToast("error", "Pick a valid month."); return; }
+    setSaving(true);
+    try { await onSubmit(ym); } finally { setSaving(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.5)" }} onClick={onClose}>
+      <div className="w-full max-w-sm bg-white rounded-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: BORDER }}>
+          <h2 className="text-[13px] font-semibold">Change cycle month</h2>
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-slate-100"><X size={14} /></button>
+        </div>
+        <div className="px-4 py-4 space-y-3">
+          <p className="text-[12px]" style={{ color: TEXT_MUTED }}>Move this cycle and all of its salaries to a different month. The target month must not already have a cycle.</p>
+          <label className="block">
+            <span className="block text-[11px] font-semibold mb-1" style={{ color: TEXT_SECONDARY }}>Month</span>
+            <input type="month" value={ym} onChange={(e) => setYm(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg outline-none" style={{ borderColor: BORDER }} />
+          </label>
+        </div>
+        <div className="flex justify-end gap-2 px-4 py-3 border-t" style={{ borderColor: BORDER }}>
+          <button type="button" onClick={onClose} className="px-3 py-1.5 text-[12px] rounded-lg" style={{ color: TEXT_MUTED }}>Cancel</button>
+          <button type="button" onClick={submit} disabled={saving} className="px-4 py-1.5 text-[12px] font-medium text-white rounded-lg inline-flex items-center gap-1" style={{ background: BRAND_RED, opacity: saving ? 0.6 : 1 }}>
+            {saving && <Loader2 size={12} className="animate-spin" />} Save
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -682,7 +717,10 @@ function SalaryRow({ salary, cycleEditable, cyclePayable, accounts, onChange }) 
   const [post]  = usePostMutation();
   const [del]   = useDeleteMutation();
 
-  const editable = cycleEditable && salary.is_editable;
+  // Editable for any salary that is not yet paid — including finalized /
+  // locked rows — as long as no payment has been recorded. Lets HR correct
+  // amounts even after finalizing, before the money is released.
+  const editable = salaryDisplayStatus(salary) !== "paid" && Number(salary.paid_so_far || 0) <= 0.001;
 
   const saveBase = async () => {
     const n = parseFloat(base);
@@ -1061,6 +1099,7 @@ export default function PayrollCycleDetailPage() {
   const [salaryQ, setSalaryQ] = useState("");
   const [salaryStatus, setSalaryStatus] = useState("");
   const [markPaidOpen, setMarkPaidOpen] = useState(false);
+  const [changeMonthOpen, setChangeMonthOpen] = useState(false);
 
   const { data: cycleResp, isFetching: cycleLoading, refetch: refetchCycle } = useGetQuery({
     path: `employee/payroll/cycles/${uuid}`,
@@ -1090,6 +1129,7 @@ export default function PayrollCycleDetailPage() {
 
   const [post]  = usePostMutation();
   const [patch] = usePatchMutation();
+  const [del]   = useDeleteMutation();
   const [busyAction, setBusyAction] = useState(null);
   // Phase 5: track which toggle is currently saving so we can spin only that
   // one (and avoid blocking the other if HR clicks both quickly).
@@ -1140,6 +1180,28 @@ export default function PayrollCycleDetailPage() {
       refetchSalaries();
     } catch (err) {
       showToast("error", err?.data?.message || "Failed to mark paid.");
+    }
+  };
+
+  const handleChangeMonth = async (yearMonth) => {
+    try {
+      await post({ path: `employee/payroll/cycles/${uuid}/change-month`, body: { year_month: yearMonth } }).unwrap();
+      showToast("success", "Cycle month updated.");
+      setChangeMonthOpen(false);
+      refetchCycle();
+    } catch (err) {
+      showToast("error", err?.data?.message || "Failed to change month.");
+    }
+  };
+
+  const handleDeleteCycle = async () => {
+    if (!window.confirm("Delete this entire payroll cycle and all of its salary rows? This cannot be undone.")) return;
+    try {
+      await del({ path: `employee/payroll/cycles/${uuid}` }).unwrap();
+      showToast("success", "Cycle deleted.");
+      navigate(HR_PAYROLL_CYCLES);
+    } catch (err) {
+      showToast("error", err?.data?.message || "Failed to delete cycle.");
     }
   };
 
@@ -1259,6 +1321,28 @@ export default function PayrollCycleDetailPage() {
             >
               <CheckCircle2 size={14} />
               Mark paid
+            </button>
+          )}
+          {canUpdateCycle && (
+            <button
+              type="button"
+              onClick={() => setChangeMonthOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border"
+              style={{ borderColor: BORDER, color: TEXT_SECONDARY }}
+              title="Move this cycle to a different month"
+            >
+              <CalendarRange size={14} /> Change month
+            </button>
+          )}
+          {!isPaid && canUpdateCycle && (
+            <button
+              type="button"
+              onClick={handleDeleteCycle}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border"
+              style={{ borderColor: "#B91C1C", color: "#B91C1C" }}
+              title="Permanently delete this cycle"
+            >
+              <Trash2 size={14} /> Delete cycle
             </button>
           )}
         </div>
@@ -1408,6 +1492,14 @@ export default function PayrollCycleDetailPage() {
         <MarkPaidModal
           onClose={() => setMarkPaidOpen(false)}
           onSubmit={handleMarkPaid}
+        />
+      )}
+
+      {changeMonthOpen && (
+        <ChangeMonthModal
+          current={cycle.year_month}
+          onClose={() => setChangeMonthOpen(false)}
+          onSubmit={handleChangeMonth}
         />
       )}
 

@@ -185,9 +185,9 @@ const BatchesComponent = () => {
   /* batches list */
   const queryParams = useMemo(() => {
     const p = { per_page: perPage, page };
-    if (courseUuid) p.category_id = courseUuid; // FilterDTO maps category_id → course's category in some chains, but for batches we want course filter. Hmm.
-    // Actually: backend FilterDTO::getCourseId() reads the `category_id` query param historically; for batches the BatchService passes that as course_id to repository.
-    // To stay safe and clear, send via category_id (since that's what FilterDTO::getCourseId reads).
+    // Course filter: the batches query reads getCourseId() which is the
+    // `course_id` query param. The repo accepts a course UUID or integer id.
+    if (courseUuid) p.course_id = courseUuid;
     if (teacherId) p.teacher_id = teacherId;
     if (mode) p.mode = mode;
     if (timeSlot) p.availability = timeSlot; // FilterDTO::getAvailability is what the batch repo reads for time_slot

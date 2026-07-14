@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../../hooks/useRememberFilters";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -140,17 +141,25 @@ const EmployeesListPage = () => {
   const navigate = useNavigate();
   const canCreate = hasPermission(user, "create employee");
 
-  const [search, setSearch] = useState("");
+  const remembered = loadRememberedFilters("employees") || {};
+  const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("employees"));
+  const [search, setSearch] = useState(remembered.search ?? "");
   // Default to active-only — HR almost always wants the current workforce.
   // Ex-employees are still reachable via the Status filter (Separated /
   // Terminated) or by clearing the chip to "All statuses".
-  const [status, setStatus] = useState("active");
-  const [employmentType, setEmploymentType] = useState("");
-  const [workLocation, setWorkLocation] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [serviceId, setServiceId] = useState("");
+  const [status, setStatus] = useState(remembered.status ?? "active");
+  const [employmentType, setEmploymentType] = useState(remembered.employmentType ?? "");
+  const [workLocation, setWorkLocation] = useState(remembered.workLocation ?? "");
+  const [departmentId, setDepartmentId] = useState(remembered.departmentId ?? "");
+  const [serviceId, setServiceId] = useState(remembered.serviceId ?? "");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(remembered.perPage ?? 10);
+
+  useEffect(() => {
+    saveRememberedFilters("employees", rememberFilters, {
+      search, status, employmentType, workLocation, departmentId, serviceId, perPage,
+    });
+  }, [rememberFilters, search, status, employmentType, workLocation, departmentId, serviceId, perPage]);
   const [notesModal, setNotesModal] = useState({ open: false, id: null, name: "" });
 
   // Send (reset + email) login credentials for an employee. Reuses the same
@@ -163,7 +172,7 @@ const EmployeesListPage = () => {
     if (!window.confirm(`Email fresh login details to ${r.email || r.full_name}? Their current password will be reset.`)) return;
     setResendingUuid(r.user_uuid);
     try {
-      const res = await resend({ path: `user/${r.user_uuid}/resend-credentials`, body: {} }).unwrap();
+      const res = await resend({ path: `employee/profiles/${r.uuid}/resend-credentials`, body: {} }).unwrap();
       showToast(res?.message || res?.data || "Login details sent.", "success");
     } catch (e) {
       showToast(e?.data?.message || "Could not send login details.", "error");
@@ -336,6 +345,10 @@ const EmployeesListPage = () => {
                 label: s.short_name || s.name,
               }))}
             />
+          </label>
+          <label className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none" style={{ color: TEXT_SECONDARY }} title="Keep these filters next time you open this page">
+            <input type="checkbox" checked={rememberFilters} onChange={(e) => setRememberFilters(e.target.checked)} />
+            Remember filters
           </label>
         </div>
       </div>

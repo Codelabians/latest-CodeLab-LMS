@@ -32,6 +32,9 @@ const LedgerAccounts = lazy(() => import("../finance/LedgerAccounts"));
 const Commissions = lazy(() => import("../finance/Commissions"));
 const WhatsAppInbox = lazy(() => import("../communication/WhatsAppInbox"));
 const PaymentAccounts = lazy(() => import("../finance/PaymentAccounts"));
+const ScholarshipPrograms = lazy(() => import("../finance/ScholarshipPrograms"));
+const FeeStatusList = lazy(() => import("../finance/FeeStatusList"));
+const StudentsOnBreak = lazy(() => import("../students/StudentsOnBreak"));
 const EnrollStudentWizard = lazy(() => import("../students/EnrollStudentWizard"));
 const SignInHero = lazy(() => import("../auth/SignIn/SignInHero"));
 const SignUpHero = lazy(() => import("../auth/SignUp/SignUpHero"));
@@ -132,6 +135,9 @@ import {
   FINANCE_STATS,
   EMPLOYEE_PAYOUTS,
   PAYMENT_ACCOUNTS,
+  SCHOLARSHIP_PROGRAMS,
+  FEE_STATUS,
+  STUDENTS_ON_BREAK,
   STUDENT_ENROLL,
   STUDENT_ADD,
   TECHSCHOOL_EMAIL_TEMPLATES,
@@ -1560,6 +1566,33 @@ export default function Router() {
           element: (
             <PrivateRoute
               element={<PaymentAccounts />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: SCHOLARSHIP_PROGRAMS,
+          element: (
+            <PrivateRoute
+              element={<ScholarshipPrograms />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: FEE_STATUS,
+          element: (
+            <PrivateRoute
+              element={<FeeStatusList />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: STUDENTS_ON_BREAK,
+          element: (
+            <PrivateRoute
+              element={<StudentsOnBreak />}
               isAuthenticated={useCheckAuthToken}
             />
           ),

@@ -24,6 +24,7 @@ import AssignGroupDialog from "../ui/AssignGroupDialog";
 import GroupsModal from "../ui/GroupsModal";
 import SimplePagination from "../ui/SimplePagination";
 import LeadStatsStrip from "../ui/LeadStatsStrip";
+import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../hooks/useRememberFilters";
 
 /* ───────────────── brand tokens ───────────────── */
 const BRAND_RED = "#C90606";
@@ -152,21 +153,24 @@ const InquiriesComponent = () => {
   const navigate = useNavigate();
 
   /* state */
+  const remembered = loadRememberedFilters("inquiries") || {};
+  const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("inquiries"));
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sort, setSort] = useState({ field: null, dir: "asc" });
+  const [perPage, setPerPage] = useState(remembered.perPage ?? 10);
+  const [search, setSearch] = useState(remembered.search ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(remembered.search ?? "");
+  const [sort, setSort] = useState(remembered.sort ?? { field: null, dir: "asc" });
 
   // filters
-  const [courseId, setCourseId] = useState("");
-  const [status, setStatus] = useState("");
-  const [shift, setShift] = useState("");
-  const [source, setSource] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [followUp, setFollowUp] = useState(""); // "" | "true" | "false" → has_reminder
-  const [reminderOn, setReminderOn] = useState(""); // YYYY-MM-DD — reminder set for this date
+  const [courseId, setCourseId] = useState(remembered.courseId ?? "");
+  const [status, setStatus] = useState(remembered.status ?? "");
+  const [shift, setShift] = useState(remembered.shift ?? "");
+  const [source, setSource] = useState(remembered.source ?? "");
+  const [fromDate, setFromDate] = useState(remembered.fromDate ?? "");
+  const [toDate, setToDate] = useState(remembered.toDate ?? "");
+  const [followUp, setFollowUp] = useState(remembered.followUp ?? ""); // "" | "true" | "false" → has_reminder
+  const [reminderOn, setReminderOn] = useState(remembered.reminderOn ?? ""); // YYYY-MM-DD
 
   // dialogs (modal-based) — add/edit moved to a dedicated /create + /:id/edit page.
   const [deleteDialog, setDeleteDialog] = useState({ open: false, inquiry: null });
@@ -208,12 +212,19 @@ const InquiriesComponent = () => {
     if (source)          p["filters[source]"] = source;
     if (followUp !== "") p["filters[has_reminder]"] = followUp; // needs / no follow-up
     if (reminderOn) p["filters[reminder_on]"] = reminderOn;
-    if (fromDate)        p.from = fromDate;
-    if (toDate)          p.to = toDate;
+    if (fromDate)        p["filters[created_from]"] = fromDate;
+    if (toDate)          p["filters[created_to]"] = toDate;
     return p;
   }, [page, perPage, debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
 
   useEffect(() => { setPage(1); }, [debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
+
+  // Persist filters when "Remember filters" is on (cleared when turned off).
+  useEffect(() => {
+    saveRememberedFilters("inquiries", rememberFilters, {
+      search, courseId, status, shift, source, fromDate, toDate, followUp, reminderOn, sort, perPage,
+    });
+  }, [rememberFilters, search, courseId, status, shift, source, fromDate, toDate, followUp, reminderOn, sort, perPage]);
 
   const { data, error, isLoading, isFetching, refetch } = useGetQuery(
     { path: "/student/inquiry", params: queryParams },
@@ -563,6 +574,10 @@ const InquiriesComponent = () => {
           style={{ background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" }}
         />
 
+        <label className="inline-flex items-center gap-1.5 text-[12px] font-medium cursor-pointer select-none" style={{ color: TEXT_SECONDARY }} title="Keep these filters next time you open this page">
+          <input type="checkbox" checked={rememberFilters} onChange={(e) => setRememberFilters(e.target.checked)} />
+          Remember filters
+        </label>
         {hasActiveFilters && (
           <button type="button" onClick={clearFilters} className="text-[12px] font-semibold transition" style={{ color: BRAND_RED }}>
             Clear filters

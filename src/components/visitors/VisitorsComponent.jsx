@@ -27,6 +27,7 @@ import AssignGroupDialog from "../ui/AssignGroupDialog";
 import GroupsModal from "../ui/GroupsModal";
 import SimplePagination from "../ui/SimplePagination";
 import LeadStatsStrip from "../ui/LeadStatsStrip";
+import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../hooks/useRememberFilters";
 
 /* ───────────────── brand tokens ───────────────── */
 const BRAND_RED = "#C90606";
@@ -172,20 +173,23 @@ const VisitorsComponent = () => {
   const navigate = useNavigate();
 
   /* state */
+  const remembered = loadRememberedFilters("visitors") || {};
+  const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("visitors"));
+
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sort, setSort] = useState({ field: null, dir: "asc" });
+  const [perPage, setPerPage] = useState(remembered.perPage ?? 10);
+  const [search, setSearch] = useState(remembered.search ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(remembered.search ?? "");
+  const [sort, setSort] = useState(remembered.sort ?? { field: null, dir: "asc" });
 
   // filters
-  const [section, setSection] = useState("");
-  const [status, setStatus] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [followUpRequired, setFollowUpRequired] = useState("");
-  const [reminderOn, setReminderOn] = useState(""); // YYYY-MM-DD — reminder set for this date
+  const [section, setSection] = useState(remembered.section ?? "");
+  const [status, setStatus] = useState(remembered.status ?? "");
+  const [sourceFilter, setSourceFilter] = useState(remembered.sourceFilter ?? "");
+  const [fromDate, setFromDate] = useState(remembered.fromDate ?? "");
+  const [toDate, setToDate] = useState(remembered.toDate ?? "");
+  const [followUpRequired, setFollowUpRequired] = useState(remembered.followUpRequired ?? "");
+  const [reminderOn, setReminderOn] = useState(remembered.reminderOn ?? ""); // YYYY-MM-DD
 
   // modals / dialogs
   const [formModal, setFormModal] = useState({ open: false, mode: null, visitor: null });
@@ -252,6 +256,12 @@ const VisitorsComponent = () => {
 
   // reset to page 1 when filters/search change
   useEffect(() => { setPage(1); }, [debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn]);
+
+  useEffect(() => {
+    saveRememberedFilters("visitors", rememberFilters, {
+      search, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn, sort, perPage,
+    });
+  }, [rememberFilters, search, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn, sort, perPage]);
 
   const { data, error, isLoading, isFetching, refetch } = useGetQuery(
     { path: "/student/visitors", params: queryParams },
@@ -584,6 +594,10 @@ const VisitorsComponent = () => {
           </button>
         </div>
 
+        <label className="inline-flex items-center gap-1.5 text-[12px] font-medium cursor-pointer select-none" style={{ color: TEXT_SECONDARY }} title="Keep these filters next time you open this page">
+          <input type="checkbox" checked={rememberFilters} onChange={(e) => setRememberFilters(e.target.checked)} />
+          Remember filters
+        </label>
         {hasActiveFilters && (
           <button type="button" onClick={clearFilters} className="text-[12px] font-semibold transition" style={{ color: BRAND_RED }}>
             Clear filters
@@ -680,12 +694,21 @@ const VisitorsComponent = () => {
                 const indexOnPage = (pagination.from || 1) + i;
                 const isCold = v.status === "cold";
                 const isConverted = v.status === "converted_to_inquiry" || v.status === "converted_to_student";
+                // Reminder row-coloring: amber when a reminder is set and still
+                // upcoming/not actioned; red once it's past and still not done.
+                const _notDone = v.status === "pending";
+                const _td = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
+                const _rd = v.reminder_date ? String(v.reminder_date).slice(0, 10) : null;
+                let rowBg = "transparent";
+                if (_rd && _notDone) { rowBg = _rd < _td ? "#FEF2F2" : "#FFFBEB"; }
+                const hoverBg = rowBg === "transparent" ? "#FAFBFC" : rowBg;
                 return (
                   <tr key={v.id}
                     onClick={() => canUpdate && openEdit(v)}
-                    style={{ borderTop: `1px solid ${BORDER}`, cursor: canUpdate ? "pointer" : "default" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFBFC")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    title={_rd && _notDone ? (_rd < _td ? `Reminder overdue — ${_rd}` : `Reminder set for ${_rd}`) : undefined}
+                    style={{ borderTop: `1px solid ${BORDER}`, cursor: canUpdate ? "pointer" : "default", background: rowBg, boxShadow: rowBg !== "transparent" ? `inset 3px 0 0 ${_rd < _td ? "#DC2626" : "#D97706"}` : undefined }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = rowBg)}
                   >
                     <td className="px-4 py-3 text-sm" style={{ color: TEXT_MUTED }}>{indexOnPage}</td>
                     <td className="px-4 py-3">

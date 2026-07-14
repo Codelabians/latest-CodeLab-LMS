@@ -150,7 +150,7 @@ function SchedulesTab({ user }) {
       {/* Right column — schedule editor */}
       <div className="flex flex-col gap-4">
         {selectedUuid ? (
-          <EmployeeSchedulesEditor profileUuid={selectedUuid} canEdit={hasPermission(user, "update employee-schedules")} canCreate={hasPermission(user, "create employee-schedules")} canDelete={hasPermission(user, "delete employee-schedules")} />
+          <EmployeeSchedulesEditor profileUuid={selectedUuid} canEdit={hasPermission(user, "update employee")} />
         ) : (
           <SectionCard icon={Calendar} title="No employee selected" subtitle="Pick one on the left to see their schedules">
             <p className="text-xs" style={{ color: TEXT_MUTED }}>
@@ -164,138 +164,123 @@ function SchedulesTab({ user }) {
   );
 }
 
-function EmployeeSchedulesEditor({ profileUuid, canCreate, canEdit, canDelete }) {
-  const { data, isLoading, refetch } = useGetQuery({
-    path: `employee/profiles/${profileUuid}/schedules`,
-  });
-  const rows = data?.data || [];
-  const [editing, setEditing] = useState(null); // null = none, "new" = create, or schedule uuid
+function EmployeeSchedulesEditor({ profileUuid, canEdit }) {
+  const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  const THRESHOLDS = [
+    ["grace_minutes", "Grace (min)", 15],
+    ["half_day_after_minutes", "Half-day after (min)", 120],
+    ["expected_break_minutes", "Break allowed (min)", 60],
+    ["max_break_minutes", "Max break (min)", 90],
+  ];
 
-  // Resolver preview date — defaults to today, can be changed by HR.
+  const { data: profResp, isLoading, refetch } = useGetQuery({ path: "employee/profiles/" + profileUuid });
+  const { data: officesResp } = useGetQuery({ path: "employee/offices", params: { per_page: 200 } });
+  const offices = officesResp?.data || [];
+
+  const [sched, setSched] = useState(null);
+  useEffect(() => {
+    const ws = profResp?.data?.weekly_schedule;
+    const norm = {};
+    DAYS.forEach((d) => {
+      const v = ws && ws[d];
+      norm[d] = Array.isArray(v) ? v.map((s) => ({ ...s })) : (v && v.start ? [{ ...v }] : []);
+    });
+    setSched(norm);
+  }, [profResp]);
+
   const [previewDate, setPreviewDate] = useState(new Date().toISOString().slice(0, 10));
-  const { data: resolvedResp } = useGetQuery({
-    path: `employee/profiles/${profileUuid}/schedule-resolved`,
-    params: { date: previewDate },
-  });
+  const { data: resolvedResp } = useGetQuery({ path: "employee/profiles/" + profileUuid + "/schedule-resolved", params: { date: previewDate } });
   const resolved = resolvedResp?.data;
+
+  const [patchMut, { isLoading: saving }] = usePatchMutation();
+
+  const upd = (day, idx, patch) => setSched((prev) => ({ ...prev, [day]: prev[day].map((s, i) => (i === idx ? { ...s, ...patch } : s)) }));
+  const addShift = (day) => setSched((prev) => {
+    const last = prev[day][prev[day].length - 1];
+    return { ...prev, [day]: [...prev[day], { start: (last && last.end) || "09:00", end: "18:00", office_slug: (offices[0] && offices[0].slug) || "" }] };
+  });
+  const removeShift = (day, idx) => setSched((prev) => ({ ...prev, [day]: prev[day].filter((_, i) => i !== idx) }));
+
+  const save = async () => {
+    try {
+      await patchMut({ path: "employee/profiles/" + profileUuid, body: { weekly_schedule: sched } }).unwrap();
+      showToast("Schedule saved.", "success");
+      refetch();
+    } catch (e) {
+      showToast(e?.data?.message || "Failed to save schedule.", "error");
+    }
+  };
+
+  if (isLoading || !sched) {
+    return <div className="flex items-center justify-center py-6"><Loader2 size={16} className="animate-spin" style={{ color: TEXT_MUTED }} /></div>;
+  }
 
   return (
     <>
-      {/* Resolved schedule preview (any date) */}
-      <SectionCard
-        icon={Sparkles}
-        title="Resolved schedule preview"
-        subtitle="What the Rules Engine would compare against on a given date"
-        action={
-          <input
-            type="date"
-            value={previewDate}
-            onChange={(e) => setPreviewDate(e.target.value)}
-            className="px-2 py-1 text-xs border rounded-md"
-            style={{ borderColor: BORDER, color: TEXT_PRIMARY }}
-          />
-        }
-      >
+      <SectionCard icon={Sparkles} title="Resolved schedule preview" subtitle="What the attendance engine compares against on a given date" action={<input type="date" value={previewDate} onChange={(e) => setPreviewDate(e.target.value)} className="px-2 py-1 text-xs border rounded-md" style={{ borderColor: BORDER, color: TEXT_PRIMARY }} />}>
         {resolved ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <MiniStat label="Source" value={resolved.source} />
             <MiniStat label="Working day" value={resolved.is_working_day ? "Yes" : "No"} />
-            <MiniStat label="In time" value={resolved.in_time?.slice(11, 16) || "—"} />
-            <MiniStat label="Out time" value={resolved.out_time?.slice(11, 16) || "—"} />
-            <MiniStat label="Override" value={resolved.override_applied || "—"} />
+            <MiniStat label="In time" value={resolved.in_time?.slice(11, 16) || "\u2014"} />
+            <MiniStat label="Out time" value={resolved.out_time?.slice(11, 16) || "\u2014"} />
+            <MiniStat label="Override" value={resolved.override_applied || "\u2014"} />
           </div>
-        ) : (
-          <p className="text-xs" style={{ color: TEXT_MUTED }}>Loading…</p>
-        )}
+        ) : (<p className="text-xs" style={{ color: TEXT_MUTED }}>Loading\u2026</p>)}
       </SectionCard>
 
-      {/* Schedules list */}
-      <SectionCard
-        icon={Calendar}
-        title="Date-ranged schedules"
-        subtitle="Schedules that override the default JSON within their date range"
-        action={
-          canCreate && (
-            <button
-              type="button"
-              onClick={() => setEditing("new")}
-              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white rounded-full"
-              style={{ background: BRAND_RED }}
-            >
-              <Plus size={12} /> New schedule
-            </button>
-          )
-        }
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center py-4"><Loader2 size={16} className="animate-spin" style={{ color: TEXT_MUTED }} /></div>
-        ) : rows.length === 0 ? (
-          <p className="text-xs" style={{ color: TEXT_MUTED }}>No date-ranged schedules. The Phase 1 JSON applies.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {rows.map((s) => (
-              <li
-                key={s.uuid}
-                className="flex flex-col gap-2 px-3 py-2 border rounded-lg"
-                style={{ borderColor: BORDER }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium" style={{ color: TEXT_PRIMARY }}>{s.name}</span>
-                    <span className="text-[11px]" style={{ color: TEXT_MUTED }}>
-                      {s.effective_from} → {s.effective_to || "open"}
-                      {!s.is_active && <span style={{ color: "#B91C1C" }}> · inactive</span>}
-                    </span>
+      <SectionCard icon={Calendar} title="Weekly schedule" subtitle="Per-day shifts across offices, with attendance rules \u2014 this is the schedule the attendance engine uses. Same schedule as the employee edit page." action={canEdit && (
+        <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white rounded-full" style={{ background: BRAND_RED, opacity: saving ? 0.6 : 1 }}>
+          {saving && <Loader2 size={12} className="animate-spin" />} Save schedule
+        </button>
+      )}>
+        <div className="flex flex-col gap-2">
+          {DAYS.map((day) => {
+            const shifts = sched[day] || [];
+            const isOff = shifts.length === 0;
+            return (
+              <div key={day} className="border rounded-md" style={{ borderColor: BORDER, background: isOff ? SURFACE_ALT : "white" }}>
+                <div className="flex items-center justify-between gap-2 px-3 py-2 border-b" style={{ borderColor: BORDER }}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold capitalize" style={{ color: TEXT_PRIMARY }}>{day}</span>
+                    <span className="text-[10px] uppercase px-1.5 py-0.5 rounded font-semibold" style={{ background: isOff ? SURFACE_ALT : BRAND_RED_TINT, color: isOff ? TEXT_MUTED : BRAND_RED }}>{isOff ? "off" : (shifts.length + " " + (shifts.length === 1 ? "shift" : "shifts"))}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {canEdit && (
-                      <button type="button" onClick={() => setEditing(s.uuid)} className="text-xs" style={{ color: BRAND_RED }}>
-                        <Edit3 size={12} className="inline mr-1" />Edit
-                      </button>
-                    )}
-                    {canDelete && (
-                      <DeleteButton uuid={s.uuid} onDone={refetch} />
-                    )}
-                  </div>
+                  {canEdit && (<button type="button" onClick={() => addShift(day)} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium border rounded-md" style={{ borderColor: BRAND_RED, color: BRAND_RED, background: BRAND_RED_TINT }}><Plus size={12} /> Add shift</button>)}
                 </div>
-                <ul className="grid grid-cols-7 gap-1 text-[10px]">
-                  {DAY_NAMES.map((d, i) => {
-                    const day = s.days?.find((dd) => dd.day_of_week === i + 1);
-                    return (
-                      <li
-                        key={d}
-                        className="flex flex-col items-center px-1 py-1 rounded"
-                        style={{ background: day && day.is_working_day ? SURFACE_ALT : "transparent", color: day && day.is_working_day ? TEXT_PRIMARY : TEXT_MUTED }}
-                      >
-                        <span className="font-semibold">{d}</span>
-                        {day && day.is_working_day ? (
-                          <span>{day.in_time?.slice(0, 5) || "—"}–{day.out_time?.slice(0, 5) || "—"}</span>
-                        ) : (
-                          <span>off</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        )}
+                {shifts.length > 0 && (
+                  <div className="p-3 space-y-2">
+                    {shifts.map((s, idx) => (
+                      <div key={idx} className="border rounded-md p-2 space-y-2" style={{ borderColor: BORDER }}>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-[120px_120px_1fr_40px] md:items-center">
+                          <input type="time" value={s.start || ""} disabled={!canEdit} onChange={(e) => upd(day, idx, { start: e.target.value })} className="px-2 py-1.5 text-xs border rounded outline-none" style={{ borderColor: BORDER, color: TEXT_PRIMARY }} />
+                          <input type="time" value={s.end || ""} disabled={!canEdit} onChange={(e) => upd(day, idx, { end: e.target.value })} className="px-2 py-1.5 text-xs border rounded outline-none" style={{ borderColor: BORDER, color: TEXT_PRIMARY }} />
+                          <select value={s.office_slug || ""} disabled={!canEdit} onChange={(e) => upd(day, idx, { office_slug: e.target.value })} className="px-2 py-1.5 text-xs border rounded outline-none" style={{ borderColor: BORDER, color: TEXT_PRIMARY }}>
+                            <option value="">\u2014 pick office \u2014</option>
+                            {offices.map((o) => (<option key={o.id} value={o.slug}>{o.name}{o.type === "partner" && o.partner_company ? (" (" + o.partner_company + ")") : ""}</option>))}
+                            <option value="remote">Remote / work from home</option>
+                          </select>
+                          {canEdit && (<button type="button" onClick={() => removeShift(day, idx)} className="px-2 py-1 text-xs rounded-md" style={{ color: TEXT_MUTED, border: "1px solid " + BORDER }} title="Remove shift"><X size={11} /></button>)}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                          {THRESHOLDS.map(([k, lbl, ph]) => (
+                            <label key={k} className="block">
+                              <span className="block text-[10px] mb-0.5" style={{ color: TEXT_MUTED }}>{lbl}</span>
+                              <input type="number" min="0" value={s[k] ?? ""} placeholder={String(ph)} disabled={!canEdit} onChange={(e) => upd(day, idx, { [k]: e.target.value === "" ? null : Number(e.target.value) })} className="w-full px-2 py-1.5 text-xs border rounded outline-none" style={{ borderColor: BORDER, color: TEXT_PRIMARY }} />
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </SectionCard>
-
-      {/* New / edit modal */}
-      {editing && (
-        <ScheduleFormModal
-          profileUuid={profileUuid}
-          uuid={editing === "new" ? null : editing}
-          onClose={() => setEditing(null)}
-          onSaved={() => { setEditing(null); refetch(); }}
-        />
-      )}
     </>
   );
 }
-
 function ScheduleFormModal({ profileUuid, uuid, onClose, onSaved }) {
   const isEdit = !!uuid;
   const { data: existing } = useGetQuery(

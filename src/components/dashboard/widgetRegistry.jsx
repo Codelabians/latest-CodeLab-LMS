@@ -13,6 +13,7 @@ import OrgBrandSplitWidget from "./widgets/OrgBrandSplitWidget";
 import OrgStatusBreakdownWidget from "./widgets/OrgStatusBreakdownWidget";
 
 import FinancePayrollReadyWidget from "./widgets/FinancePayrollReadyWidget";
+import ScholarshipSubsidyWidget from "./widgets/ScholarshipSubsidyWidget";
 
 import TeacherTodaysClassesWidget from "./widgets/TeacherTodaysClassesWidget";
 import TeacherMyStudentsWidget from "./widgets/TeacherMyStudentsWidget";
@@ -52,6 +53,7 @@ const MY_REFERRAL = { Component: MyReferralWidget, span: "col-span-1 lg:col-span
 export const WIDGET_REGISTRY = {
   // ─────────── Senior leadership ────────────────────────────────────────
   admin: [
+    { Component: ScholarshipSubsidyWidget,     permission: "get scholarship-programs",        span: "col-span-1 lg:col-span-2" },
     { Component: OrgKpiWidget,                 permission: "view hr-dashboard-all-employees", span: "col-span-1 lg:col-span-2" },
     { Component: HrSummaryWidget,              permission: "view hr-dashboard-all-employees", span: "col-span-1 lg:col-span-2" },
     { Component: OrgBrandSplitWidget,          permission: "view hr-dashboard-all-employees", span: "col-span-1 lg:col-span-2" },
@@ -94,10 +96,12 @@ export const WIDGET_REGISTRY = {
 
   // ─────────── Finance ──────────────────────────────────────────────────
   finance_manager: [
+    { Component: ScholarshipSubsidyWidget,     permission: "get scholarship-programs",        span: "col-span-1 lg:col-span-2" },
     { Component: FinancePayrollReadyWidget,    permission: "view hr-dashboard-payroll",       span: "col-span-1 lg:col-span-2" },
     { Component: OrgKpiWidget,                 permission: "view hr-dashboard-all-employees", span: "col-span-1 lg:col-span-2" },
   ],
   finance: [
+    { Component: ScholarshipSubsidyWidget,     permission: "get scholarship-programs",        span: "col-span-1 lg:col-span-2" },
     { Component: FinancePayrollReadyWidget,    permission: "view hr-dashboard-payroll",       span: "col-span-1 lg:col-span-2" },
   ],
 
@@ -154,6 +158,7 @@ Object.keys(WIDGET_REGISTRY).forEach((slug) => {
 
 /** Default fallback when the active role isn't in the registry. */
 export const DEFAULT_WIDGETS = [
+  { Component: ScholarshipSubsidyWidget, permission: "get scholarship-programs", span: "col-span-1 lg:col-span-2" },
   { Component: MyProfileCompletenessWidget, span: "col-span-1 lg:col-span-2" },
   { Component: MyDocumentsWidget,           span: "col-span-1 lg:col-span-2" },
   { Component: MyRecentAuditWidget,         span: "col-span-1 lg:col-span-4" },

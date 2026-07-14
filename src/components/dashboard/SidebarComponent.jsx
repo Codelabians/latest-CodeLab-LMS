@@ -52,6 +52,8 @@ import {
   Bell,
   Activity,
   Landmark,
+  HeartHandshake,
+  PauseCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -106,6 +108,7 @@ import {
   STARTUP_SUMMARY,
   STUDENT_SUMMARY,
   STUDENT_LEAVES,
+  STUDENTS_ON_BREAK,
   STUDENT_COMPLAINTS,
   STUDENT_LAPTOPS,
   BATCH_ATTENDANCE,
@@ -132,6 +135,8 @@ import {
   FINANCE_STATS,
   EMPLOYEE_PAYOUTS,
   PAYMENT_ACCOUNTS,
+  SCHOLARSHIP_PROGRAMS,
+  FEE_STATUS,
   STUDENT_LOANS,
   LEDGER_ACCOUNTS,
   COMMISSIONS,
@@ -239,6 +244,7 @@ const NAV_SECTIONS = [
         children: [
           { route: FINANCE_STATS, label: "Finance Stats", icon: TrendingUp, gate: ["get finance-stats"] },
           { route: FEE_COLLECTION, label: "Collect Fee", icon: Wallet, gate: ["record payments"] },
+          { route: FEE_STATUS, label: "Fee Status", icon: Wallet, gate: ["record payments"] },
           { route: EMPLOYEE_PAYOUTS, label: "Employee Payouts", icon: Banknote, gate: ["get finance-summary"] },
           { route: EXPENSES, label: "Expenses", icon: ArrowDownCircle, gate: ["get expenses", "create expenses", "update expenses", "delete expenses"] },
           { route: ALL_EXPENSES, label: "All Expenses", icon: ArrowDownCircle, gate: ["get expenses", "create expenses", "update expenses", "delete expenses", "get finance-summary"] },
@@ -251,6 +257,7 @@ const NAV_SECTIONS = [
           { route: PAYMENT_ACCOUNTS, label: "Payment Accounts", icon: Landmark, gate: ["get finance-summary"] },
           { route: STUDENT_LOANS, label: "Student Loans", icon: Banknote, gate: ["get student-loans"] },
           { route: LEDGER_ACCOUNTS, label: "Accounts & Ledger", icon: Landmark, gate: ["get ledger"] },
+          { route: SCHOLARSHIP_PROGRAMS, label: "Scholarship / NGO", icon: HeartHandshake, gate: ["get scholarship-programs"] },
           { route: COMMISSIONS, label: "Commissions", icon: Banknote, gate: ["get commissions"] },
         ],
       },
@@ -267,6 +274,7 @@ const NAV_SECTIONS = [
           { route: STUDENT_SUMMARY, label: "Students Summary", icon: BarChart3, gate: ["get student-summary"] },
           { route: STUDENTS, label: "All Students", icon: Users, gate: ["get student"] },
           { route: STUDENT_LEAVES, label: "Leave Requests", icon: CalendarCheck, gate: ["get student-leaves"] },
+          { route: STUDENTS_ON_BREAK, label: "On Break", icon: PauseCircle, gate: ["get student"] },
           { route: STUDENT_COMPLAINTS, label: "Complaints", icon: MessageSquareWarning, gate: ["get complaints"] },
           { route: STUDENT_LAPTOPS, label: "Laptops", icon: Boxes, gate: ["get inventory-assign", "update inventory-assign"] },
           { route: BATCH_ATTENDANCE, label: "Batch Attendance", icon: CalendarCheck, gate: ["get student"] },

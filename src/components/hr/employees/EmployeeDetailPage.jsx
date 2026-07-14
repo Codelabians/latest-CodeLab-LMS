@@ -366,7 +366,7 @@ const EmployeeDetailPage = () => {
     if (!uid) { showToast("This employee has no linked user account.", "error"); return; }
     if (!window.confirm("Email fresh login details to this employee? Their current password will be reset.")) return;
     try {
-      const res = await postResendCreds({ path: `user/${uid}/resend-credentials`, body: {} }).unwrap();
+      const res = await postResendCreds({ path: `employee/profiles/${profile.uuid}/resend-credentials`, body: {} }).unwrap();
       showToast(res?.message || res?.data || "Login details emailed.", "success");
     } catch (e) {
       showToast(e?.data?.message || "Could not send login details.", "error");

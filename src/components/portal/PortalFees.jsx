@@ -8,7 +8,15 @@ const BORDER = "#EEF2F6";
 const API_URL = import.meta.env?.VITE_API_URL || "https://api.codelab.pk/public/api/";
 const money = (n) => "Rs " + Number(n || 0).toLocaleString();
 const METHOD = { cash: "Cash", jazzcash: "JazzCash", easypaisa: "EasyPaisa", bank_transfer: "Bank Transfer", cheque: "Cheque", other: "Other" };
-const STATUS = { paid: { bg: "#F0FDF4", fg: "#15803D" }, pending: { bg: "#FFFBEB", fg: "#B45309" }, overdue: { bg: "#FEF2F2", fg: BRAND } };
+const STATUS = {
+  paid: { bg: "#F0FDF4", fg: "#15803D", label: "Paid" },
+  pending: { bg: "#FFFBEB", fg: "#B45309", label: "Pending" },
+  overdue: { bg: "#FEF2F2", fg: BRAND, label: "Overdue" },
+  waived: { bg: "#F5F3FF", fg: "#6D28D9", label: "Waived" },
+  break: { bg: "#EFF6FF", fg: "#1D4ED8", label: "On break" },
+  close: { bg: "#F0FDF4", fg: "#15803D", label: "Closed" },
+  partially_paid: { bg: "#FEF3C7", fg: "#B45309", label: "Partial" },
+};
 const fmtDateTime = (v) => {
   if (!v) return "—";
   const dt = new Date(String(v).replace(" ", "T"));
@@ -92,7 +100,7 @@ export default function PortalFees() {
                             <td className="px-2 py-2" style={{ color: "#0F172A" }}>{money(r.amount)}</td>
                             <td className="px-2 py-2" style={{ color: "#475569" }}>{money(r.paid)}{r.remaining > 0 && r.paid > 0 ? <span className="block text-[10px]" style={{ color: BRAND }}>{money(r.remaining)} left</span> : null}</td>
                             <td className="px-2 py-2" style={{ color: "#94A3B8" }}>{(r.due_date || "").slice(0, 10) || "—"}</td>
-                            <td className="px-2 py-2"><span className="px-2 py-0.5 rounded-full text-[10px] font-bold capitalize" style={{ background: st.bg, color: st.fg }}>{r.status}</span></td>
+                            <td className="px-2 py-2"><span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: st.bg, color: st.fg }}>{st.label || r.status}</span></td>
                             <td className="px-2 py-2" style={{ color: "#475569" }}>
                               <div className="flex items-center gap-2">
                                 <span>{methods.length ? methods.map((m) => METHOD[m] || m).join(", ") : "—"}</span>

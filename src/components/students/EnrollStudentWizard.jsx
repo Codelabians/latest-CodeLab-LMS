@@ -79,6 +79,7 @@ export default function EnrollStudentWizard() {
   const { data: cityData } = useGetQuery({ path: "/core/cities/active" });
   const { data: discSettings } = useGetQuery({ path: "finance/fee-discount-settings" });
   const { data: instData } = useGetQuery({ path: "/employee/institutes" });
+  const { data: progData } = useGetQuery({ path: "student/scholarship-programs/active" });
   const { data: courseData } = useGetQuery({ path: "/course/courses", params: { per_page: 200 } }, { skip: !direct });
 
   const [stu, setStu] = useState({});
@@ -110,6 +111,7 @@ export default function EnrollStudentWizard() {
   const [enrollDisc, setEnrollDisc] = useState("");
   const [monthlyDisc, setMonthlyDisc] = useState("");
   const [promoCode, setPromoCode] = useState("");
+  const [scholarshipProgram, setScholarshipProgram] = useState("");
 
   // Slot-aware laptops from the new asset system (only units free in the
   // selected batch's time slot).
@@ -168,25 +170,54 @@ export default function EnrollStudentWizard() {
       ? (selectedCourse?.monthly_fee || 0)
       : (inquiry?.primary_course?.monthly_fee || selBatch?.course_monthly_fee || 0)
   );
-  const netEnroll = Math.max(baseEnroll - (Number(enrollDisc) || 0), 0);
-  const netMonthly = Math.max(baseMonthly - (Number(monthlyDisc) || 0), 0);
+  const selProgram = (progData?.data || []).find((pp) => pp.uuid === scholarshipProgram) || null;
+  // When a scholarship/NGO program is selected, the program's fixed rates drive
+  // the fees (and the payment lines) — manual/auto discounts are ignored.
+  const netEnroll = selProgram
+    ? (selProgram.enrollment_fee_override != null ? Number(selProgram.enrollment_fee_override) : baseEnroll)
+    : Math.max(baseEnroll - (Number(enrollDisc) || 0), 0);
+  const netMonthly = selProgram
+    ? Number(selProgram.monthly_fee_override || 0)
+    : Math.max(baseMonthly - (Number(monthlyDisc) || 0), 0);
   const laptopDiscAmt = !needsLaptop ? 0 : laptopDiscType === "flat" ? (Number(laptopDiscValue) || 0) : laptopDiscType === "percent" ? Math.round((laptopFeeSetting * (Number(laptopDiscValue) || 0)) / 100) : 0;
-  const netLaptop = needsLaptop ? Math.max(0, laptopFeeSetting - laptopDiscAmt) : 0;
+  const netLaptop = needsLaptop
+    ? (selProgram && selProgram.laptop_fee_override != null
+        ? Number(selProgram.laptop_fee_override)
+        : Math.max(0, laptopFeeSetting - laptopDiscAmt))
+    : 0;
   const money = (n) => "Rs " + Number(n || 0).toLocaleString();
 
   // Seed the org-wide default discount (% → Rs for this course) when nothing
   // is quoted yet. Won't override an inquiry-quoted discount or admin edits.
+  // Discount handling:
+  //  - When a scholarship/NGO program is selected, clear the discounts (the
+  //    program's fixed rate drives the fee instead).
+  //  - When NO program is selected, (re)fill the discount from the inquiry's
+  //    quoted value, else the org-wide default % from settings. So removing a
+  //    program restores the normal discounts.
   useEffect(() => {
-    const d = discSettings?.data;
-    if (!d) return;
-    if (!enrollDisc && baseEnroll > 0 && d.enrollment_discount_percent && !(Number(inquiry?.enrollment_discount) > 0)) {
-      setEnrollDisc(String(Math.round((baseEnroll * d.enrollment_discount_percent) / 100)));
+    if (scholarshipProgram) {
+      setEnrollDisc("");
+      setMonthlyDisc("");
+      return;
     }
-    if (!monthlyDisc && baseMonthly > 0 && d.monthly_discount_percent && !(Number(inquiry?.monthly_discount) > 0)) {
-      setMonthlyDisc(String(Math.round((baseMonthly * d.monthly_discount_percent) / 100)));
+    const d = discSettings?.data;
+    if (!enrollDisc) {
+      if (Number(inquiry?.enrollment_discount) > 0) {
+        setEnrollDisc(String(inquiry.enrollment_discount));
+      } else if (d && baseEnroll > 0 && d.enrollment_discount_percent) {
+        setEnrollDisc(String(Math.round((baseEnroll * d.enrollment_discount_percent) / 100)));
+      }
+    }
+    if (!monthlyDisc) {
+      if (Number(inquiry?.monthly_discount) > 0) {
+        setMonthlyDisc(String(inquiry.monthly_discount));
+      } else if (d && baseMonthly > 0 && d.monthly_discount_percent) {
+        setMonthlyDisc(String(Math.round((baseMonthly * d.monthly_discount_percent) / 100)));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discSettings, baseEnroll, baseMonthly]);
+  }, [discSettings, baseEnroll, baseMonthly, scholarshipProgram]);
 
   // Payment-line helpers (amount/method/account/reference per line).
   const sumForSlot = (slot) => payLines.reduce((s, l) => (l.fee_slot === slot ? s + (Number(l.amount) || 0) : s), 0);
@@ -198,12 +229,21 @@ export default function EnrollStudentWizard() {
   // Default the first line's amount to the net enrollment fee (until the
   // admin edits any line).
   const [payTouched, setPayTouched] = useState(false);
+
+  // Changing the scholarship program resets the payment lines so their amounts
+  // re-seed from the program rate (on select) or the restored discounted fee
+  // (on remove) instead of keeping the previous values.
+  useEffect(() => {
+    setPayLines([{ fee_slot: "enrollment", amount: "", payment_method: "cash", payment_account_uuid: "", payment_reference: "" }]);
+    setPayTouched(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scholarshipProgram]);
   useEffect(() => {
     if (!payTouched && netEnroll > 0) {
       setPayLines((prev) => prev.map((l, idx) => (idx === 0 ? { ...l, amount: String(netEnroll) } : l)));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [netEnroll]);
+  }, [netEnroll, scholarshipProgram]);
 
   const [promotePost, { isLoading: saving }] = usePostMutation();
 
@@ -238,9 +278,12 @@ export default function EnrollStudentWizard() {
     };
     if (enrollmentDue) body.enrollment_due_date = enrollmentDue;
     if (monthlyDue) body.first_monthly_due_date = monthlyDue;
-    if (Number(enrollDisc) > 0) body.enrollment_discount = Number(enrollDisc);
-    if (Number(monthlyDisc) > 0) body.monthly_discount = Number(monthlyDisc);
+    if (!scholarshipProgram) {
+      if (Number(enrollDisc) > 0) body.enrollment_discount = Number(enrollDisc);
+      if (Number(monthlyDisc) > 0) body.monthly_discount = Number(monthlyDisc);
+    }
     if (promoCode.trim()) body.promo_code = promoCode.trim();
+    if (scholarshipProgram) body.scholarship_program_uuid = scholarshipProgram;
     if (needsLaptop && laptopUuid) {
       body.laptop_inventory_uuid = laptopUuid;
       body.laptop_full_course = laptopFullCourse;
@@ -408,13 +451,13 @@ export default function EnrollStudentWizard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Field label={`Enrollment discount (base ${money(baseEnroll)})`} icon={Wallet}>
-                    <TextInput type="number" min="0" value={enrollDisc} onChange={(e) => setEnrollDisc(e.target.value)} placeholder="0" />
+                    <TextInput type="number" min="0" value={enrollDisc} onChange={(e) => setEnrollDisc(e.target.value)} placeholder="0" disabled={!!selProgram} />
                   </Field>
                   <div className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Net enrollment: <b style={{ color: "#15803D" }}>{money(netEnroll)}</b></div>
                 </div>
                 <div>
                   <Field label={`Monthly discount (base ${money(baseMonthly)})`} icon={Wallet}>
-                    <TextInput type="number" min="0" value={monthlyDisc} onChange={(e) => setMonthlyDisc(e.target.value)} placeholder="0" />
+                    <TextInput type="number" min="0" value={monthlyDisc} onChange={(e) => setMonthlyDisc(e.target.value)} placeholder="0" disabled={!!selProgram} />
                   </Field>
                   <div className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Net monthly: <b style={{ color: "#15803D" }}>{money(netMonthly)}</b> <span style={{ color: TEXT_MUTED }}>(applies to every month)</span></div>
                 </div>
@@ -422,6 +465,17 @@ export default function EnrollStudentWizard() {
                   <Field label="Promo code (optional — applies referrer)" icon={ClipboardCheck}>
                     <TextInput value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} placeholder="e.g. ALI7K3Q" />
                   </Field>
+                </div>
+                <div className="md:col-span-2">
+                  <Field label="Scholarship / NGO program (optional)" icon={Wallet}>
+                    <SearchableSelect
+                      options={(progData?.data || []).map((pr) => ({ value: pr.uuid, label: `${pr.name} — monthly ${money(pr.monthly_fee_override)}` }))}
+                      value={scholarshipProgram}
+                      onChange={(v) => setScholarshipProgram(v || "")}
+                      placeholder="No program"
+                    />
+                  </Field>
+                  {selProgram && <div className="text-[11px] mt-1" style={{ color: "#6D28D9" }}>Using <b>{selProgram.name}</b> rates — enrollment {money(netEnroll)}, monthly {money(netMonthly)}. Discounts are ignored; the waived difference is tracked as this program&apos;s subsidy.</div>}
                 </div>
               </div>
             </div>
@@ -443,15 +497,21 @@ export default function EnrollStudentWizard() {
                         <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end rounded-lg p-2.5" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
                           <div className="md:col-span-3">
                             <label className="block text-[11px] mb-1" style={{ color: TEXT_MUTED }}>Pays for</label>
-                            <Select value={line.fee_slot} onChange={(e) => { setPayTouched(true); updateLine(idx, "fee_slot", e.target.value); }}>
+                            <Select value={line.fee_slot} onChange={(e) => {
+                              setPayTouched(true);
+                              const slot = e.target.value;
+                              const net = slot === "laptop" ? netLaptop : slot === "monthly" ? netMonthly : netEnroll;
+                              setPayLines((prev) => prev.map((l, i2) => (i2 === idx ? { ...l, fee_slot: slot, amount: String(net || 0) } : l)));
+                            }}>
                               <option value="enrollment">Enrollment</option>
                               <option value="monthly">Monthly</option>
-                              {needsLaptop && netLaptop > 0 && <option value="laptop">Laptop</option>}
+                              {needsLaptop && <option value="laptop">Laptop</option>}
                             </Select>
                           </div>
                           <div className="md:col-span-2">
                             <label className="block text-[11px] mb-1" style={{ color: TEXT_MUTED }}>Amount</label>
                             <TextInput type="number" min="0" max={slotNet} value={line.amount} onChange={(e) => { setPayTouched(true); updateLine(idx, "amount", e.target.value); }} placeholder="0" />
+                            <div className="text-[10px] mt-0.5" style={{ color: TEXT_MUTED }}>of {money(slotNet)}</div>
                           </div>
                           <div className="md:col-span-2">
                             <label className="block text-[11px] mb-1" style={{ color: TEXT_MUTED }}>Method</label>
@@ -479,7 +539,7 @@ export default function EnrollStudentWizard() {
                       <Plus size={14} /> Add payment line
                     </button>
                     <div className="text-[12px] font-semibold" style={{ color: TEXT_PRIMARY }}>
-                      Paying now: {money(payTotal)} <span className="font-normal" style={{ color: TEXT_MUTED }}>({money(sumForSlot("enrollment"))} enrol · {money(sumForSlot("monthly"))} monthly{needsLaptop && netLaptop > 0 ? ` · ${money(sumForSlot("laptop"))} laptop` : ""})</span>
+                      Paying now: {money(payTotal)} <span className="font-normal" style={{ color: TEXT_MUTED }}>({money(sumForSlot("enrollment"))} enrol · {money(sumForSlot("monthly"))} monthly{needsLaptop ? ` · ${money(sumForSlot("laptop"))} laptop` : ""})</span>
                     </div>
                   </div>
                 </>
@@ -496,7 +556,7 @@ export default function EnrollStudentWizard() {
                 <span>Laptop</span><span style={{ color: TEXT_PRIMARY }}>{needsLaptop ? (laptops.find((l) => l.uuid === laptopUuid)?.asset_tag || "selected") : "No"}</span>
                 <span>Enrollment (net)</span><span style={{ color: TEXT_PRIMARY }}>{money(netEnroll)}{Number(enrollDisc) > 0 ? ` (−${money(enrollDisc)})` : ""}</span>
                 <span>Monthly (net)</span><span style={{ color: TEXT_PRIMARY }}>{money(netMonthly)}{Number(monthlyDisc) > 0 ? ` (−${money(monthlyDisc)})` : ""}</span>
-                {needsLaptop && laptopFeeSetting > 0 ? (<><span>Laptop fee</span><span style={{ color: TEXT_PRIMARY }}>{money(laptopFeeSetting)}<span style={{ color: TEXT_MUTED }}> /month (billed monthly)</span></span></>) : null}
+                {needsLaptop ? (<><span>Laptop fee</span><span style={{ color: TEXT_PRIMARY }}>{money(netLaptop)}<span style={{ color: TEXT_MUTED }}> /month (billed monthly)</span>{netLaptop <= 0 ? <span style={{ color: "#B45309" }}> — set laptop fee in Website Settings</span> : null}</span></>) : null}
                 {promoCode.trim() ? (<><span>Promo code</span><span style={{ color: TEXT_PRIMARY }}>{promoCode.trim()}</span></>) : null}
                 <span>Payment now</span><span style={{ color: TEXT_PRIMARY }}>{(() => {
                   if (!payNow || payTotal <= 0) return "None";

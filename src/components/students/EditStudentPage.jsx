@@ -5,7 +5,7 @@ import {
   GraduationCap, Users as UsersIcon, Home, CheckCircle2, AlertTriangle,
   Gift, UserPlus,
 } from "lucide-react";
-import { useGetQuery, usePatchMutation, usePostMutation } from "../../api/apiSlice";
+import { useGetQuery, usePatchMutation, usePostMutation, useDeleteMutation } from "../../api/apiSlice";
 import SearchableSelect from "../ui/SearchableSelect";
 
 const BRAND = "#C90606";
@@ -23,13 +23,14 @@ const inputStyle = (err) => ({
   height: 40,
 });
 
-function Field({ icon: Icon, label, required, error, children }) {
+function Field({ icon: Icon, label, required, error, helper, children }) {
   return (
     <div>
       <label className="text-[12px] font-semibold flex items-center gap-1 mb-1" style={{ color: TEXT_SECONDARY }}>
         {Icon && <Icon size={13} style={{ color: TEXT_MUTED }} />} {label}{required && <span style={{ color: BRAND }}>*</span>}
       </label>
       {children}
+      {helper && <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>{helper}</p>}
       {error && <p className="text-[11px] mt-1" style={{ color: BRAND }}>{error}</p>}
     </div>
   );
@@ -41,6 +42,10 @@ export default function EditStudentPage() {
   const { data, isLoading } = useGetQuery({ path: `/student/students/${studentUuid}` });
   const [patch, { isLoading: saving }] = usePatchMutation();
   const [uploadAvatar, { isLoading: uploadingPhoto }] = usePostMutation();
+  const [assignProg] = usePostMutation();
+  const [unassignProg] = useDeleteMutation();
+  const { data: progData } = useGetQuery({ path: "student/scholarship-programs/active" });
+  const programs = progData?.data || [];
   const [imageFile, setImageFile] = useState(null);
   const { data: cityData } = useGetQuery({ path: "/core/cities/active" });
 
@@ -52,6 +57,15 @@ export default function EditStudentPage() {
   useEffect(() => {
     const s = data?.data?.student;
     if (s && !form) {
+      const enrollments = data?.data?.enrollments || [];
+      const activeEnr =
+        enrollments.find((e) => e.is_active) || enrollments[0];
+      const enrSchedule = activeEnr?.fees?.schedule || [];
+      const enrInst =
+        enrSchedule.find(
+          (r) => String(r.type).toLowerCase() === "enrollment" && r.status !== "paid",
+        ) ||
+        enrSchedule.find((r) => String(r.type).toLowerCase() === "enrollment");
       setForm({
         first_name: s.first_name || "",
         last_name: s.last_name || "",
@@ -74,9 +88,18 @@ export default function EditStudentPage() {
         current_qualification: s.current_qualification || "",
         is_laptop_demanded: s.is_laptop_demanded || "",
         fixed_fee: s.fixed_fee ?? "",
-        join_date: (s.enrollments?.[0]?.join_date || "").slice(0, 10),
-        enrollment_fee_due_date: "",
+        join_date: (activeEnr?.join_date || "").slice(0, 10),
+        enrollment_fee_due_date: (enrInst?.due_date || "").slice(0, 10),
         monthly_billing_day: "",
+        enrollment_discount:
+          activeEnr?.fees?.enrollment_fee_discount != null
+            ? String(activeEnr.fees.enrollment_fee_discount)
+            : "",
+        monthly_discount: activeEnr?.fees?.monthly_fee_discount
+          ? String(activeEnr.fees.monthly_fee_discount)
+          : "",
+        monthly_discount_scope: "existing",
+        scholarship_program_uuid: s.scholarship_program?.scholarship_program_uuid || "",
         // Referral: the student's OWN shareable code + who referred them.
         referral_code: s.referral_code || "",
         referrer_code: s.referrer?.referral_code || "",
@@ -108,9 +131,33 @@ export default function EditStudentPage() {
       join_date: form.join_date || undefined,
       enrollment_fee_due_date: form.enrollment_fee_due_date || undefined,
       monthly_billing_day: form.monthly_billing_day ? Number(form.monthly_billing_day) : undefined,
+      enrollment_discount:
+        form.enrollment_discount === "" || form.enrollment_discount == null
+          ? undefined
+          : Number(form.enrollment_discount),
+      monthly_discount:
+        form.monthly_discount === "" || form.monthly_discount == null
+          ? undefined
+          : Number(form.monthly_discount),
+      monthly_discount_scope: form.monthly_discount_scope || "existing",
     };
     try {
       await patch({ path: `/student/students/${studentUuid}`, body }).unwrap();
+      // Scholarship/NGO program assignment (separate endpoints). Re-bills the
+      // student's unpaid fees to the program rate on assign.
+      const origProg = data?.data?.student?.scholarship_program?.scholarship_program_uuid || "";
+      const newProg = form.scholarship_program_uuid || "";
+      if (newProg !== origProg) {
+        try {
+          if (newProg) {
+            await assignProg({ path: `student/scholarship-programs/${newProg}/assign/${studentUuid}`, body: {} }).unwrap();
+          } else if (origProg) {
+            await unassignProg({ path: `student/scholarship-programs/${origProg}/assign/${studentUuid}` }).unwrap();
+          }
+        } catch (e) {
+          notify("Saved, but the scholarship program change failed.", false);
+        }
+      }
       // Photo is stored via the dedicated admin avatar endpoint (the student
       // PATCH does not handle images). Best-effort so it never blocks the save.
       if (imageFile instanceof File) {
@@ -230,6 +277,26 @@ export default function EditStudentPage() {
           </Field>
           <Field icon={CreditCard} label="Enrollment fee due date">
             <input type="date" className={inp} style={inputStyle()} value={form.enrollment_fee_due_date} onChange={(e) => set("enrollment_fee_due_date", e.target.value)} />
+          </Field>
+          <Field icon={CreditCard} label="Enrollment discount (Rs)" helper="Discount off the enrollment fee. Set it to the full enrollment fee to waive it — the fee becomes Rs 0 and is auto-marked paid. Only applies if the enrollment fee is not already paid.">
+            <input type="number" min="0" className={inp} style={inputStyle()} value={form.enrollment_discount} onChange={(e) => set("enrollment_discount", e.target.value)} />
+          </Field>
+          <Field icon={CreditCard} label="Monthly fee discount (Rs / month)" helper="Reduces every UNPAID month by this amount; paid months are untouched. Choose the scope below.">
+            <input type="number" min="0" className={inp} style={inputStyle()} value={form.monthly_discount} onChange={(e) => set("monthly_discount", e.target.value)} />
+          </Field>
+          <Field icon={CreditCard} label="Apply monthly discount to">
+            <select className={inp} style={inputStyle()} value={form.monthly_discount_scope} onChange={(e) => set("monthly_discount_scope", e.target.value)}>
+              <option value="existing">Only existing unpaid months</option>
+              <option value="future">Existing + all future months</option>
+            </select>
+          </Field>
+          <Field icon={GraduationCap} label="Scholarship / NGO program" helper="Sponsored students pay the program's fixed fees; unpaid fees are re-billed to that rate and the difference tracked as the program's subsidy.">
+            <select className={inp} style={inputStyle()} value={form.scholarship_program_uuid} onChange={(e) => set("scholarship_program_uuid", e.target.value)}>
+              <option value="">No program</option>
+              {programs.map((pr) => (
+                <option key={pr.uuid} value={pr.uuid}>{pr.name} (monthly Rs {Number(pr.monthly_fee_override || 0).toLocaleString()})</option>
+              ))}
+            </select>
           </Field>
           <Field icon={CreditCard} label="Monthly fee day (1-28)">
             <input type="number" min="1" max="28" className={inp} style={inputStyle()} value={form.monthly_billing_day} onChange={(e) => set("monthly_billing_day", e.target.value)} />
