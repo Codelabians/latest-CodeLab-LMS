@@ -45,6 +45,7 @@ export default function StudentDetailPage() {
   // Projected next month's fee (course monthly + net laptop fee).
   const { data: nextFeeData, refetch: refetchNextFee } = useGetQuery({ path: `/student/students/${id}/next-month-fee` });
   const nextFee = nextFeeData?.data;
+  const [adjustSchedule, setAdjustSchedule] = useState(null); // monthly-schedule line being adjusted
 
   const [toast, setToast] = useState(null);
   const [showSwitch, setShowSwitch] = useState(false);
@@ -310,7 +311,27 @@ export default function StudentDetailPage() {
           </div>
           <div className="space-y-1">
             {(nextFee.items || []).map((it, i) => (
-              <div key={i} className="flex items-center justify-between text-[12.5px]"><span style={{ color: TEXT_SECONDARY }}>{it.label} (monthly)</span><span style={{ color: TEXT_PRIMARY }}>{money(it.amount)}</span></div>
+              <div key={i} className="flex items-center justify-between text-[12.5px]">
+                <span style={{ color: TEXT_SECONDARY }}>
+                  {it.label} (monthly)
+                  {it.schedule_discount > 0 && (
+                    <span style={{ color: TEXT_MUTED }}> · {money(it.base_amount)} − {money(it.schedule_discount)} discount</span>
+                  )}
+                </span>
+                <span className="inline-flex items-center gap-1.5" style={{ color: TEXT_PRIMARY }}>
+                  {money(it.amount)}
+                  {it.schedule_uuid && (
+                    <button
+                      onClick={() => setAdjustSchedule(it)}
+                      className="text-[10.5px] font-semibold px-1.5 py-0.5 rounded"
+                      style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}
+                      title="Adjust the standing monthly amount / discount"
+                    >
+                      Adjust
+                    </button>
+                  )}
+                </span>
+              </div>
             ))}
             {nextFee.laptop_fee > 0 && (
               <div className="flex items-center justify-between text-[12.5px]"><span style={{ color: TEXT_SECONDARY }}>Laptop fee</span><span style={{ color: TEXT_PRIMARY }}>{money(nextFee.laptop_fee)}</span></div>
@@ -376,6 +397,15 @@ export default function StudentDetailPage() {
             These referrals are why this student gets a &quot;Referral discount&quot; on their monthly fee. Removing one cancels its reward — already-delivered rewards can&apos;t be removed.
           </p>
         </div>
+      )}
+
+      {adjustSchedule && (
+        <AdjustScheduleModal
+          item={adjustSchedule}
+          onClose={() => setAdjustSchedule(null)}
+          onDone={(msg) => { notify(msg); setAdjustSchedule(null); refetchNextFee(); }}
+          onError={(msg) => notify(msg, false)}
+        />
       )}
 
       {/* Laptop / assets — assign a laptop later, manage billing */}
@@ -863,6 +893,77 @@ function SwitchBatchModal({ studentUuid, onClose, onDone, onError }) {
 /* ------------------------------------------------------------------ */
 /* Assign ambassador modal                                             */
 /* ------------------------------------------------------------------ */
+/*
+ * Adjust a monthly fee schedule's standing amount / recurring discount —
+ * fixes mistyped enrollment values (e.g. 8,001) or changed agreements.
+ * PATCH finance/monthly-fee-schedules/{uuid}/amounts. Applies from the
+ * next generated bill; the current installment is corrected separately
+ * via the fee tab's Discount action.
+ */
+function AdjustScheduleModal({ item, onClose, onDone, onError }) {
+  const [amount, setAmount] = useState(String(item.base_amount ?? ""));
+  const [discount, setDiscount] = useState(String(item.schedule_discount ?? 0));
+  const [note, setNote] = useState("");
+  const [patch, { isLoading }] = usePatchMutation();
+
+  const submit = async () => {
+    const a = parseFloat(amount); const d = parseFloat(discount);
+    if (!(a >= 0)) { onError("Enter a valid monthly amount."); return; }
+    if (!(d >= 0)) { onError("Enter a valid discount (0 for none)."); return; }
+    if (!note.trim()) { onError("A reason note is required."); return; }
+    try {
+      const res = await patch({
+        path: `finance/monthly-fee-schedules/${item.schedule_uuid}/amounts`,
+        body: { amount: a, discount: d, note: note.trim() },
+      }).unwrap();
+      onDone(res?.message || "Monthly schedule updated.");
+    } catch (e) {
+      const errs = e?.data?.errors;
+      onError((errs && Object.values(errs)[0]?.[0]) || e?.data?.message || "Could not update the schedule.");
+    }
+  };
+
+  const inp = { background: "#F8FAFC", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" };
+  const net = Math.max(0, (parseFloat(amount) || 0) - (parseFloat(discount) || 0));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.45)" }}>
+      <div className="bg-white rounded-2xl w-full max-w-md" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${BORDER}` }}>
+          <span className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>Adjust monthly fee — {item.label}</span>
+          <button onClick={onClose}><X size={18} style={{ color: TEXT_MUTED }} /></button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <p className="text-[12px]" style={{ color: TEXT_MUTED }}>
+            Changes apply from the <b>next generated bill</b>. To fix the current unpaid installment too, use the Discount action on the Fees tab.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-semibold block mb-1" style={{ color: TEXT_SECONDARY }}>Monthly amount (Rs)</label>
+              <input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={inp} />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold block mb-1" style={{ color: TEXT_SECONDARY }}>Recurring discount (Rs)</label>
+              <input type="number" min="0" value={discount} onChange={(e) => setDiscount(e.target.value)} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={inp} />
+            </div>
+          </div>
+          <div className="text-[12px]" style={{ color: TEXT_SECONDARY }}>Net per month: <b style={{ color: TEXT_PRIMARY }}>Rs {net.toLocaleString()}</b> (before any referral credit)</div>
+          <div>
+            <label className="text-[11px] font-semibold block mb-1" style={{ color: TEXT_SECONDARY }}>Reason / note (required)</label>
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. fee was mistyped at enrollment" className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={inp} />
+          </div>
+        </div>
+        <div className="px-5 py-4 flex justify-end gap-2" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}>Cancel</button>
+          <button onClick={submit} disabled={isLoading || !note.trim()} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style={{ background: BRAND_RED, opacity: (isLoading || !note.trim()) ? 0.6 : 1 }}>
+            {isLoading && <Loader2 size={15} className="animate-spin" />} Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AssignAmbassadorModal({ studentUuid, onClose, onDone, onError }) {
   const [q, setQ] = useState("");
   const [ambUuid, setAmbUuid] = useState(null);
