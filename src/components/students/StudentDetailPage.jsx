@@ -487,7 +487,28 @@ export default function StudentDetailPage() {
                       <div className="text-[11px]" style={{ color: TEXT_MUTED }}>{e.batch.name || "—"}{e.instructor ? ` · ${e.instructor}` : ""}{e.batch.timing ? ` · ${e.batch.timing}` : ""}{e.join_date ? ` · joined ${String(e.join_date).slice(0,10)}` : ""}</div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={e.is_active ? { background: "#F0FDF4", color: "#15803D" } : { background: SURFACE_HOVER, color: TEXT_MUTED }}>{e.is_active ? "Current" : "Past"}</span>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={e.is_active ? { background: "#F0FDF4", color: "#15803D" } : { background: SURFACE_HOVER, color: TEXT_MUTED }}>{e.is_active ? "Current" : "Past"}</span>
+                    {e.is_active && e.batch?.uuid && (
+                      <button
+                        disabled={posting}
+                        onClick={async () => {
+                          if (!window.confirm(`Remove ${s.name} from ${e.batch.name}? This closes the enrollment and stops its monthly billing. Fees already attached stay for history.`)) return;
+                          const note = window.prompt("Reason (optional):", "Added by mistake — meant to switch");
+                          if (note === null) return;
+                          try {
+                            const res = await post({ path: `/student/${id}/remove-from-batch`, body: { batch_uuid: e.batch.uuid, ...(note.trim() ? { note: note.trim() } : {}) } }).unwrap();
+                            notify(res?.message || "Removed from batch."); refetch(); refetchNextFee();
+                          } catch (err) { notify(err?.data?.message || "Could not remove from the batch.", false); }
+                        }}
+                        className="px-2 py-1 rounded-lg text-[11px] font-semibold"
+                        style={{ border: "1px solid #FCA5A5", color: "#B91C1C" }}
+                        title="Remove this student from this batch entirely (closes the enrollment + stops its billing)"
+                      >
+                        Remove from batch
+                      </button>
+                    )}
+                  </span>
                 </div>
 
                 {/* per-enrolment mini stats */}
