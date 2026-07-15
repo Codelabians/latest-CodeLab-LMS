@@ -11,6 +11,7 @@ import {
   useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation, useLazyGetQuery,
 } from "../../api/apiSlice";
 import ReportModal from "../ui/ReportModal";
+import PhoneActions from "../ui/PhoneActions";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { showToast } from "../ui/common/ShowToast";
 import SearchableSelect from "../ui/SearchableSelect";
@@ -698,11 +699,8 @@ const InquiriesComponent = () => {
                       )}
                       <ChallanStatusBadge row={v} onClick={() => setChallanLog({ open: true, id: v.id, name: `${v.first_name || ""} ${v.last_name || ""}`.trim() })} />
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 text-sm" style={{ color: TEXT_PRIMARY }}>
-                        <Phone size={12} strokeWidth={2} style={{ color: TEXT_MUTED }} />
-                        {v.phone_number}
-                      </div>
+                    <td className="px-4 py-3 text-sm">
+                      {v.phone_number ? <PhoneActions number={v.phone_number} name={`${v.first_name || ""} ${v.last_name || ""}`.trim()} /> : "—"}
                     </td>
                     <td className="px-4 py-3 text-sm" style={{ color: TEXT_SECONDARY }}>
                       {v.primary_course?.name || (courses.find((c) => c.id === v.primary_course_id)?.name) || "—"}

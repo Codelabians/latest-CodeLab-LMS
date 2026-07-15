@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Wallet, Search, Loader2, Plus, Trash2, CheckCircle2, AlertTriangle, X,
-  CalendarDays, BadgeDollarSign, User as UserIcon, Download, Mail, MessageCircle,
+  CalendarDays, BadgeDollarSign, BadgePercent, User as UserIcon, Download, Mail, MessageCircle,
 } from "lucide-react";
 import { useGetQuery, usePostMutation, useDownloadChallanMutation } from "../../api/apiSlice";
 import SearchableSelect from "../ui/SearchableSelect";
@@ -52,6 +52,7 @@ export default function FeeCollection() {
   const [toast, setToast] = useState(null);
   const [collectFor, setCollectFor] = useState(null); // installment row
   const [leaveFor, setLeaveFor] = useState(null); // installment for leave adjustment
+  const [discountFor, setDiscountFor] = useState(null); // installment for manual discount
   const [advanceOpen, setAdvanceOpen] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => setDebouncedQ(q.trim()), 300); return () => clearTimeout(t); }, [q]);
@@ -343,6 +344,14 @@ export default function FeeCollection() {
                                 style={{ border: "1px solid #FBCFE8", background: "#FDF2F8", color: "#9D174D" }}
                               >Leave</button>
                             )}
+                            {i.remaining > 0 && i.status !== "paid" && i.status !== "waived" && (
+                              <button
+                                onClick={() => setDiscountFor(i)}
+                                title="Discount — write off part or all of the remaining amount, with a reason"
+                                className="px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                style={{ border: "1px solid #FDE68A", background: "#FFFBEB", color: "#B45309" }}
+                              >Discount</button>
+                            )}
                             {canSkipFinance && i.remaining <= 0 && Number(i.paid) > 0 && (
                               <button
                                 onClick={() => resetToPending(i.installment_uuid)}
@@ -387,6 +396,15 @@ export default function FeeCollection() {
           installment={leaveFor}
           onClose={() => setLeaveFor(null)}
           onDone={(msg) => { notify(msg); setLeaveFor(null); refetch(); }}
+          onError={(msg) => notify(msg, false)}
+        />
+      )}
+
+      {discountFor && (
+        <DiscountModal
+          installment={discountFor}
+          onClose={() => setDiscountFor(null)}
+          onDone={(msg) => { notify(msg); setDiscountFor(null); refetch(); }}
           onError={(msg) => notify(msg, false)}
         />
       )}
@@ -645,6 +663,72 @@ export function AdvanceModal({ studentUuid, onClose, onDone, onError, canSkipFin
 /* ------------------------------------------------------------------ */
 /* Leave adjustment — write down the days the student was on leave     */
 /* ------------------------------------------------------------------ */
+/*
+ * Manual discount — write off part or all of the outstanding balance with a
+ * MANDATORY reason. Covers "she paid 5,500 of 6,000, waive the last 500" and
+ * any goodwill monthly discount. Fully-discounted rows settle automatically
+ * (paid if money was received, waived otherwise).
+ */
+export function DiscountModal({ installment, onClose, onDone, onError }) {
+  const remaining = Number(installment.remaining || 0);
+  const [amount, setAmount] = useState(remaining > 0 ? String(remaining) : "");
+  const [note, setNote] = useState("");
+  const [post, { isLoading }] = usePostMutation();
+
+  const submit = async () => {
+    const a = parseFloat(amount);
+    if (!(a > 0)) { onError("Enter the discount amount."); return; }
+    if (!note.trim()) { onError("A reason note is required for a discount."); return; }
+    try {
+      const res = await post({
+        path: `finance/installments/${installment.installment_uuid}/discount`,
+        body: { amount: a, note: note.trim() },
+      }).unwrap();
+      onDone(res?.message || "Discount applied.");
+    } catch (e) {
+      const errs = e?.data?.errors;
+      onError((errs && Object.values(errs)[0]?.[0]) || e?.data?.message || "Could not apply the discount.");
+    }
+  };
+
+  const cellStyle = { background: SURFACE_HOVER, border: `1px solid ${BORDER}`, color: TEXT_PRIMARY, fontFamily: "'Montserrat', sans-serif" };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,23,42,0.45)" }}>
+      <div className="bg-white rounded-2xl w-full max-w-md" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${BORDER}` }}>
+          <div className="flex items-center gap-2">
+            <BadgePercent size={18} style={{ color: "#B45309" }} />
+            <span className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>Apply discount</span>
+          </div>
+          <button onClick={onClose}><X size={18} style={{ color: TEXT_MUTED }} /></button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <p className="text-[12px]" style={{ color: TEXT_MUTED }}>
+            Write off part or all of what&apos;s still owed on this installment — money already paid is never touched.
+            If the discount clears the balance, the installment settles automatically.
+            Outstanding now: <b style={{ color: TEXT_PRIMARY }}>Rs {remaining.toLocaleString()}</b>.
+          </p>
+          <div>
+            <label className="text-[11px] font-semibold block mb-1" style={{ color: TEXT_SECONDARY }}>Discount amount (Rs)</label>
+            <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={cellStyle} />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold block mb-1" style={{ color: TEXT_SECONDARY }}>Reason / note (required)</label>
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. referral top-up for this month / financial hardship" className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={cellStyle} />
+          </div>
+        </div>
+        <div className="px-5 py-4 flex justify-end gap-2" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}>Cancel</button>
+          <button onClick={submit} disabled={isLoading || !note.trim() || !(parseFloat(amount) > 0)} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style={{ background: "#B45309", opacity: (isLoading || !note.trim() || !(parseFloat(amount) > 0)) ? 0.6 : 1 }}>
+            {isLoading && <Loader2 size={15} className="animate-spin" />} Apply discount
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LeaveAdjustModal({ installment, onClose, onDone, onError }) {
   const remaining = Number(installment.remaining || 0);
   const [amount, setAmount] = useState(remaining > 0 ? String(remaining) : "");

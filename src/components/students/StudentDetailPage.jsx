@@ -13,6 +13,7 @@ import { selectCurrentUser } from "../../features/auth/authSlice";
 import { STUDENTS_EDIT } from "../routes/RouteConstants";
 import PrintIdCard from "../common/PrintIdCard";
 import SearchableSelect from "../ui/SearchableSelect";
+import PhoneActions from "../ui/PhoneActions";
 import RecordPaymentModal from "./studentDetailsPages/RecordPaymentModal";
 import StudentLaptopCard from "./StudentLaptopCard";
 
@@ -119,6 +120,12 @@ export default function StudentDetailPage() {
       try { await post({ path: `/student/${id}/put-on-break`, body: { note: note || undefined } }).unwrap(); notify("Student put on break."); refetch(); }
       catch (e) { notify(e?.data?.message || "Action failed.", false); }
     }
+  };
+
+  const removeReferrer = async () => {
+    if (!window.confirm("Remove this student's referrer? Any still-active referral reward for this pairing is cancelled and the recurring credit stops.")) return;
+    try { await post({ path: `/student/${id}/remove-referrer`, body: {} }).unwrap(); notify("Referral removed."); refetch(); }
+    catch (e) { notify(e?.data?.message || "Could not remove the referral.", false); }
   };
 
   const toggleAlumni = async (makeAlumni) => {
@@ -230,9 +237,21 @@ export default function StudentDetailPage() {
                 </span>
               )}
               {s.referrer && (
-                <span className="inline-flex items-center gap-1" style={{ color: "#6D28D9" }}>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md" style={{ color: "#6D28D9", background: "#F5F3FF" }}>
                   <UserPlus size={12} /> Referred by: {`${s.referrer.first_name || ""} ${s.referrer.last_name || ""}`.trim() || "—"}
                   {s.referrer.referral_code ? ` (${s.referrer.referral_code})` : ""}
+                  {s.referrer_reward_status ? ` · reward ${s.referrer_reward_status}` : ""}
+                  {["paid", "completed"].includes(s.referrer_reward_status) ? null : (
+                    <button
+                      disabled={posting}
+                      onClick={removeReferrer}
+                      className="ml-1 font-bold hover:opacity-70"
+                      title="Remove this referral (cancels any active reward)"
+                      style={{ color: "#B91C1C" }}
+                    >
+                      ✕
+                    </button>
+                  )}
                 </span>
               )}
             </div>
@@ -651,12 +670,12 @@ export default function StudentDetailPage() {
           <h3 className="text-[13px] font-bold mb-3" style={{ color: TEXT_PRIMARY }}>Profile</h3>
           <div className="grid grid-cols-1 gap-3">
             <Info icon={Mail} label="Email" value={s.email} />
-            <Info icon={Phone} label="Phone" value={s.contact} />
+            <Info icon={Phone} label="Phone" value={s.contact ? <PhoneActions number={s.contact} name={s.name} /> : "—"} />
             <Info icon={CreditCard} label="CNIC" value={s.cnic} />
             <Info icon={User} label="Gender" value={s.gender} />
             <Info icon={GraduationCap} label="Qualification" value={s.qualification} />
             <Info icon={MapPin} label="City" value={s.city} />
-            <Info icon={User} label="Guardian" value={s.guardian_name ? `${s.guardian_name}${s.guardian_phone ? ` · ${s.guardian_phone}` : ""}` : "—"} />
+            <Info icon={User} label="Guardian" value={s.guardian_name ? <>{s.guardian_name}{s.guardian_phone ? <> · <PhoneActions number={s.guardian_phone} name={s.guardian_name} /></> : null}</> : "—"} />
             <Info icon={MapPin} label="Address" value={s.address} />
           </div>
 

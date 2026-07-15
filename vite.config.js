@@ -4,6 +4,11 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Honor an externally assigned port (e.g. the Claude Code preview harness
+  // sets PORT); falls back to Vite's default 5173 for plain `npm run dev`.
+  server: {
+    port: Number(process.env.PORT) || 5173,
+  },
   plugins: [
     react(),
     // Bundle analyzer — writes dist/stats.html after every `vite build`.

@@ -13,6 +13,7 @@ import {
   useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation, useLazyGetQuery,
 } from "../../api/apiSlice";
 import ReportModal from "../ui/ReportModal";
+import PhoneActions from "../ui/PhoneActions";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { showToast } from "../ui/common/ShowToast";
 import VisitorModal from "./components/VisitorModal";
@@ -731,11 +732,8 @@ const VisitorsComponent = () => {
                       )}
                       <ChallanStatusBadge row={v} onClick={() => setChallanLog({ open: true, id: v.id, name: v.name })} />
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 text-sm" style={{ color: TEXT_PRIMARY }}>
-                        <Phone size={12} strokeWidth={2} style={{ color: TEXT_MUTED }} />
-                        {v.contact}
-                      </div>
+                    <td className="px-4 py-3 text-sm">
+                      {v.contact ? <PhoneActions number={v.contact} name={v.name} /> : "—"}
                     </td>
                     <td className="px-4 py-3"><SectionPill section={v.section} /></td>
                     <td className="px-4 py-3 text-sm" style={{ color: TEXT_SECONDARY }}>

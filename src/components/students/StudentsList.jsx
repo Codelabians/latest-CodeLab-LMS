@@ -8,6 +8,7 @@ import { useGetQuery, useLazyGetQuery, usePostMutation, useDeleteMutation } from
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { downloadCSV } from "../../api/fileDownload";
 import SimplePagination from "../ui/SimplePagination";
+import PhoneActions from "../ui/PhoneActions";
 import SearchableSelect from "../ui/SearchableSelect";
 import LeadNotesModal from "../ui/LeadNotesModal";
 import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../hooks/useRememberFilters";
@@ -295,9 +296,7 @@ export default function StudentsList() {
                         </div>
                         <div className="text-[11px]" style={{ color: TEXT_MUTED }}>{r.email || r.cnic || ""}</div>
                         {r.contact && (
-                          <a href={`tel:${r.contact}`} className="text-[11px] font-semibold hover:underline" style={{ color: TEXT_SECONDARY }} onClick={(ev) => ev.stopPropagation()}>
-                            {r.contact}
-                          </a>
+                          <PhoneActions number={r.contact} name={r.name} className="text-[11px]" />
                         )}
                         {r.latest_note?.body && (
                           <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: TEXT_SECONDARY, maxWidth: 260 }} title={r.latest_note.body}>

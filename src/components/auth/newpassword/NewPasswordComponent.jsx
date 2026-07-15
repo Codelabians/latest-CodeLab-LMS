@@ -1,196 +1,146 @@
-import React, { useEffect, useState } from "react";
-import Logo from "../../../assets/images/park logo.png";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { toast } from "react-toastify";
 import { usePostMutation } from "../../../api/apiSlice";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import ForgetImage from "../../../assets/images/forget/ezgif.com-video-to-gif-converter.gif";
-import ForgetImage2 from "../../../assets/images/forget/Forgotpassword1-ezgif.com-video-to-gif-converter.gif";
-import ArrowImage from "../../../assets/images/forget/arrow.png";
-import { SIGNIN } from "../../routes/RouteConstants";
+import { toast } from "react-toastify";
+import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { SIGNIN } from "../../routes/RouteConstants";
+import AuthBrandHeader from "../AuthBrandHeader";
 
-const ForgetComponent = () => {
+const BRAND_RED = "#C90606";
+const BRAND_RED_DARK = "#A00505";
+
+/**
+ * Set-new-password page, opened from the reset link in the email as
+ * /newpassword?token=...&email=... — restyled to match SignInHero, with
+ * the logo driven from Settings → Company branding.
+ */
+const NewPasswordComponent = () => {
   const navigate = useNavigate();
-  // The reset email links here as /newpassword?token=...&email=... — both
-  // are required by the backend reset endpoint alongside the new password.
   const [searchParams] = useSearchParams();
   const resetToken = searchParams.get("token") || "";
   const resetEmail = searchParams.get("email") || "";
-  const [passicon, setPassIcon] = useState(false);
-  const [confirmPassIcon, setConfirmPassIcon] = useState(false);
-  const error = useSelector((state) => state.error.error);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [updatePassword, { isLoading }] = usePostMutation();
-  const [imageValue, setImageValue] = useState(true);
 
-  const signInValidation = Yup.object({
-    password: Yup.string()
-      .min(8, "Password must be at least 8 characters")
-      .required("Password is required"),
+  const validation = Yup.object({
+    password: Yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
     password_confirmation: Yup.string()
       .oneOf([Yup.ref("password"), null], "Passwords must match")
       .required("Confirm Password is required"),
   });
 
-  useEffect(() => {
-    const timeOut = setTimeout(() => {
-      setImageValue(false);
-    }, 2000);
-    return () => clearTimeout(timeOut);
-  }, []);
+  const { handleBlur, handleChange, handleSubmit, values, errors, touched } = useFormik({
+    initialValues: { password: "", password_confirmation: "" },
+    validationSchema: validation,
+    onSubmit: async (vals) => {
+      if (!resetToken || !resetEmail) {
+        toast.error("This reset link is invalid or incomplete. Please request a new one.");
+        return;
+      }
+      try {
+        await updatePassword({
+          path: "admin/authentication/password/reset",
+          body: { ...vals, token: resetToken, email: resetEmail },
+        }).unwrap();
+        toast.success("Password updated. Please sign in with your new password.");
+        navigate(SIGNIN);
+      } catch (err) {
+        const errs = err?.data?.errors;
+        const firstErr = errs && Object.values(errs)[0]?.[0];
+        toast.error(firstErr || err?.data?.message || "Could not reset password. The link may have expired — request a new one.");
+      }
+    },
+  });
 
-  const { handleBlur, handleChange, handleSubmit, values, errors, touched } =
-    useFormik({
-      initialValues: { password: "", password_confirmation: "" },
-      validationSchema: signInValidation,
-      onSubmit: async (values) => {
-        if (!resetToken || !resetEmail) {
-          toast.error("This reset link is invalid or incomplete. Please use the link from your email, or request a new one.");
-          return;
-        }
-        try {
-          await updatePassword({
-            path: "admin/authentication/password/reset",
-            body: { ...values, token: resetToken, email: resetEmail },
-          }).unwrap();
-          toast.success("Password updated. Please sign in with your new password.");
-          navigate(SIGNIN);
-        } catch (err) {
-          const errs = err?.data?.errors;
-          const firstErr = errs && Object.values(errs)[0]?.[0];
-          toast.error(firstErr || err?.data?.message || "Could not reset password. The link may have expired — request a new one.");
-          console.error("Failed to reset password:", err);
-        }
-      },
-    });
+  const linkBroken = !resetToken || !resetEmail;
+
+  const passwordField = (name, label, show, setShow) => (
+    <div>
+      <label htmlFor={name} className="block mb-2 text-sm font-semibold text-black">{label}</label>
+      <div className="relative">
+        <input
+          id={name}
+          type={show ? "text" : "password"}
+          name={name}
+          autoComplete="new-password"
+          placeholder="••••••••"
+          className={`w-full px-4 py-3 pr-11 text-sm text-black placeholder-gray-400 transition border rounded-lg outline-none bg-gray-50 focus:bg-white focus:ring-2 ${
+            errors[name] && touched[name] ? "border-red-500 focus:ring-red-200" : "border-gray-200 focus:ring-red-100"
+          }`}
+          value={values[name]}
+          onBlur={handleBlur}
+          onChange={handleChange}
+        />
+        <span className="absolute text-gray-400 -translate-y-1/2 cursor-pointer right-4 top-1/2">
+          {show ? <FaEyeSlash onClick={() => setShow(false)} /> : <FaEye onClick={() => setShow(true)} />}
+        </span>
+      </div>
+      {errors[name] && touched[name] && (
+        <p className="mt-1.5 text-xs font-medium text-red-600">{errors[name]}</p>
+      )}
+    </div>
+  );
 
   return (
-    <section className="flex pt-16 pb-4 md:pt-10 h-screen bg-white">
-      <div className="container flex flex-col gap-12 w-full md:w-[60%] md:border-r border-gray-200">
-        <div className="flex items-center justify-center">
-          <img src={Logo} alt="logo" className="w-48 md:w-54" />
-        </div>
+    <section
+      className="relative flex items-center justify-center min-h-screen px-4 py-10 overflow-hidden bg-white font-Montserrat"
+      style={{
+        backgroundImage: `
+          radial-gradient(1200px 600px at -10% -20%, rgba(201,6,6,0.08) 0%, rgba(201,6,6,0) 60%),
+          radial-gradient(900px 600px at 110% 110%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0) 60%)
+        `,
+      }}
+    >
+      <div aria-hidden="true" className="absolute top-0 left-0 w-40 h-40 rounded-full opacity-30 -translate-x-1/2 -translate-y-1/2" style={{ background: BRAND_RED, filter: "blur(80px)" }} />
+      <div aria-hidden="true" className="absolute bottom-0 right-0 w-56 h-56 rounded-full opacity-20 translate-x-1/3 translate-y-1/3" style={{ background: "#000", filter: "blur(90px)" }} />
 
-        <form className="flex flex-col gap-8 md:gap-14" onSubmit={handleSubmit}>
-          <div className="flex flex-col items-center justify-center gap-1 text-center">
-            <h1 className="text-2xl md:text-4xl font-bold text-[#aa0e0e]">
-              New Password
-            </h1>
-            <p className="text-xs md:text-sm text-gray-500 px-5 tracking-wide max-w-sm">
-              Your new password must be different from previously used
-              passwords.
+      <div className="relative w-full max-w-md">
+        <AuthBrandHeader />
+
+        <div className="p-8 bg-white border border-gray-100 shadow-xl rounded-2xl" style={{ boxShadow: "0 20px 50px -20px rgba(0,0,0,0.15)" }}>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-black">Set a new password</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Your new password must be different from previously used passwords.
             </p>
-            {(!resetToken || !resetEmail) && (
-              <div className="mt-2 mx-5 max-w-sm rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs text-orange-700">
+          </div>
+
+          {linkBroken && (
+            <div className="flex items-start gap-2.5 p-3 mb-5 text-xs rounded-lg" style={{ background: "#FFFBEB", border: "1px solid #FDE68A", color: "#92400E" }}>
+              <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" />
+              <span>
                 This page must be opened from the reset link in your email.
-                If you don&apos;t have one, request it from the Forgot Password page.
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-5 md:w-[65%] mx-auto w-full px-6">
-            {/* New Password Input */}
-            <div className="relative w-full">
-              <input
-                type={passicon ? "text" : "password"}
-                name="password"
-                placeholder="New Password*"
-                className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d61111] w-full transition-all ${
-                  errors.password && touched.password
-                    ? "border-orange-500"
-                    : "border-gray-300"
-                }`}
-                value={values.password}
-                onBlur={handleBlur}
-                onChange={handleChange}
-              />
-              <span className="absolute right-4 top-4 cursor-pointer text-gray-400">
-                {passicon ? (
-                  <FaEyeSlash onClick={() => setPassIcon(false)} />
-                ) : (
-                  <FaEye onClick={() => setPassIcon(true)} />
-                )}
+                If you don&apos;t have one, request it from the <Link to="/forget" className="font-bold underline">Forgot Password</Link> page.
               </span>
-              {errors.password && touched.password && (
-                <div className="text-orange-600 text-[10px] font-bold mt-1">
-                  {errors.password}
-                </div>
-              )}
             </div>
+          )}
 
-            {/* Confirm Password Input */}
-            <div className="relative w-full">
-              <input
-                type={confirmPassIcon ? "text" : "password"}
-                name="password_confirmation"
-                placeholder="Confirm Password*"
-                className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d61111] w-full transition-all ${
-                  errors.password_confirmation && touched.password_confirmation
-                    ? "border-orange-500"
-                    : "border-gray-300"
-                }`}
-                value={values.password_confirmation}
-                onBlur={handleBlur}
-                onChange={handleChange}
-              />
-              <span className="absolute right-4 top-4 cursor-pointer text-gray-400">
-                {confirmPassIcon ? (
-                  <FaEyeSlash onClick={() => setConfirmPassIcon(false)} />
-                ) : (
-                  <FaEye onClick={() => setConfirmPassIcon(true)} />
-                )}
-              </span>
-              {errors.password_confirmation &&
-                touched.password_confirmation && (
-                  <div className="text-orange-600 text-[10px] font-bold mt-1">
-                    {errors.password_confirmation}
-                  </div>
-                )}
-            </div>
-          </div>
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+            {passwordField("password", "New password", showPass, setShowPass)}
+            {passwordField("password_confirmation", "Confirm password", showConfirm, setShowConfirm)}
 
-          <div className="flex flex-col items-center w-full px-6 gap-4">
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full md:w-64 py-3 bg-[#aa0e0e] text-white font-bold rounded-lg hover:bg-[#01355d] transition-all active:scale-95 shadow-lg disabled:opacity-50"
+              disabled={isLoading || linkBroken}
+              className="flex items-center justify-center w-full gap-2 py-3 text-sm font-bold text-white transition rounded-lg active:scale-[0.99] disabled:opacity-50"
+              style={{ background: `linear-gradient(135deg, ${BRAND_RED} 0%, ${BRAND_RED_DARK} 100%)`, boxShadow: "0 10px 24px -12px rgba(201,6,6,0.6)" }}
             >
-              {isLoading ? "Updating..." : "Update Password"}
+              {isLoading && <Loader2 size={16} className="animate-spin" />}
+              {isLoading ? "Updating…" : "Update password"}
             </button>
 
-            <div className="flex items-center justify-center gap-2">
-              <img src={ArrowImage} alt="back" className="w-4 h-4" />
-              <Link
-                to={SIGNIN}
-                className="text-center cursor-pointer border-b border-dotted border-gray-500 font-semibold text-gray-600 hover:text-[#d61111]"
-              >
-                Back to Login Page
-              </Link>
-            </div>
-          </div>
-        </form>
-
-        {error && (
-          <div className="bg-orange-50 p-3 mx-6 rounded border border-orange-200 text-orange-700 text-sm">
-            {error.title}: {error.description}
-          </div>
-        )}
-      </div>
-
-      {/* Side Image Section */}
-      <div className="w-[40%] hidden md:flex items-center justify-center pr-16 lg:pr-28">
-        <div className="max-w-md">
-          <img
-            src={imageValue ? ForgetImage2 : ForgetImage}
-            alt="forget animation"
-            className="w-full h-auto"
-          />
+            <Link to={SIGNIN} className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-black">
+              <ArrowLeft size={15} /> Back to sign in
+            </Link>
+          </form>
         </div>
       </div>
     </section>
   );
 };
 
-export default ForgetComponent;
+export default NewPasswordComponent;

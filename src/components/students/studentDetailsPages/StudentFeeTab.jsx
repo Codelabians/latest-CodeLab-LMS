@@ -28,6 +28,7 @@ import DeleteModal from "../../ui/DeleteModal";
 import ChallanApprovalModal from "../ChallanApprovalModal";
 import StudentFeeEdit from "./StudentFeeEdit";
 import RecordPaymentModal from "./RecordPaymentModal";
+import { DiscountModal } from "../../finance/FeeCollection";
 
 const METHOD_LABELS = {
   cash: "Cash",
@@ -62,6 +63,7 @@ const StudentFeeTab = () => {
   const [deleteInst] = usePostMutation();
   const [breakInst] = usePostMutation();
   const [waiveInst] = usePostMutation();
+  const [discountFor, setDiscountFor] = useState(null); // installment for manual discount
 
   const [downloadChallan, { isLoading: isDownloading }] =
     useDownloadChallanMutation();
@@ -908,6 +910,17 @@ const StudentFeeTab = () => {
                                   Waive
                                 </button>
                               )}
+                            {canManageRecords &&
+                              installment.status !== "waived" &&
+                              installment.status !== "paid" && (
+                                <button
+                                  onClick={() => setDiscountFor(installment)}
+                                  className="px-3 py-2 rounded-lg text-sm font-semibold shadow-md bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
+                                  title="Discount — write off part or all of the remaining amount, with a reason"
+                                >
+                                  Discount
+                                </button>
+                              )}
                           </div>
                         </div>
 
@@ -1108,6 +1121,15 @@ const StudentFeeTab = () => {
         installmentIndex={recordTarget?.installmentIndex}
         onRecorded={refetchStudents}
       />
+
+      {discountFor && (
+        <DiscountModal
+          installment={discountFor}
+          onClose={() => setDiscountFor(null)}
+          onDone={(msg) => { toast.success(msg); setDiscountFor(null); refetchStudents(); }}
+          onError={(msg) => toast.error(msg)}
+        />
+      )}
     </div>
   );
 };
