@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { STUDENTS_EDIT } from "../routes/RouteConstants";
 import PrintIdCard from "../common/PrintIdCard";
+import { DiscountModal } from "../finance/FeeCollection";
 import SearchableSelect from "../ui/SearchableSelect";
 import PhoneActions from "../ui/PhoneActions";
 import RecordPaymentModal from "./studentDetailsPages/RecordPaymentModal";
@@ -46,6 +47,7 @@ export default function StudentDetailPage() {
   const { data: nextFeeData, refetch: refetchNextFee } = useGetQuery({ path: `/student/students/${id}/next-month-fee` });
   const nextFee = nextFeeData?.data;
   const [adjustSchedule, setAdjustSchedule] = useState(null); // monthly-schedule line being adjusted
+  const [discountFor, setDiscountFor] = useState(null); // installment for manual discount
 
   const [toast, setToast] = useState(null);
   const [showSwitch, setShowSwitch] = useState(false);
@@ -399,6 +401,15 @@ export default function StudentDetailPage() {
         </div>
       )}
 
+      {discountFor && (
+        <DiscountModal
+          installment={discountFor}
+          onClose={() => setDiscountFor(null)}
+          onDone={(msg) => { notify(msg); setDiscountFor(null); refetch(); refetchNextFee(); }}
+          onError={(msg) => notify(msg, false)}
+        />
+      )}
+
       {adjustSchedule && (
         <AdjustScheduleModal
           item={adjustSchedule}
@@ -693,6 +704,16 @@ export default function StudentDetailPage() {
                                   title="Waive this fee — relief, not owed"
                                 >
                                   <Gift size={12} /> Waive
+                                </button>
+                              )}
+                              {canManageRecords && r.status !== "waived" && r.status !== "paid" && remaining > 0 && (
+                                <button
+                                  onClick={() => setDiscountFor({ installment_uuid: r.installment_uuid, remaining })}
+                                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold"
+                                  style={{ border: "1px solid #FDE68A", background: "#FFFBEB", color: "#B45309" }}
+                                  title="Discount — write off part or all of the remaining amount with a reason (works even when payments exist)"
+                                >
+                                  <Gift size={12} /> Discount
                                 </button>
                               )}
                             </span>
