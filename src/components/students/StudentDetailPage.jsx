@@ -508,7 +508,7 @@ export default function StudentDetailPage() {
                         Remove from batch
                       </button>
                     )}
-                    {!e.is_active && e.student_batch_uuid && (
+                    {(!e.is_active || s.status === "dropout") && e.student_batch_uuid && (
                       <button
                         disabled={posting}
                         onClick={async () => {
