@@ -508,6 +508,24 @@ export default function StudentDetailPage() {
                         Remove from batch
                       </button>
                     )}
+                    {!e.is_active && e.student_batch_uuid && (
+                      <button
+                        disabled={posting}
+                        onClick={async () => {
+                          try {
+                            const res = await post({ path: `/student/student-batches/${e.student_batch_uuid}/toggle-teacher-visibility`, body: {} }).unwrap();
+                            notify(res?.message || "Teacher visibility updated."); refetch();
+                          } catch (err) { notify(err?.data?.message || "Could not update teacher visibility.", false); }
+                        }}
+                        className="px-2 py-1 rounded-lg text-[11px] font-semibold"
+                        style={e.visible_to_teacher
+                          ? { border: "1px solid #BBF7D0", background: "#F0FDF4", color: "#15803D" }
+                          : { border: `1px solid ${BORDER}`, background: SURFACE_HOVER, color: TEXT_MUTED }}
+                        title="Controls whether the TEACHER still sees this past student in their roster and attendance screens"
+                      >
+                        {e.visible_to_teacher ? "Visible to teacher" : "Hidden from teacher"}
+                      </button>
+                    )}
                   </span>
                 </div>
 
