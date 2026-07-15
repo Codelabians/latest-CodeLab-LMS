@@ -43,7 +43,7 @@ export default function StudentDetailPage() {
   const { data: mgmtData } = useGetQuery({ path: `/student/students/${id}/management` });
   const mgmt = mgmtData?.data;
   // Projected next month's fee (course monthly + net laptop fee).
-  const { data: nextFeeData } = useGetQuery({ path: `/student/students/${id}/next-month-fee` });
+  const { data: nextFeeData, refetch: refetchNextFee } = useGetQuery({ path: `/student/students/${id}/next-month-fee` });
   const nextFee = nextFeeData?.data;
 
   const [toast, setToast] = useState(null);
@@ -326,6 +326,55 @@ export default function StudentDetailPage() {
             </div>
           </div>
           <p className="text-[10.5px] mt-2" style={{ color: TEXT_MUTED }}>Projection of the next monthly bill — generated automatically on the 1st.</p>
+        </div>
+      )}
+
+      {/* Referrals this student MADE — the source of their referral
+          discount. Each row can be removed (cancels that reward). */}
+      {(s.referrals_made || []).length > 0 && (
+        <div className="bg-white rounded-xl p-4 mb-4" style={{ border: `1px solid ${BORDER}` }}>
+          <h3 className="text-[13px] font-bold flex items-center gap-1.5 mb-2" style={{ color: TEXT_PRIMARY }}>
+            <Gift size={14} /> Referrals made ({s.referrals_made.length})
+          </h3>
+          <div className="space-y-1.5">
+            {s.referrals_made.map((r) => {
+              const delivered = ["paid", "completed"].includes(r.reward_status);
+              return (
+                <div key={r.uuid} className="flex items-center justify-between gap-2 text-[12.5px] py-1.5" style={{ borderBottom: `1px solid ${BORDER}` }}>
+                  <div className="min-w-0">
+                    <span className="font-semibold" style={{ color: TEXT_PRIMARY }}>{r.name || "—"}</span>
+                    <span style={{ color: TEXT_MUTED }}>
+                      {r.student_status ? ` · ${r.student_status}` : ""}
+                      {r.reward_type ? ` · ${String(r.reward_type).replace(/_/g, " ")}` : " · no reward yet"}
+                      {r.reward_status ? ` (${r.reward_status})` : ""}
+                      {r.reward_amount ? ` · ${money(r.reward_amount)}/referral` : ""}
+                      {r.total_credited > 0 ? ` · credited ${money(r.total_credited)} so far` : ""}
+                    </span>
+                  </div>
+                  {!delivered && (
+                    <button
+                      disabled={posting}
+                      onClick={async () => {
+                        if (!window.confirm(`Remove ${r.name || "this student"}'s referral link to this student? Their reward is cancelled and the recurring discount stops.`)) return;
+                        try {
+                          await post({ path: `/student/${r.uuid}/remove-referrer`, body: {} }).unwrap();
+                          notify("Referral removed."); refetch(); refetchNextFee();
+                        } catch (e) { notify(e?.data?.message || "Could not remove the referral.", false); }
+                      }}
+                      className="px-2 py-1 rounded-lg text-[11px] font-semibold flex-shrink-0"
+                      style={{ border: "1px solid #FCA5A5", color: "#B91C1C" }}
+                      title="Remove this referral (cancels the reward and its discount)"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[10.5px] mt-2" style={{ color: TEXT_MUTED }}>
+            These referrals are why this student gets a &quot;Referral discount&quot; on their monthly fee. Removing one cancels its reward — already-delivered rewards can&apos;t be removed.
+          </p>
         </div>
       )}
 
