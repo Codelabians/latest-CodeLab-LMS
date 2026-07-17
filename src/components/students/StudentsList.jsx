@@ -287,7 +287,9 @@ export default function StudentsList() {
                 <tr key={r.id} style={{ borderTop: `1px solid ${BORDER}` }}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <span className="grid rounded-full place-items-center text-white font-bold" style={{ width: 34, height: 34, background: BRAND_RED, fontSize: 13 }}>{(r.name || "?").charAt(0).toUpperCase()}</span>
+                      {r.image
+                        ? <img src={r.image} alt={r.name} className="object-cover rounded-full flex-shrink-0" style={{ width: 34, height: 34 }} />
+                        : <span className="grid rounded-full place-items-center text-white font-bold flex-shrink-0" style={{ width: 34, height: 34, background: BRAND_RED, fontSize: 13 }}>{(r.name || "?").charAt(0).toUpperCase()}</span>}
                       <div>
                         <div className="font-semibold flex items-center gap-1.5" style={{ color: TEXT_PRIMARY }}>
                           {r.name || "—"}
