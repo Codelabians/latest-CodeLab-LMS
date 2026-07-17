@@ -109,6 +109,7 @@ export default function StudentsList() {
   const todayStr = new Date().toISOString().slice(0, 10);
   const DROPOUT_CATEGORIES = ["personal", "financial", "academic", "relocation", "health", "job", "other"];
   const [dropTarget, setDropTarget] = useState(null); // student row
+  const [photoPreview, setPhotoPreview] = useState(null); // full-size photo lightbox
   const [dropReason, setDropReason] = useState("");
   const [dropDate, setDropDate] = useState(todayStr);
   const [dropCategory, setDropCategory] = useState("personal");
@@ -288,7 +289,7 @@ export default function StudentsList() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       {r.image
-                        ? <img src={r.image} alt={r.name} className="object-cover rounded-full flex-shrink-0" style={{ width: 34, height: 34 }} />
+                        ? <img src={r.image} alt={r.name} onClick={(ev) => { ev.stopPropagation(); setPhotoPreview(r.image); }} className="object-cover rounded-full flex-shrink-0 cursor-zoom-in" style={{ width: 34, height: 34 }} title="Click to view full size" />
                         : <span className="grid rounded-full place-items-center text-white font-bold flex-shrink-0" style={{ width: 34, height: 34, background: BRAND_RED, fontSize: 13 }}>{(r.name || "?").charAt(0).toUpperCase()}</span>}
                       <div>
                         <div className="font-semibold flex items-center gap-1.5" style={{ color: TEXT_PRIMARY }}>
@@ -430,6 +431,12 @@ export default function StudentsList() {
         </div>
       )}
       <LeadNotesModal open={notesModal.open} type="student" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
+
+      {photoPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 cursor-zoom-out" style={{ background: "rgba(15,23,42,0.85)" }} onClick={() => setPhotoPreview(null)}>
+          <img src={photoPreview} alt="Student" className="object-contain rounded-2xl" style={{ maxWidth: "90vw", maxHeight: "85vh", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }} />
+        </div>
+      )}
     </div>
   );
 }

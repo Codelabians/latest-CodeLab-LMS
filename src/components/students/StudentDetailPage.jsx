@@ -48,6 +48,7 @@ export default function StudentDetailPage() {
   const nextFee = nextFeeData?.data;
   const [adjustSchedule, setAdjustSchedule] = useState(null); // monthly-schedule line being adjusted
   const [discountFor, setDiscountFor] = useState(null); // installment for manual discount
+  const [photoPreview, setPhotoPreview] = useState(null); // full-size photo lightbox url
 
   const [toast, setToast] = useState(null);
   const [showSwitch, setShowSwitch] = useState(false);
@@ -203,7 +204,7 @@ export default function StudentDetailPage() {
       <div className="bg-white rounded-xl p-5 mb-4 flex flex-wrap items-center justify-between gap-3" style={{ border: `1px solid ${BORDER}` }}>
         <div className="flex items-center gap-3">
           {s.image
-            ? <img src={s.image} alt={s.name} className="object-cover rounded-full" style={{ width: 56, height: 56, border: `2px solid ${BORDER}` }} />
+            ? <img src={s.image} alt={s.name} onClick={() => setPhotoPreview(s.image)} className="object-cover rounded-full cursor-zoom-in" style={{ width: 56, height: 56, border: `2px solid ${BORDER}` }} title="Click to view full size" />
             : <span className="grid rounded-full place-items-center text-white font-bold" style={{ width: 56, height: 56, background: BRAND_RED, fontSize: 22 }}>{(s.name || "?").charAt(0).toUpperCase()}</span>}
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -398,6 +399,12 @@ export default function StudentDetailPage() {
           <p className="text-[10.5px] mt-2" style={{ color: TEXT_MUTED }}>
             These referrals are why this student gets a &quot;Referral discount&quot; on their monthly fee. Removing one cancels its reward — already-delivered rewards can&apos;t be removed.
           </p>
+        </div>
+      )}
+
+      {photoPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 cursor-zoom-out" style={{ background: "rgba(15,23,42,0.85)" }} onClick={() => setPhotoPreview(null)}>
+          <img src={photoPreview} alt="Student" className="object-contain rounded-2xl" style={{ maxWidth: "90vw", maxHeight: "85vh", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }} />
         </div>
       )}
 
