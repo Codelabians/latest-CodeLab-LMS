@@ -10,7 +10,8 @@ import { usePostMutation } from "../../../api/apiSlice";
 import {
   ADMINDASHBOARD,
   FORGET,
-  STUDENT_SUMMARY,
+  PORTAL,
+  TEACHER,
 } from "../../routes/RouteConstants";
 import { firstAccessibleRoute } from "../../dashboard/SidebarComponent";
 import { showToast } from "../../ui/common/ShowToast";
@@ -135,11 +136,15 @@ const SignInHero = () => {
     },
   });
 
-  // If a token already exists in Redux, send the user where they belong.
+  // If a token already exists in Redux, send the user where they belong:
+  // students to their portal, teachers to the staff portal — never to an
+  // admin page (previously this dumped them on /dashboard/student-summary).
   useEffect(() => {
     if (!token) return;
-    if (NON_ADMIN_ROLES.includes(user?.role)) {
-      navigate(STUDENT_SUMMARY);
+    if (user?.role === "user") {
+      navigate(PORTAL);
+    } else if (user?.role === "teacher") {
+      navigate(TEACHER);
     } else {
       navigate(landingRouteFor(user));
     }

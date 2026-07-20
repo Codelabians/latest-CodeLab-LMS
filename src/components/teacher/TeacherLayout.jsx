@@ -103,6 +103,10 @@ export default function TeacherLayout() {
     if (roleNames.length && roleNames.every((r) => r === "user")) {
       return <Navigate to={PORTAL} replace />;
     }
+  } else {
+    // Role unknown yet (profile still loading after a refresh) — hold the
+    // render instead of flashing staff pages at a student.
+    return null;
   }
 
   const mustReset = user?.must_reset_password ?? me?.data?.must_reset_password;

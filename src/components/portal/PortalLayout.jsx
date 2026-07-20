@@ -120,6 +120,10 @@ export default function PortalLayout() {
     if (!roleNames.includes("user")) {
       return <Navigate to={TEACHER} replace />;
     }
+  } else {
+    // Role unknown yet (profile still loading after a refresh) — hold the
+    // render instead of flashing portal pages at a non-student.
+    return null;
   }
 
   // Force-reset gate: account created with a temporary password must set
