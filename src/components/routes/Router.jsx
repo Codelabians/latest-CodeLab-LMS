@@ -1,11 +1,35 @@
 import { Navigate, useRoutes, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { useSelector } from "react-redux";
+import { useGetQuery } from "../../api/apiSlice";
 
 // Back-compat: map any old /teacher-portal/* URL to the new /staff-portal/* path.
 function LegacyTeacherPortalRedirect() {
   const loc = useLocation();
   const to = loc.pathname.replace("/teacher-portal", "/staff-portal") + (loc.search || "");
   return <Navigate to={to} replace />;
+}
+
+// Catch-all: any URL that matches no route sends the user to THEIR home —
+// students to /portal, teacher-only accounts to /staff-portal, everyone
+// else to the admin dashboard (whose own layout gate re-checks access).
+function RoleHomeRedirect() {
+  const { token, user } = useSelector((s) => s.auth);
+  const { data: me } = useGetQuery(
+    { path: "/user/get-user" },
+    { skip: !token || !!(user?.role || user?.roles) },
+  );
+  if (!token) return <Navigate to={SIGNIN} replace />;
+  const u = user?.role || user?.roles ? user : me?.data;
+  if (!u) return null; // role still loading — hold the render
+  const roles = [u.role, ...(u.roles || [])].filter(Boolean);
+  if (roles.length && roles.every((r) => r === "user")) {
+    return <Navigate to={PORTAL} replace />;
+  }
+  if (roles.length && roles.every((r) => r === "user" || r === "teacher")) {
+    return <Navigate to={TEACHER} replace />;
+  }
+  return <Navigate to={ADMINDASHBOARD} replace />;
 }
 import { useCheckAuthToken } from "../../hooks/useCheckAuthToken";
 const AssetsManager = lazy(() => import("../inventory/AssetsManager"));
@@ -2034,6 +2058,9 @@ export default function Router() {
     /* Back-compat: old /teacher-portal URLs redirect to /staff-portal. */
     { path: "/teacher-portal", element: <Navigate to="/staff-portal" replace /> },
     { path: "/teacher-portal/*", element: <LegacyTeacherPortalRedirect /> },
+
+    /* Catch-all: unknown URLs land the user on their own dashboard. */
+    { path: "*", element: <RoleHomeRedirect /> },
   ]);
   return (
     <Suspense

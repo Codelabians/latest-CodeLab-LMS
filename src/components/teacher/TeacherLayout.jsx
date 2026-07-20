@@ -89,6 +89,13 @@ export default function TeacherLayout() {
 
   // Refresh-safe profile fetch so the force-reset gate survives a reload.
   const { data: me } = useGetQuery({ path: "/teacher/get-teacher" }, { skip: !token });
+  // Role fetch for the gate below via the ungated endpoint — get-teacher is
+  // staff-only (403 for students), which would leave a student stuck on a
+  // blank page instead of being sent back to their portal.
+  const { data: meUser } = useGetQuery(
+    { path: "/user/get-user" },
+    { skip: !token || !!(user?.role || user?.roles) },
+  );
   // Unified Staff Portal context: drives teaching vs employee-only nav.
   const { data: ctx } = useGetQuery({ path: "/teacher/me/context" }, { skip: !token });
 
@@ -97,7 +104,7 @@ export default function TeacherLayout() {
   // Role gate (mirror of PortalLayout): all logins share one auth token, so
   // without this a student could open /staff-portal/* URLs. Users whose only
   // role is "user" (student) belong in the student portal.
-  const roleSource = user?.role || user?.roles ? user : me?.data;
+  const roleSource = user?.role || user?.roles ? user : (meUser?.data || me?.data);
   if (roleSource) {
     const roleNames = [roleSource.role, ...(roleSource.roles || [])].filter(Boolean);
     if (roleNames.length && roleNames.every((r) => r === "user")) {
