@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, FileText, ExternalLink, CheckCircle2, Clock, Link2, X } from "lucide-react";
+import { Loader2, FileText, ExternalLink, CheckCircle2, Clock, Link2, X, Paperclip } from "lucide-react";
 import { useGetQuery, usePostMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
 
@@ -34,7 +34,12 @@ export default function PortalAssignments() {
                   {a.description && <p className="text-[12px] mt-1" style={{ color: "#475569" }}>{a.description}</p>}
                   <div className="flex items-center gap-3 mt-2 text-[11px]" style={{ color: "#94A3B8" }}>
                     {a.deadline && <span className="inline-flex items-center gap-1"><Clock size={12} /> Due {String(a.deadline).slice(0, 10)}</span>}
-                    {a.url && <a href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold" style={{ color: BRAND }}><ExternalLink size={12} /> Resource</a>}
+                    {(a.links?.length ? a.links : a.url ? [a.url] : []).map((l, li) => (
+                      <a key={li} href={l} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold" style={{ color: BRAND }}><ExternalLink size={12} /> Resource{(a.links?.length || 0) > 1 ? ` ${li + 1}` : ""}</a>
+                    ))}
+                    {a.document_url && (
+                      <a href={a.document_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold" style={{ color: BRAND }}><Paperclip size={12} /> PDF</a>
+                    )}
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">

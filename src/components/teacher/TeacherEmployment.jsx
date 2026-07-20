@@ -4,7 +4,7 @@ import {
   Loader2, User, Wallet, Download, Plus, X,
   Mail, Phone, GraduationCap, Briefcase, BadgeCheck, Building2, ShieldCheck, CalendarRange,
   FileText, FileSignature, CheckCircle2, AlertTriangle, Eraser, MapPin,
-  Coins, Landmark, Boxes, Pencil, IdCard, Users2,
+  Coins, Landmark, Boxes, Pencil, IdCard, Users2, Eye, EyeOff,
 } from "lucide-react";
 import { useGetQuery, usePostMutation, usePatchMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
@@ -13,6 +13,16 @@ import { EMPLOYMENT_SECTIONS } from "./employmentSections";
 const BRAND = "#C90606";
 const BORDER = "#EEF2F6";
 const money = (n) => "Rs " + Number(n || 0).toLocaleString();
+const MASK = "Rs ••••••";
+/* Small eye button used to reveal/hide salary amounts (hidden by default). */
+function SalaryToggle({ show, onToggle, size = 14 }) {
+  return (
+    <button type="button" onClick={onToggle} title={show ? "Hide salary" : "Show salary"}
+      className="inline-flex items-center align-middle" style={{ color: "#94A3B8" }}>
+      {show ? <EyeOff size={size} /> : <Eye size={size} />}
+    </button>
+  );
+}
 const API_URL = import.meta.env?.VITE_API_URL || "https://api.codelab.pk/public/api/";
 
 const SECTION_COMPONENTS = {
@@ -277,6 +287,7 @@ function CardBox({ title, icon: Icon, children }) {
 function ProfileTab() {
   const { data, isLoading, refetch } = useGetQuery({ path: "/teacher/me/profile" }, { refetchOnMountOrArgChange: true });
   const [editOpen, setEditOpen] = useState(false);
+  const [showSalary, setShowSalary] = useState(false);
   const d = data?.data || {};
   if (isLoading) return <Spinner />;
   if (!d.has_profile) {
@@ -314,8 +325,10 @@ function ProfileTab() {
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="text-right">
-              <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: "#94A3B8" }}>Basic salary</div>
-              <div className="text-[20px] font-bold" style={{ color: "#15803D" }}>{d.basic_salary != null ? money(d.basic_salary) : "—"}</div>
+              <div className="text-[10.5px] font-semibold uppercase tracking-wide inline-flex items-center gap-1.5" style={{ color: "#94A3B8" }}>
+                Basic salary <SalaryToggle show={showSalary} onToggle={() => setShowSalary((s) => !s)} size={13} />
+              </div>
+              <div className="text-[20px] font-bold" style={{ color: "#15803D" }}>{d.basic_salary != null ? (showSalary ? money(d.basic_salary) : MASK) : "—"}</div>
             </div>
             <button onClick={() => setEditOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white" style={{ background: BRAND }}>
               <Pencil size={12} /> Edit profile
@@ -513,6 +526,7 @@ function PayslipsTab() {
   const { data, isLoading } = useGetQuery({ path: "/teacher/me/payslips" }, { refetchOnMountOrArgChange: true });
   const rows = data?.data || [];
   const [busy, setBusy] = useState(null);
+  const [showAmounts, setShowAmounts] = useState(false);
 
   const openPayslip = async (uuid) => {
     setBusy(uuid);
@@ -548,16 +562,25 @@ function PayslipsTab() {
   }
   return (
     <div className="space-y-2">
+      <div className="flex justify-end">
+        <button type="button" onClick={() => setShowAmounts((s) => !s)}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+          style={{ border: `1px solid ${BORDER}`, color: "#475569", background: "#fff" }}>
+          {showAmounts ? <EyeOff size={12} /> : <Eye size={12} />} {showAmounts ? "Hide amounts" : "Show amounts"}
+        </button>
+      </div>
       {rows.map((r, i) => (
         <div key={i} className="bg-white rounded-xl p-4 flex items-center justify-between gap-3" style={{ border: `1px solid ${BORDER}` }}>
           <div>
             <div className="text-[14px] font-bold" style={{ color: "#0F172A" }}>{r.year_month || "—"}</div>
             <div className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>
-              Base {money(r.base_salary)} · +{money(r.allowances + r.bonuses)} · −{money(r.deductions)}
+              {showAmounts
+                ? <>Base {money(r.base_salary)} · +{money(r.allowances + r.bonuses)} · −{money(r.deductions)}</>
+                : <>Base {MASK} · +{MASK} · −{MASK}</>}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[16px] font-bold" style={{ color: "#15803D" }}>{money(r.net_payable)}</div>
+            <div className="text-[16px] font-bold" style={{ color: "#15803D" }}>{showAmounts ? money(r.net_payable) : MASK}</div>
             <div className="inline-flex items-center gap-2 mt-1">
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize" style={{ background: "#F8FAFC", color: "#475569" }}>{r.status}</span>
               {r.has_payslip && (

@@ -433,6 +433,7 @@ const CourseDetail = () => {
 
   // Curriculum Excel import (uploads to POST /api/course/{uuid}/curriculum/import).
   const fileRef = useRef(null);
+  const [applyToBatches, setApplyToBatches] = useState(true);
   const [importCurriculum, { isLoading: importing }] = useSmartPostMutation();
   const onCurriculumFile = async (e) => {
     const file = e.target.files?.[0];
@@ -440,6 +441,7 @@ const CourseDetail = () => {
     if (!file) return;
     const fd = new FormData();
     fd.append("file", file);
+    if (applyToBatches) fd.append("apply_to_batches", "1");
     try {
       const res = await importCurriculum({
         path: `course/${uuid}/curriculum/import`,
@@ -449,8 +451,11 @@ const CourseDetail = () => {
         toast.error(res.error?.data?.message || "Curriculum import failed.");
       } else {
         const r = res?.data?.data || res?.data || {};
+        const batchNote = r.batches?.applied
+          ? ` Applied to ${r.batches.batches_synced ?? 0} active batch${(r.batches.batches_synced ?? 0) === 1 ? "" : "es"}.`
+          : "";
         toast.success(
-          `Curriculum imported${r.total ? `: ${r.created ?? 0} added, ${r.updated ?? 0} updated` : ""}.`,
+          `Curriculum imported${r.total ? `: ${r.created ?? 0} added, ${r.updated ?? 0} updated` : ""}.${batchNote}`,
         );
         refetch();
       }
@@ -674,6 +679,19 @@ const CourseDetail = () => {
                 className="hidden"
                 onChange={onCurriculumFile}
               />
+              <label
+                className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold cursor-pointer select-none"
+                style={{ color: TEXT_SECONDARY }}
+                title="Also push the imported lectures into every active batch of this course. Existing lectures keep their attendance — only their content is refreshed."
+              >
+                <input
+                  type="checkbox"
+                  checked={applyToBatches}
+                  onChange={(e) => setApplyToBatches(e.target.checked)}
+                  className="accent-[#C90606]"
+                />
+                Apply to all batches
+              </label>
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={importing}

@@ -23,6 +23,8 @@ import {
   ArrowLeft,
   UserCircle,
   Award,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 const InstructorDetailsTab = () => {
@@ -30,6 +32,7 @@ const InstructorDetailsTab = () => {
   const [isMultipleSelected, setIsMultipleSelected] = useState(false);
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("Instructor Details");
+  const [showSalary, setShowSalary] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -113,7 +116,19 @@ const InstructorDetailsTab = () => {
     },
     {
       label: "BASIC SALARY",
-      value: instructorData?.basic_salary,
+      value: instructorData?.basic_salary ? (
+        <span className="inline-flex items-center gap-2">
+          {showSalary ? instructorData.basic_salary : "••••••"}
+          <button
+            type="button"
+            onClick={() => setShowSalary((s) => !s)}
+            title={showSalary ? "Hide salary" : "Show salary"}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            {showSalary ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        </span>
+      ) : null,
       icon: DollarSign,
     },
     {

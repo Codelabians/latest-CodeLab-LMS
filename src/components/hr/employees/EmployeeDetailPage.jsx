@@ -31,6 +31,8 @@ import {
   UserMinus,
   UserCheck,
   Send,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 import {
@@ -376,6 +378,7 @@ const EmployeeDetailPage = () => {
   const [offboardOpen, setOffboardOpen] = useState(false);
   const [reactivateOpen, setReactivateOpen] = useState(false);
   const [tab, setTab] = useState("overview");
+  const [showSalary, setShowSalary] = useState(false);
 
   if (isFetching && !profile) {
     return (
@@ -719,7 +722,23 @@ const EmployeeDetailPage = () => {
       <KpiTile
         icon={Wallet}
         label="Basic salary"
-        value={profile.basic_salary ? `PKR ${Number(profile.basic_salary).toLocaleString()}` : "—"}
+        value={
+          profile.basic_salary ? (
+            <span className="inline-flex items-center gap-1.5">
+              {showSalary ? `PKR ${Number(profile.basic_salary).toLocaleString()}` : "PKR ••••••"}
+              <button
+                type="button"
+                onClick={() => setShowSalary((s) => !s)}
+                title={showSalary ? "Hide salary" : "Show salary"}
+                style={{ color: TEXT_MUTED }}
+              >
+                {showSalary ? <EyeOff size={13} /> : <Eye size={13} />}
+              </button>
+            </span>
+          ) : (
+            "—"
+          )
+        }
         sub={titleCase(profile.employment_type)}
       />
       <KpiTile
@@ -837,7 +856,24 @@ const EmployeeDetailPage = () => {
           <Field label="Contract end"    value={profile.contract_end} />
           <Field label="Probation months" value={profile.probation_months} />
           <Field label="Probation end"    value={profile.probation_end_date} />
-          <Field label="Basic salary (PKR)" value={profile.basic_salary ? Number(profile.basic_salary).toLocaleString() : null} />
+          <Field
+            label="Basic salary (PKR)"
+            value={
+              profile.basic_salary ? (
+                <span className="inline-flex items-center gap-1.5">
+                  {showSalary ? Number(profile.basic_salary).toLocaleString() : "••••••"}
+                  <button
+                    type="button"
+                    onClick={() => setShowSalary((s) => !s)}
+                    title={showSalary ? "Hide salary" : "Show salary"}
+                    style={{ color: TEXT_MUTED }}
+                  >
+                    {showSalary ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                </span>
+              ) : null
+            }
+          />
           <Field label="Status"             value={titleCase(profile.employment_status)} />
         </div>
       </SectionCard>
