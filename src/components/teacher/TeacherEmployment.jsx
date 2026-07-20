@@ -4,7 +4,7 @@ import {
   Loader2, User, Wallet, Download, Plus, X,
   Mail, Phone, GraduationCap, Briefcase, BadgeCheck, Building2, ShieldCheck, CalendarRange,
   FileText, FileSignature, CheckCircle2, AlertTriangle, Eraser, MapPin,
-  Coins, Landmark, Boxes, Pencil, IdCard, Users2, Eye, EyeOff,
+  Coins, Landmark, Boxes, Pencil, IdCard, Users2, Eye, EyeOff, Camera,
 } from "lucide-react";
 import { useGetQuery, usePostMutation, usePatchMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
@@ -288,7 +288,26 @@ function ProfileTab() {
   const { data, isLoading, refetch } = useGetQuery({ path: "/teacher/me/profile" }, { refetchOnMountOrArgChange: true });
   const [editOpen, setEditOpen] = useState(false);
   const [showSalary, setShowSalary] = useState(false);
+  const photoRef = useRef(null);
+  const [uploadPhoto, { isLoading: uploadingPhoto }] = usePostMutation();
   const d = data?.data || {};
+
+  const onPhotoFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("avatar", file);
+    try {
+      await uploadPhoto({ path: "user/upload-personal-avatar", body: fd }).unwrap();
+      showToast("Profile photo updated.", "success");
+      refetch();
+    } catch (err) {
+      const errs = err?.data?.errors;
+      const firstErr = errs && Object.values(errs)[0]?.[0];
+      showToast(firstErr || err?.data?.message || "Could not upload photo.", "error");
+    }
+  };
   if (isLoading) return <Spinner />;
   if (!d.has_profile) {
     return <div className="bg-white rounded-xl p-10 text-center" style={{ border: `1px solid ${BORDER}` }}>
@@ -306,7 +325,24 @@ function ProfileTab() {
       <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
         <div style={{ height: 8, background: `linear-gradient(90deg, ${BRAND} 0%, #A00505 100%)` }} />
         <div className="bg-white p-5 flex flex-wrap items-center gap-4">
-          <span className="grid place-items-center rounded-2xl text-white font-bold flex-shrink-0" style={{ width: 60, height: 60, background: `linear-gradient(135deg, ${BRAND} 0%, #A00505 100%)`, fontSize: 22 }}>{initials}</span>
+          <div className="relative flex-shrink-0" style={{ width: 60, height: 60 }}>
+            {d.personal_image || d.image ? (
+              <img src={d.personal_image || d.image} alt={d.name} className="rounded-2xl object-cover" style={{ width: 60, height: 60 }} />
+            ) : (
+              <span className="grid place-items-center rounded-2xl text-white font-bold" style={{ width: 60, height: 60, background: `linear-gradient(135deg, ${BRAND} 0%, #A00505 100%)`, fontSize: 22 }}>{initials}</span>
+            )}
+            <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif" className="hidden" onChange={onPhotoFile} />
+            <button
+              type="button"
+              onClick={() => photoRef.current?.click()}
+              disabled={uploadingPhoto}
+              title="Change profile photo"
+              className="absolute -bottom-1.5 -right-1.5 grid place-items-center rounded-full text-white shadow"
+              style={{ width: 24, height: 24, background: "#0F172A", opacity: uploadingPhoto ? 0.6 : 1 }}
+            >
+              {uploadingPhoto ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />}
+            </button>
+          </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-[18px] font-bold" style={{ color: "#0F172A" }}>{d.name}</h2>
