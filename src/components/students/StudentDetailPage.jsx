@@ -103,6 +103,14 @@ export default function StudentDetailPage() {
     } catch { notify("Could not download challan.", false); }
     finally { setChallanBusy(null); }
   };
+  // ONE challan covering every pending installment of this student.
+  const downloadPendingChallan = async () => {
+    setChallanBusy("dl-pending");
+    try {
+      await dlChallan({ path: `finance/students/${id}/pending-challan`, params: {}, filename: `challan-pending-${id}.pdf` }).unwrap();
+    } catch (e) { notify(e?.data?.message || "Could not download the combined challan (the student may have no pending dues).", false); }
+    finally { setChallanBusy(null); }
+  };
   const sendChallanFor = async (uuid, channel) => {
     setChallanBusy(`${channel}-${uuid}`);
     try {
@@ -567,16 +575,27 @@ export default function StudentDetailPage() {
                 {/* fee schedule */}
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px] font-bold" style={{ color: TEXT_SECONDARY }}>Fee schedule</span>
-                  {e.student_batch_uuid && (
+                  <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => setShiftTarget({ studentBatchUuid: e.student_batch_uuid, label: e.course?.name || e.batch?.name })}
+                      onClick={downloadPendingChallan}
+                      disabled={challanBusy === "dl-pending"}
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold"
-                      style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}
-                      title="Shift upcoming fee due dates (e.g. after a leave)"
+                      style={{ border: `1px solid ${BORDER}`, color: "#15803D" }}
+                      title="Download ONE challan covering every pending installment of this student"
                     >
-                      <CalendarCheck size={12} /> Shift fee dates
+                      {challanBusy === "dl-pending" ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} All pending (1 challan)
                     </button>
-                  )}
+                    {e.student_batch_uuid && (
+                      <button
+                        onClick={() => setShiftTarget({ studentBatchUuid: e.student_batch_uuid, label: e.course?.name || e.batch?.name })}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold"
+                        style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}
+                        title="Shift upcoming fee due dates (e.g. after a leave)"
+                      >
+                        <CalendarCheck size={12} /> Shift fee dates
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <table className="w-full text-sm">
                   <thead><tr style={{ color: TEXT_SECONDARY }}>{["Fee", "Amount", "Paid", "Due", "Status", ""].map((h, j) => <th key={j} className="px-2 py-1.5 text-left font-semibold text-[11px]">{h}</th>)}</tr></thead>
