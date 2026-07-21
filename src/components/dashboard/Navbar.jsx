@@ -4,6 +4,7 @@ import { Bell, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProfileDetailsDropdown from "./ProfileDetailsDropdown";
 import { useGetQuery } from "../../api/apiSlice"; // Import your RTK Query hook
+import RefreshButton from "../common/RefreshButton";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ const Navbar = () => {
   return (
     <div className="h-16 flex ml-10 my-5 justify-end items-center border-b border-divider pb-4 px-5 overflow-hidden">
       <div className="flex gap-4 items-center">
+        {/* Soft refresh — refetches the data on screen, no page reload */}
+        <RefreshButton />
         <div onClick={toggleSettings} className="cursor-pointer relative">
           <Settings className="text-brown w-6 h-6" />
         </div>

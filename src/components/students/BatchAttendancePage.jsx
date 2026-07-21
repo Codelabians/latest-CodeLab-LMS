@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { CalendarCheck, Loader2, Users } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { CalendarCheck, Loader2, Users, FilterX } from "lucide-react";
 import { useGetQuery } from "../../api/apiSlice";
 import SearchableSelect from "../ui/SearchableSelect";
 import AttendanceRegisterGrid from "../ui/AttendanceRegisterGrid";
+import usePersistedFilters from "../../hooks/usePersistedFilters";
 
 const BRAND = "#C90606";
 const TEXT_PRIMARY = "#0F172A";
@@ -14,22 +15,28 @@ export default function BatchAttendancePage() {
   // all their batches, each with an attendance summary.
   const { data: teachersData } = useGetQuery({ path: "/course/teachers" });
   const teachers = teachersData?.data || [];
-  const [teacherId, setTeacherId] = useState("");
+
+  // Remembered across visits; Clear resets both.
+  const { filters, setFilter, clearFilters, hasActiveFilters } =
+    usePersistedFilters("batch-attendance", { teacherId: "", batchUuid: "" });
+  const { teacherId, batchUuid } = filters;
+  const setTeacherId = (v) => setFilter("teacherId", v || "");
+  const setBatchUuid = (v) => setFilter("batchUuid", v || "");
 
   const { data: batchData } = useGetQuery({
     path: "/course/batches",
     params: { per_page: 200, ...(teacherId ? { teacher_id: teacherId } : {}) },
   });
   const batches = useMemo(() => batchData?.data || [], [batchData]);
-  const [batchUuid, setBatchUuid] = useState("");
 
   // No auto-selection — the admin picks a batch deliberately. Only clear a
   // selection that is no longer valid for the current teacher filter.
   useEffect(() => {
-    if (batchUuid && !batches.some((b) => b.batch_uuid === batchUuid)) {
+    if (batchUuid && batchData && !batches.some((b) => b.batch_uuid === batchUuid)) {
       setBatchUuid("");
     }
-  }, [batches, batchUuid]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batches, batchUuid, batchData]);
 
   const teacherOptions = [
     { value: "", label: "All teachers" },
@@ -72,6 +79,15 @@ export default function BatchAttendancePage() {
           </label>
           <SearchableSelect options={options} value={batchUuid} onChange={(v) => setBatchUuid(v || "")} placeholder={teacherId ? "All batches (combined view)" : "Select a batch…"} />
         </div>
+        {hasActiveFilters && (
+          <div className="flex items-end">
+            <button type="button" onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold"
+              style={{ border: `1px solid ${BORDER}`, color: BRAND }}>
+              <FilterX size={13} /> Clear filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Combined roster: teacher chosen, no specific batch */}

@@ -11,6 +11,7 @@ import { useGetQuery } from "../../api/apiSlice";
 import ForcePasswordReset from "./ForcePasswordReset";
 import BrandMark from "../common/BrandMark";
 import FirstLoginTour from "../common/FirstLoginTour";
+import RefreshButton from "../common/RefreshButton";
 import {
   PORTAL, PORTAL_ATTENDANCE, PORTAL_FEES, PORTAL_ASSETS, PORTAL_LEAVES, PORTAL_MAKEUPS, PORTAL_ASSIGNMENTS, PORTAL_CONTENT, PORTAL_ANNOUNCEMENTS, PORTAL_REWARDS, PORTAL_PROFILE, PORTAL_RULES, PORTAL_CAREER, PORTAL_QUIZ, PORTAL_LOGIN, PORTAL_COMPLAINTS, TEACHER,
 } from "../routes/RouteConstants";
@@ -231,6 +232,8 @@ export default function PortalLayout() {
         <div className="h-16 flex items-center justify-between px-6 bg-white" style={{ borderBottom: "1px solid #EEF2F6" }}>
           <h2 className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>{activeLabel}</h2>
           <div className="flex items-center gap-2.5">
+            {/* Soft refresh — refetches the data on screen, no page reload */}
+            <RefreshButton />
             <span className="text-[13px] font-semibold hidden sm:block" style={{ color: TEXT_SECONDARY }}>{fullName}</span>
             <div className="flex items-center justify-center text-[11px] font-bold text-white" style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${BRAND_RED} 0%, ${BRAND_RED_DARK} 100%)` }}>{initials}</div>
           </div>

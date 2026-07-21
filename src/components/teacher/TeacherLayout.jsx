@@ -9,6 +9,7 @@ import { useGetQuery } from "../../api/apiSlice";
 import ForcePasswordReset from "../portal/ForcePasswordReset";
 import BrandMark from "../common/BrandMark";
 import FirstLoginTour from "../common/FirstLoginTour";
+import RefreshButton from "../common/RefreshButton";
 import { EMPLOYMENT_SECTIONS } from "./employmentSections";
 import { firstAccessibleRoute } from "../dashboard/SidebarComponent";
 import {
@@ -281,6 +282,8 @@ export default function TeacherLayout() {
         <div className="h-16 flex items-center justify-between px-6 bg-white" style={{ borderBottom: "1px solid #EEF2F6" }}>
           <h2 className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>{activeLabel}</h2>
           <div className="flex items-center gap-2.5">
+            {/* Soft refresh — refetches the data on screen, no page reload */}
+            <RefreshButton />
             <span className="text-[13px] font-semibold hidden sm:block" style={{ color: TEXT_SECONDARY }}>{fullName}</span>
             <div className="flex items-center justify-center text-[11px] font-bold text-white" style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${BRAND_RED} 0%, ${BRAND_RED_DARK} 100%)` }}>{initials}</div>
           </div>

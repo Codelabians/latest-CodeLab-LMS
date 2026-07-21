@@ -137,18 +137,31 @@ const BatchesComponent = () => {
   const navigate = useNavigate();
 
   /* state */
+  // Filters are remembered per user (localStorage) so returning to this
+  // page restores exactly what was set; "Clear filters" wipes the memory.
+  const savedFilters = (() => {
+    try { return JSON.parse(localStorage.getItem("filters:batches")) || {}; } catch { return {}; }
+  })();
+
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(savedFilters.search || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(savedFilters.search || "");
   const [sort, setSort] = useState({ field: null, dir: "asc" });
 
   // filters
-  const [courseUuid, setCourseUuid] = useState("");
-  const [teacherId, setTeacherId]   = useState("");
-  const [mode, setMode]             = useState("");
-  const [timeSlot, setTimeSlot]     = useState("");
-  const [activeFilter, setActiveFilter] = useState(""); // "", "1", "0"
+  const [courseUuid, setCourseUuid] = useState(savedFilters.courseUuid || "");
+  const [teacherId, setTeacherId]   = useState(savedFilters.teacherId || "");
+  const [mode, setMode]             = useState(savedFilters.mode || "");
+  const [timeSlot, setTimeSlot]     = useState(savedFilters.timeSlot || "");
+  const [activeFilter, setActiveFilter] = useState(savedFilters.activeFilter || ""); // "", "1", "0"
+
+  // Persist the filter set whenever any of them changes.
+  useEffect(() => {
+    try {
+      localStorage.setItem("filters:batches", JSON.stringify({ search, courseUuid, teacherId, mode, timeSlot, activeFilter }));
+    } catch { /* storage blocked — filters just won't persist */ }
+  }, [search, courseUuid, teacherId, mode, timeSlot, activeFilter]);
 
   const [deleteDialog, setDeleteDialog] = useState({ open: false, batch: null });
   const [formModal, setFormModal] = useState({ open: false, mode: null, batch: null });
@@ -353,6 +366,7 @@ const BatchesComponent = () => {
   const clearFilters = () => {
     setCourseUuid(""); setTeacherId(""); setMode(""); setTimeSlot("");
     setActiveFilter(""); setSearch("");
+    try { localStorage.removeItem("filters:batches"); } catch { /* ignore */ }
   };
 
   /* options for searchable selects — single-line labels for a clean dropdown */
