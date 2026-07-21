@@ -36,6 +36,7 @@ export const TEACHER_EMPLOYMENT = "/staff-portal/employment";
 export const TEACHER_RULES = "/staff-portal/rules";
 export const TEACHER_COMPLAINTS = "/staff-portal/complaints";
 export const TEACHER_SHARE_EARN = "/staff-portal/share-earn";
+export const TEACHER_STUDENT_LEAVES = "/staff-portal/student-leaves";
 export const TEACHER_ASSESSMENT = "/staff-portal/assessment";
 export const STUDENTS = "/dashboard/students";
 export const STUDENT = "/dashboard/students";

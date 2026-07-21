@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
 import {
-  LayoutDashboard, ClipboardCheck, RefreshCw, Users, FileText, BookOpen, Award, Megaphone, Gift, Briefcase, ChevronDown, ChevronRight, LogOut, Menu, X, ShieldCheck, Brain, MessageSquareWarning, Share2,
+  LayoutDashboard, ClipboardCheck, RefreshCw, Users, FileText, BookOpen, Award, Megaphone, Gift, Briefcase, ChevronDown, ChevronRight, LogOut, Menu, X, ShieldCheck, Brain, MessageSquareWarning, Share2, CalendarDays,
 } from "lucide-react";
 import { clearCredentials } from "../../features/auth/authSlice";
 import { useGetQuery } from "../../api/apiSlice";
@@ -13,7 +13,7 @@ import RefreshButton from "../common/RefreshButton";
 import { EMPLOYMENT_SECTIONS } from "./employmentSections";
 import { firstAccessibleRoute } from "../dashboard/SidebarComponent";
 import {
-  TEACHER, TEACHER_ATTENDANCE, TEACHER_MAKEUPS, TEACHER_STUDENTS, TEACHER_ASSIGNMENTS, TEACHER_CONTENT, TEACHER_PERFORMANCE, TEACHER_ANNOUNCEMENTS, TEACHER_REWARDS, TEACHER_EMPLOYMENT, TEACHER_RULES, TEACHER_ASSESSMENT, TEACHER_COMPLAINTS, TEACHER_SHARE_EARN, TEACHER_LOGIN,
+  TEACHER, TEACHER_ATTENDANCE, TEACHER_MAKEUPS, TEACHER_STUDENTS, TEACHER_ASSIGNMENTS, TEACHER_CONTENT, TEACHER_PERFORMANCE, TEACHER_ANNOUNCEMENTS, TEACHER_REWARDS, TEACHER_EMPLOYMENT, TEACHER_RULES, TEACHER_ASSESSMENT, TEACHER_COMPLAINTS, TEACHER_SHARE_EARN, TEACHER_STUDENT_LEAVES, TEACHER_LOGIN,
   ADMINDASHBOARD, PORTAL,
 } from "../routes/RouteConstants";
 
@@ -37,6 +37,7 @@ const NAV = [
   { route: TEACHER_PERFORMANCE, label: "Performance", icon: Award },
   { route: TEACHER_STUDENTS, label: "My Students", icon: Users },
   { route: TEACHER_MAKEUPS, label: "Makeups", icon: RefreshCw },
+  { route: TEACHER_STUDENT_LEAVES, label: "Student Leaves", icon: CalendarDays },
   { route: TEACHER_REWARDS, label: "Rewards", icon: Gift },
   { route: TEACHER_ANNOUNCEMENTS, label: "Announcements", icon: Megaphone },
   { route: TEACHER_ASSESSMENT, label: "Skills Assessment", icon: Brain },

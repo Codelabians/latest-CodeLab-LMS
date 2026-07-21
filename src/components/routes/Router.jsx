@@ -267,6 +267,7 @@ import {
   TEACHER_ASSESSMENT,
   TEACHER_COMPLAINTS,
   TEACHER_SHARE_EARN,
+  TEACHER_STUDENT_LEAVES,
   PORTAL_SHARE_EARN,
   STUDENTS,
   STUDENTS_EDIT,
@@ -374,6 +375,7 @@ const QuizAnalyticsPage = lazy(() => import("../quizzes/QuizAnalyticsPage"));
 const TeacherAssessment = lazy(() => import("../teacher/TeacherAssessment"));
 const TeacherComplaints = lazy(() => import("../teacher/TeacherComplaints"));
 const TeacherShareEarn = lazy(() => import("../teacher/TeacherShareEarn"));
+const TeacherStudentLeaves = lazy(() => import("../teacher/TeacherStudentLeaves"));
 const ShareEarnPage = lazy(() => import("../portal/ShareEarnPage"));
 const EmployeeAssessmentAnalytics = lazy(() => import("../assessments/EmployeeAssessmentAnalytics"));
 const CompanySettingsPage = lazy(() => import("../hr/companySettings/CompanySettingsPage"));
@@ -2079,6 +2081,7 @@ export default function Router() {
         { path: TEACHER_EMPLOYMENT, element: <TeacherEmployment /> },
         { path: TEACHER_EMPLOYMENT + "/:section", element: <TeacherEmployment /> },
         { path: TEACHER_SHARE_EARN, element: <TeacherShareEarn /> },
+        { path: TEACHER_STUDENT_LEAVES, element: <TeacherStudentLeaves /> },
         { path: TEACHER_COMPLAINTS, element: <TeacherComplaints /> },
         { path: TEACHER_RULES, element: <RulesView endpoint="/core/policies/for-employees" /> },
         { path: TEACHER_ASSESSMENT, element: <TeacherAssessment /> },

@@ -856,6 +856,8 @@ const UnreadBadge = ({ route }) => {
   const count =
     route === WHATSAPP_INBOX ? data?.data?.whatsapp_unread || 0
     : route === NOTIFICATIONS_LOG ? data?.data?.unread || 0
+    : route === STUDENT_LEAVES ? data?.data?.pending_student_leaves || 0
+    : route === HR_LEAVE_REQUESTS ? data?.data?.pending_leave_requests || 0
     : 0;
   if (!count) return null;
   return (
