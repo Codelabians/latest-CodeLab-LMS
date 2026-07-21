@@ -17,7 +17,7 @@ import SearchableSelect from "../ui/SearchableSelect";
 import BatchModal from "./components/BatchModal";
 import MergeBatchModal from "./components/MergeBatchModal";
 import SimplePagination from "../ui/SimplePagination";
-import { GitMerge, Undo2 } from "lucide-react";
+import { GitMerge, Undo2, GraduationCap } from "lucide-react";
 
 /* ───────────────── brand tokens ───────────────── */
 const BRAND_RED = "#C90606";
@@ -208,6 +208,7 @@ const BatchesComponent = () => {
   const [updateBatch, { isLoading: updating }] = usePatchMutation();
   const [mergePost,   { isLoading: merging }]  = usePostMutation();
   const [unmergePost, { isLoading: unmerging }] = usePostMutation();
+  const [completePost, { isLoading: completing }] = usePostMutation();
 
   const rows = data?.data || [];
   const pagination = data?.meta?.pagination || {
@@ -279,6 +280,20 @@ const BatchesComponent = () => {
     } catch (err) {
       const msg = err?.data?.message || "Could not merge batch.";
       return { error: msg };
+    }
+  };
+
+  // Batch finished its course: students are recorded as course-completed
+  // (never dropout), monthly billing stops, and the batch closes.
+  const handleComplete = async (b) => {
+    if (!window.confirm(
+      `Mark "${b.name}" as COMPLETED?\n\nAll its current students will be recorded as having completed the course (not dropout), their monthly billing for this batch stops, and the batch becomes inactive. Students with no other active batch become alumni.`
+    )) return;
+    try {
+      const res = await completePost({ path: `/course/batch/${b.batch_uuid}/complete`, body: {} }).unwrap();
+      showToast(res?.message || "Batch marked completed.", "success");
+    } catch (err) {
+      showToast(err?.data?.message || "Could not mark the batch completed.", "error");
     }
   };
 
@@ -649,6 +664,16 @@ const BatchesComponent = () => {
                     </td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-1">
+                        {/* Batch completed — students become course-completed, NOT dropout */}
+                        {canUpdate && !b.is_merged && b.is_active && (
+                          <button type="button" onClick={() => handleComplete(b)} title="Mark batch completed — its students are recorded as course-completed (not dropout)"
+                            disabled={completing}
+                            className="flex items-center justify-center transition rounded-md disabled:opacity-50"
+                            style={{ width: 30, height: 30, color: "#15803D", background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "#F0FDF4"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          ><GraduationCap size={14} strokeWidth={2} /></button>
+                        )}
                         {/* Merge / Un-merge — visible to anyone with update batch */}
                         {canUpdate && !b.is_merged && (
                           <button type="button" onClick={() => openMerge(b)} title="Merge batch"
