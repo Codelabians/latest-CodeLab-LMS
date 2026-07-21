@@ -1,0 +1,1 @@
+import{j as r}from"./index-CaO_sBXu.js";import e from"./ShareEarnPage-N4__ohFe.js";import"./copy-Bmu_LASe.js";import"./clock-CbhxgUHW.js";import"./link-2-BJwQ4nDq.js";import"./upload-CzMUA3CU.js";import"./star-D5_td7bs.js";function s(){return r.jsx(e,{basePath:"/teacher/me/share-earn"})}export{s as default};
