@@ -29,7 +29,68 @@ const SECTION_COMPONENTS = {
   profile: ProfileTab, schedule: ScheduleTab, attendance: AttendanceTab, payslips: PayslipsTab,
   payroll: PayrollStatusTab, leave: LeaveTab, loans: LoansTab, bank: BankTab,
   documents: DocumentsTab, assets: AssetsTab, contracts: ContractsTab, stp: StpTab,
+  payouts: PayoutsTab,
 };
+
+/* Money paid out to the signed-in employee (fuel etc.) — mirrors the admin
+   Employee Payouts page, scoped to the requester. */
+function PayoutsTab() {
+  const { data, isLoading } = useGetQuery({ path: "/teacher/me/payouts" }, { refetchOnMountOrArgChange: true });
+  const d = data?.data || {};
+  const byCategory = d.by_category || [];
+  const recent = d.recent || [];
+  if (isLoading) return <Spinner />;
+  if (!recent.length && !byCategory.length) {
+    return <div className="bg-white rounded-xl p-10 text-center" style={{ border: `1px solid ${BORDER}` }}>
+      <Coins size={30} className="mx-auto mb-2" style={{ color: "#CBD5E1" }} />
+      <p className="text-[13px]" style={{ color: "#94A3B8" }}>No payouts recorded for you yet.</p>
+    </div>;
+  }
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="bg-white rounded-xl p-3 text-center" style={{ border: `1px solid ${BORDER}` }}>
+          <div className="text-[18px] font-bold" style={{ color: "#15803D" }}>{money(d.total)}</div>
+          <div className="text-[10.5px] font-semibold" style={{ color: "#94A3B8" }}>Total received</div>
+        </div>
+        <div className="bg-white rounded-xl p-3 text-center" style={{ border: `1px solid ${BORDER}` }}>
+          <div className="text-[18px] font-bold" style={{ color: "#1D4ED8" }}>{money(d.fuel_total)}</div>
+          <div className="text-[10.5px] font-semibold" style={{ color: "#94A3B8" }}>Fuel</div>
+        </div>
+        <div className="bg-white rounded-xl p-3 text-center" style={{ border: `1px solid ${BORDER}` }}>
+          <div className="text-[18px] font-bold" style={{ color: "#0F172A" }}>{recent.length}</div>
+          <div className="text-[10.5px] font-semibold" style={{ color: "#94A3B8" }}>Payments</div>
+        </div>
+      </div>
+
+      {byCategory.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {byCategory.map((c, i) => (
+            <span key={i} className="px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: "#F8FAFC", color: "#475569", border: `1px solid ${BORDER}` }}>
+              {c.category}: {money(c.total)} ({c.count})
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
+        <table className="w-full text-[12px]">
+          <thead><tr style={{ background: "#F8FAFC", color: "#475569" }}>{["Date", "Category", "Description", "Amount"].map((h, i) => <th key={i} className={`px-3 py-2 font-semibold text-[11px] ${h === "Amount" ? "text-right" : "text-left"}`}>{h}</th>)}</tr></thead>
+          <tbody>
+            {recent.map((r, i) => (
+              <tr key={r.uuid || i} style={{ borderTop: `1px solid ${BORDER}` }}>
+                <td className="px-3 py-2 font-semibold" style={{ color: "#0F172A" }}>{String(r.date || "").slice(0, 10)}</td>
+                <td className="px-3 py-2" style={{ color: "#1D4ED8" }}>{r.category || "—"}</td>
+                <td className="px-3 py-2" style={{ color: "#475569" }}>{r.description || "—"}</td>
+                <td className="px-3 py-2 text-right font-bold" style={{ color: "#15803D" }}>{money(r.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 /* Assets issued to the signed-in staff member (read-only). */
 function AssetsTab() {

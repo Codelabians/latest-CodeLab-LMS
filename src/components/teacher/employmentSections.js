@@ -1,6 +1,6 @@
 import {
   User, CalendarClock, CalendarCheck, Wallet, ShieldCheck, CalendarDays,
-  Coins, Landmark, FileText, FileSignature, MapPin, Boxes,
+  Coins, Landmark, FileText, FileSignature, MapPin, Boxes, Banknote,
 } from "lucide-react";
 
 /**
@@ -15,6 +15,7 @@ export const EMPLOYMENT_SECTIONS = [
   { key: "payroll", label: "Payroll status", icon: ShieldCheck, hint: "What's blocking salary" },
   { key: "leave", label: "Leaves", icon: CalendarDays, hint: "Balances & requests" },
   { key: "loans", label: "Loans", icon: Coins, hint: "Salary advances" },
+  { key: "payouts", label: "Payouts", icon: Banknote, hint: "Fuel & other money given to you" },
   { key: "bank", label: "Bank", icon: Landmark, hint: "Payroll account" },
   { key: "documents", label: "Documents", icon: FileText, hint: "Your HR documents" },
   { key: "assets", label: "Assets", icon: Boxes, hint: "Items issued to you" },
