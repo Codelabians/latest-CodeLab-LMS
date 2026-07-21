@@ -1,1 +1,0 @@
-import{g as e}from"./index-CZgV6esD.js";const d=r=>{var o;if(r.status===422&&((o=r.data)!=null&&o.errors)){const s=r.data.errors;Object.keys(s).forEach(t=>{s[t].forEach(a=>{e(a,"error")})})}else e("An unexpected error occurred","error")};export{d as s};
