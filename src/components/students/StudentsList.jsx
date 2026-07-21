@@ -104,6 +104,9 @@ export default function StudentsList() {
   const rows = data?.data || [];
   const meta = data?.meta?.pagination || data?.meta || data?.pagination || {};
   const total = meta.total || rows.length;
+  // Live active-students count (enrolled, dropouts excluded) for the header.
+  const { data: summaryResp } = useGetQuery({ path: "student/students-summary" });
+  const activeCount = summaryResp?.data?.students?.active ?? null;
 
   // Mark-dropout
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -191,7 +194,14 @@ export default function StudentsList() {
           <div className="grid place-items-center" style={{ width: 40, height: 40, borderRadius: 12, background: BRAND_RED_TINT, color: BRAND_RED }}><Users size={18} /></div>
           <div>
             <h1 className="text-[18px] font-bold" style={{ color: TEXT_PRIMARY }}>Students</h1>
-            <p className="text-[12px] mt-0.5" style={{ color: TEXT_MUTED }}>{total} student{total === 1 ? "" : "s"}</p>
+            <p className="text-[12px] mt-0.5" style={{ color: TEXT_MUTED }}>
+              {total} student{total === 1 ? "" : "s"} shown
+              {activeCount != null && (
+                <span className="ml-2 px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#F0FDF4", color: "#15803D" }}>
+                  {activeCount} active (dropouts excluded)
+                </span>
+              )}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">

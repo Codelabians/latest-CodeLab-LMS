@@ -555,7 +555,7 @@ const InquiriesComponent = () => {
 
         {/* Unattended — nobody added a note or set a reminder yet */}
         <button type="button" onClick={() => setUnattended(unattended === "true" ? "" : "true")}
-          title="Leads nobody has engaged yet — no note added and no reminder set"
+          title="Leads needing attention — no upcoming reminder and no note in the last 3 days (passed reminders with no follow-up count as unattended)"
           className="px-3 py-1.5 text-xs font-semibold transition rounded-lg"
           style={unattended === "true"
             ? { color: "#fff", background: "#B45309", border: "1px solid #B45309" }
