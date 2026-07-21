@@ -1,0 +1,1 @@
+import{a as s}from"./index-DfkGN7VD.js";function p(o=0){var u;const{data:e}=s({path:"/settings/public"}),t=Number((u=e==null?void 0:e.data)==null?void 0:u.laptop_monthly_fee);return Number.isFinite(t)&&t>0?t:o}export{p as u};
