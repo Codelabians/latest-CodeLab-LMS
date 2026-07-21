@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
 import {
-  LayoutDashboard, ClipboardCheck, RefreshCw, Users, FileText, BookOpen, Award, Megaphone, Gift, Briefcase, ChevronDown, ChevronRight, LogOut, Menu, X, ShieldCheck, Brain, MessageSquareWarning,
+  LayoutDashboard, ClipboardCheck, RefreshCw, Users, FileText, BookOpen, Award, Megaphone, Gift, Briefcase, ChevronDown, ChevronRight, LogOut, Menu, X, ShieldCheck, Brain, MessageSquareWarning, Share2,
 } from "lucide-react";
 import { clearCredentials } from "../../features/auth/authSlice";
 import { useGetQuery } from "../../api/apiSlice";
@@ -13,7 +13,7 @@ import RefreshButton from "../common/RefreshButton";
 import { EMPLOYMENT_SECTIONS } from "./employmentSections";
 import { firstAccessibleRoute } from "../dashboard/SidebarComponent";
 import {
-  TEACHER, TEACHER_ATTENDANCE, TEACHER_MAKEUPS, TEACHER_STUDENTS, TEACHER_ASSIGNMENTS, TEACHER_CONTENT, TEACHER_PERFORMANCE, TEACHER_ANNOUNCEMENTS, TEACHER_REWARDS, TEACHER_EMPLOYMENT, TEACHER_RULES, TEACHER_ASSESSMENT, TEACHER_COMPLAINTS, TEACHER_LOGIN,
+  TEACHER, TEACHER_ATTENDANCE, TEACHER_MAKEUPS, TEACHER_STUDENTS, TEACHER_ASSIGNMENTS, TEACHER_CONTENT, TEACHER_PERFORMANCE, TEACHER_ANNOUNCEMENTS, TEACHER_REWARDS, TEACHER_EMPLOYMENT, TEACHER_RULES, TEACHER_ASSESSMENT, TEACHER_COMPLAINTS, TEACHER_SHARE_EARN, TEACHER_LOGIN,
   ADMINDASHBOARD, PORTAL,
 } from "../routes/RouteConstants";
 
@@ -40,12 +40,13 @@ const NAV = [
   { route: TEACHER_REWARDS, label: "Rewards", icon: Gift },
   { route: TEACHER_ANNOUNCEMENTS, label: "Announcements", icon: Megaphone },
   { route: TEACHER_ASSESSMENT, label: "Skills Assessment", icon: Brain },
+  { route: TEACHER_SHARE_EARN, label: "Share & Earn", icon: Share2 },
   { route: TEACHER_COMPLAINTS, label: "Complaints", icon: MessageSquareWarning },
   { route: TEACHER_RULES, label: "Rules & Regulations", icon: ShieldCheck },
 ];
 
 // Nav items every staff member sees (the rest are teaching-only).
-const GENERAL_ROUTES = [TEACHER_REWARDS, TEACHER_ANNOUNCEMENTS, TEACHER_ASSESSMENT, TEACHER_RULES, TEACHER_COMPLAINTS];
+const GENERAL_ROUTES = [TEACHER_REWARDS, TEACHER_ANNOUNCEMENTS, TEACHER_ASSESSMENT, TEACHER_RULES, TEACHER_COMPLAINTS, TEACHER_SHARE_EARN];
 
 function NavItem({ item, active, collapsed, onClick }) {
   const Icon = item.icon;

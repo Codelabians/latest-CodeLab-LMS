@@ -47,6 +47,7 @@ const CertificateApplications = lazy(() => import("../certificates/CertificateAp
 const NewsletterSubscribers = lazy(() => import("../newsletter/NewsletterSubscribers"));
 const ReferralLeaderboard = lazy(() => import("../referrals/ReferralLeaderboard"));
 const BrandAmbassadors = lazy(() => import("../referrals/BrandAmbassadors"));
+const ShareEarnAdmin = lazy(() => import("../referrals/ShareEarnAdmin"));
 const FeeCollection = lazy(() => import("../finance/FeeCollection"));
 const EditStudentPage = lazy(() => import("../students/EditStudentPage"));
 const FinanceStats = lazy(() => import("../finance/FinanceStats"));
@@ -147,6 +148,7 @@ import {
   CERTIFICATE_APPLICATIONS,
   NEWSLETTER_SUBSCRIBERS,
   REFERRAL_LEADERBOARD,
+  SHARE_EARN_ADMIN,
   BRAND_AMBASSADORS,
   FEE_COLLECTION,
   STUDENT_LOANS,
@@ -264,6 +266,8 @@ import {
   TEACHER_RULES,
   TEACHER_ASSESSMENT,
   TEACHER_COMPLAINTS,
+  TEACHER_SHARE_EARN,
+  PORTAL_SHARE_EARN,
   STUDENTS,
   STUDENTS_EDIT,
   TRAINING_INQUIRY,
@@ -369,6 +373,8 @@ const PortalQuiz = lazy(() => import("../portal/PortalQuiz"));
 const QuizAnalyticsPage = lazy(() => import("../quizzes/QuizAnalyticsPage"));
 const TeacherAssessment = lazy(() => import("../teacher/TeacherAssessment"));
 const TeacherComplaints = lazy(() => import("../teacher/TeacherComplaints"));
+const TeacherShareEarn = lazy(() => import("../teacher/TeacherShareEarn"));
+const ShareEarnPage = lazy(() => import("../portal/ShareEarnPage"));
 const EmployeeAssessmentAnalytics = lazy(() => import("../assessments/EmployeeAssessmentAnalytics"));
 const CompanySettingsPage = lazy(() => import("../hr/companySettings/CompanySettingsPage"));
 const BrandsListPage = lazy(() => import("../hr/companyBrands/BrandsListPage"));
@@ -1571,6 +1577,15 @@ export default function Router() {
           ),
         },
         {
+          path: SHARE_EARN_ADMIN,
+          element: (
+            <PrivateRoute
+              element={<ShareEarnAdmin />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
           path: FINANCE_STATS,
           element: (
             <PrivateRoute
@@ -2038,6 +2053,7 @@ export default function Router() {
         { path: PORTAL_MAKEUPS, element: <PortalMakeups /> },
         { path: PORTAL_ANNOUNCEMENTS, element: <PortalAnnouncements /> },
         { path: PORTAL_REWARDS, element: <PortalRewards /> },
+        { path: PORTAL_SHARE_EARN, element: <ShareEarnPage /> },
         { path: PORTAL_PROFILE, element: <PortalProfile /> },
         { path: PORTAL_RULES, element: <RulesView endpoint="/core/policies/for-students" /> },
         { path: PORTAL_CAREER, element: <PortalCareerPath /> },
@@ -2062,6 +2078,7 @@ export default function Router() {
         { path: TEACHER_REWARDS, element: <TeacherRewards /> },
         { path: TEACHER_EMPLOYMENT, element: <TeacherEmployment /> },
         { path: TEACHER_EMPLOYMENT + "/:section", element: <TeacherEmployment /> },
+        { path: TEACHER_SHARE_EARN, element: <TeacherShareEarn /> },
         { path: TEACHER_COMPLAINTS, element: <TeacherComplaints /> },
         { path: TEACHER_RULES, element: <RulesView endpoint="/core/policies/for-employees" /> },
         { path: TEACHER_ASSESSMENT, element: <TeacherAssessment /> },

@@ -43,12 +43,27 @@ function chime(notes, type = "sine", volume = 0.12) {
   });
 }
 
+/** Mute preference (persisted). Sounds respect this everywhere. */
+export const soundsEnabled = () => localStorage.getItem("notify_sounds") !== "off";
+export const setSoundsEnabled = (on) => {
+  try { localStorage.setItem("notify_sounds", on ? "on" : "off"); } catch { /* ignore */ }
+  if (on) getCtx(); // toggling on is a user gesture — unlock right here
+};
+
 /** General notification — soft two-note "ding-dong". */
 export function playNotificationSound() {
+  if (!soundsEnabled()) return;
   chime([[880, 0.16], [660, 0.22]]);
 }
 
 /** WhatsApp message — brighter three-note pattern so it's distinct. */
 export function playWhatsAppSound() {
+  if (!soundsEnabled()) return;
   chime([[520, 0.1], [780, 0.1], [1040, 0.18]], "triangle", 0.14);
+}
+
+/** Demo both chimes (used by the header toggle so users can verify). */
+export function playTestSounds() {
+  chime([[880, 0.16], [660, 0.22]]);
+  setTimeout(() => chime([[520, 0.1], [780, 0.1], [1040, 0.18]], "triangle", 0.14), 700);
 }

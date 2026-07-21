@@ -5,11 +5,13 @@ import { useNavigate } from "react-router-dom";
 import ProfileDetailsDropdown from "./ProfileDetailsDropdown";
 import { useGetQuery } from "../../api/apiSlice"; // Import your RTK Query hook
 import RefreshButton from "../common/RefreshButton";
-import { armNotifySounds, playNotificationSound, playWhatsAppSound } from "../../utils/notifySounds";
+import { armNotifySounds, playNotificationSound, playWhatsAppSound, soundsEnabled, setSoundsEnabled, playTestSounds } from "../../utils/notifySounds";
+import { Volume2, VolumeX } from "lucide-react";
 import { showToast } from "../ui/common/ShowToast";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const [soundOn, setSoundOn] = useState(soundsEnabled());
 
   // Poll the lightweight unread-count endpoint for the bell badge.
   const { data: unreadResponse, isLoading } = useGetQuery(
@@ -51,6 +53,22 @@ const Navbar = () => {
       <div className="flex gap-4 items-center">
         {/* Soft refresh — refetches the data on screen, no page reload */}
         <RefreshButton />
+        {/* Notification sounds on/off — clicking plays the two test chimes
+            (and doubles as the browser's audio-unlock gesture). */}
+        <button
+          type="button"
+          title={soundOn ? "Notification sounds ON — click to test & toggle" : "Notification sounds OFF — click to enable"}
+          onClick={() => {
+            const next = !soundOn;
+            setSoundsEnabled(next);
+            setSoundOn(next);
+            if (next) { playTestSounds(); showToast("Sounds ON — that's how notifications & WhatsApp will sound.", "success"); }
+            else showToast("Notification sounds muted.", "info");
+          }}
+          className="cursor-pointer"
+        >
+          {soundOn ? <Volume2 className="text-brown w-5 h-5" /> : <VolumeX className="w-5 h-5" style={{ color: "#94A3B8" }} />}
+        </button>
         <div onClick={toggleSettings} className="cursor-pointer relative">
           <Settings className="text-brown w-6 h-6" />
         </div>

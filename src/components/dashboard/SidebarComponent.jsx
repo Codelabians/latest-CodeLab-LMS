@@ -131,6 +131,7 @@ import {
   CERTIFICATE_APPLICATIONS,
   NEWSLETTER_SUBSCRIBERS,
   REFERRAL_LEADERBOARD,
+  SHARE_EARN_ADMIN,
   BRAND_AMBASSADORS,
   FEE_COLLECTION,
   FINANCE_STATS,
@@ -367,6 +368,12 @@ const NAV_SECTIONS = [
       {
         route: REFERRAL_LEADERBOARD,
         label: "Referrals",
+        icon: Trophy,
+        gate: ["get referrals"],
+      },
+      {
+        route: SHARE_EARN_ADMIN,
+        label: "Share & Earn",
         icon: Trophy,
         gate: ["get referrals"],
       },
