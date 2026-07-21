@@ -840,7 +840,31 @@ const ChildItem = ({ child, isActive, onClick, collapsed }) => {
       >
         {child.label}
       </span>
+      <UnreadBadge route={child.route} />
     </button>
+  );
+};
+
+
+/* Small red count pill for sidebar rows with unread items. Reads the same
+   polled unread-count query as the navbar bell (RTK Query dedupes it). */
+const UnreadBadge = ({ route }) => {
+  const { data } = useGetQuery(
+    { path: "communication/notifications/unread-count" },
+    { pollingInterval: 15000 },
+  );
+  const count =
+    route === WHATSAPP_INBOX ? data?.data?.whatsapp_unread || 0
+    : route === NOTIFICATIONS_LOG ? data?.data?.unread || 0
+    : 0;
+  if (!count) return null;
+  return (
+    <span
+      className="flex items-center justify-center flex-shrink-0 text-white font-bold rounded-full"
+      style={{ minWidth: 18, height: 18, padding: "0 5px", fontSize: 10, background: BRAND_RED }}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
   );
 };
 
@@ -915,6 +939,7 @@ const NavItem = ({
             >
               {item.label}
             </span>
+            {!isGroup && <UnreadBadge route={item.route} />}
             {isGroup && (
               <span
                 className="transition-transform duration-200 mr-0.5"

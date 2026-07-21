@@ -4,7 +4,7 @@ import {
   ChevronLeft, Loader2, Home, Laptop, Pencil, Wallet, CalendarCheck, GraduationCap,
   Mail, Phone, CreditCard, MapPin, User, BookOpen, Layers, Award, ArrowRightLeft,
   CheckCircle2, AlertTriangle, X, Repeat, History, UserPlus, RotateCcw,
-  ChevronDown, ChevronRight, Plus, FileText, Gift, Send, Download, MessageCircle, PauseCircle,
+  ChevronDown, ChevronRight, Plus, FileText, Gift, Send, Download, MessageCircle, PauseCircle, Briefcase,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as ReTooltip } from "recharts";
 import { useGetQuery, usePostMutation, usePatchMutation, useDownloadChallanMutation } from "../../api/apiSlice";
@@ -149,6 +149,12 @@ export default function StudentDetailPage() {
     catch (e) { notify(e?.data?.message || "Could not remove the referral.", false); }
   };
 
+  const toggleIntern = async (makeIntern) => {
+    try {
+      const res = await post({ path: `/student/${id}/${makeIntern ? "convert-to-intern" : "revert-intern"}`, body: {} }).unwrap();
+      notify(res?.message || (makeIntern ? "Marked as CodeLab intern. 🎉" : "Intern status removed.")); refetch();
+    } catch (e) { notify(e?.data?.message || "Could not update intern status.", false); }
+  };
   const toggleAlumni = async (makeAlumni) => {
     try {
       await post({ path: `/student/${id}/${makeAlumni ? "convert-to-alumni" : "revert-alumni"}`, body: {} }).unwrap();
@@ -236,6 +242,7 @@ export default function StudentDetailPage() {
               {s.is_hostalize && <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#0891B2" }}><Home size={12} /> Hostelite</span>}
               {s.laptop_provided && <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#B45309" }}><Laptop size={12} /> Laptop</span>}
               {s.is_alumni && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#EDE9FE", color: "#6D28D9" }}><GraduationCap size={12} /> Alumni</span>}
+              {s.is_intern && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#ECFDF5", color: "#047857" }} title={s.intern_since ? `Intern since ${s.intern_since}` : undefined}><Briefcase size={12} /> CodeLab Intern</span>}
               {s.is_brand_ambassador && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#FEF3C7", color: "#B45309" }}><Award size={12} /> Brand Ambassador</span>}
             </div>
             <div className="text-[12px] mt-0.5" style={{ color: TEXT_MUTED }}>
@@ -304,6 +311,9 @@ export default function StudentDetailPage() {
           {s.is_brand_ambassador
             ? <button disabled={posting} onClick={removeAmbassador} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><RotateCcw size={14} /> Remove ambassador</button>
             : <button onClick={() => setShowMakeBA(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-white" style={{ background: "#B45309" }}><Award size={14} /> Make ambassador</button>}
+          {s.is_intern
+            ? <button disabled={posting} onClick={() => toggleIntern(false)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><RotateCcw size={14} /> Remove intern</button>
+            : <button disabled={posting} onClick={() => toggleIntern(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-white" style={{ background: "#047857" }} title="Achievement: this student got an internship at CodeLab"><Briefcase size={14} /> Mark intern</button>}
           {s.is_alumni
             ? <button disabled={posting} onClick={() => toggleAlumni(false)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_SECONDARY }}><RotateCcw size={14} /> Remove alumni</button>
             : <button disabled={posting} onClick={() => toggleAlumni(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg text-white" style={{ background: "#6D28D9" }}><GraduationCap size={14} /> Mark alumni</button>}

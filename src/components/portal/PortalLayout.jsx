@@ -117,11 +117,15 @@ export default function PortalLayout() {
   // Falls back to the freshly fetched profile after a page refresh (redux
   // user may be empty until then — don't redirect while neither is loaded).
   const roleSource = user?.role || user?.roles ? user : me?.data;
+  let hasStaffRole = false;
   if (roleSource) {
     const roleNames = [roleSource.role, ...(roleSource.roles || [])].filter(Boolean);
     if (!roleNames.includes("user")) {
       return <Navigate to={TEACHER} replace />;
     }
+    // Dual-role (e.g. student who became an intern/teacher): same login
+    // opens both portals — offer the switch.
+    hasStaffRole = roleNames.some((r) => r !== "user");
   } else {
     // Role unknown yet (profile still loading after a refresh) — hold the
     // render instead of flashing portal pages at a non-student.
@@ -233,6 +237,14 @@ export default function PortalLayout() {
         <div className="h-16 flex items-center justify-between px-6 bg-white" style={{ borderBottom: "1px solid #EEF2F6" }}>
           <h2 className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>{activeLabel}</h2>
           <div className="flex items-center gap-2.5">
+            {hasStaffRole && (
+              <button type="button" onClick={() => navigate(TEACHER)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold"
+                style={{ border: "1px solid #EEF2F6", color: BRAND_RED }}
+                title="You also have a staff role — open the staff portal with this same login">
+                <RefreshCw size={12} /> Staff Portal
+              </button>
+            )}
             {/* Soft refresh — refetches the data on screen, no page reload */}
             <RefreshButton />
             <span className="text-[13px] font-semibold hidden sm:block" style={{ color: TEXT_SECONDARY }}>{fullName}</span>

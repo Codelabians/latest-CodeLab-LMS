@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  Users, GraduationCap, Award, UserPlus, Wallet, TrendingUp, Clock,
+  Users, GraduationCap, Award, UserPlus, Wallet, TrendingUp, Clock, Briefcase,
   CalendarCheck, Loader2, Filter, X, Undo2,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as ReTooltip, Legend } from "recharts";
@@ -127,6 +127,8 @@ export default function StudentSummary() {
             <Kpi icon={UserPlus} label="New (period)" value={s.new_in_period ?? 0} color="#1D4ED8" tint="#EFF6FF" />
             <Kpi icon={Users} label="Dropped" value={s.dropped ?? 0} color={BRAND} tint="#FEF2F2" />
             <Kpi icon={GraduationCap} label="Alumni" value={s.alumni ?? 0} color="#7C3AED" tint="#F5F3FF" />
+            <Kpi icon={Briefcase} label="CodeLab Interns" value={s.interns ?? 0} color="#047857" tint="#ECFDF5" />
+            <Kpi icon={Award} label="Hired from students" value={s.hired_from_students ?? 0} color="#B45309" tint="#FFFBEB" />
           </div>
 
           {/* Fee KPIs */}

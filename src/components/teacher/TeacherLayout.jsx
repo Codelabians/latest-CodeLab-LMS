@@ -108,11 +108,14 @@ export default function TeacherLayout() {
   // without this a student could open /staff-portal/* URLs. Users whose only
   // role is "user" (student) belong in the student portal.
   const roleSource = user?.role || user?.roles ? user : (meUser?.data || me?.data);
+  let hasStudentRole = false;
   if (roleSource) {
     const roleNames = [roleSource.role, ...(roleSource.roles || [])].filter(Boolean);
     if (roleNames.length && roleNames.every((r) => r === "user")) {
       return <Navigate to={PORTAL} replace />;
     }
+    // Dual-role (intern who is still a student): same login, both portals.
+    hasStudentRole = roleNames.includes("user");
   } else {
     // Role unknown yet (profile still loading after a refresh) — hold the
     // render instead of flashing staff pages at a student.
@@ -284,6 +287,14 @@ export default function TeacherLayout() {
         <div className="h-16 flex items-center justify-between px-6 bg-white" style={{ borderBottom: "1px solid #EEF2F6" }}>
           <h2 className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>{activeLabel}</h2>
           <div className="flex items-center gap-2.5">
+            {hasStudentRole && (
+              <button type="button" onClick={() => navigate(PORTAL)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold"
+                style={{ border: "1px solid #EEF2F6", color: BRAND_RED }}
+                title="You are also a student — open your student portal with this same login">
+                <RefreshCw size={12} /> Student Portal
+              </button>
+            )}
             {/* Soft refresh — refetches the data on screen, no page reload */}
             <RefreshButton />
             <span className="text-[13px] font-semibold hidden sm:block" style={{ color: TEXT_SECONDARY }}>{fullName}</span>
