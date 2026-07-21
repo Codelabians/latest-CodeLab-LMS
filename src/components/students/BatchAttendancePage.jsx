@@ -21,11 +21,11 @@ export default function BatchAttendancePage() {
   const batches = useMemo(() => batchData?.data || [], [batchData]);
   const [batchUuid, setBatchUuid] = useState("");
 
-  // Keep the selected batch valid for the current teacher filter.
+  // No auto-selection — the admin picks a batch deliberately. Only clear a
+  // selection that is no longer valid for the current teacher filter.
   useEffect(() => {
-    if (!batches.length) { setBatchUuid(""); return; }
-    if (!batches.some((b) => b.batch_uuid === batchUuid)) {
-      setBatchUuid(batches[0].batch_uuid);
+    if (batchUuid && !batches.some((b) => b.batch_uuid === batchUuid)) {
+      setBatchUuid("");
     }
   }, [batches, batchUuid]);
 
@@ -52,19 +52,23 @@ export default function BatchAttendancePage() {
       <div className="bg-white rounded-xl p-4 mb-4 flex flex-wrap gap-4" style={{ border: "1px solid #EEF2F6" }}>
         <div style={{ minWidth: 280, flex: "0 1 320px" }}>
           <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Teacher</label>
-          <SearchableSelect options={teacherOptions} value={teacherId} onChange={setTeacherId} placeholder="All teachers" />
+          <SearchableSelect options={teacherOptions} value={teacherId} onChange={(v) => setTeacherId(v || "")} placeholder="All teachers" />
         </div>
         <div style={{ minWidth: 280, flex: "0 1 380px" }}>
           <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>
             Batch{teacherId ? ` (${batches.length} for ${selectedTeacher?.name || "this teacher"})` : ""}
           </label>
-          <SearchableSelect options={options} value={batchUuid} onChange={setBatchUuid} placeholder="Search batch…" />
+          <SearchableSelect options={options} value={batchUuid} onChange={(v) => setBatchUuid(v || "")} placeholder="Select a batch…" />
         </div>
       </div>
 
       {teacherId && batches.length === 0 ? (
         <div className="bg-white rounded-xl p-10 text-center text-[13px]" style={{ border: "1px solid #EEF2F6", color: "#94A3B8" }}>
           This teacher has no batches.
+        </div>
+      ) : !batchUuid ? (
+        <div className="bg-white rounded-xl p-10 text-center text-[13px]" style={{ border: "1px solid #EEF2F6", color: "#94A3B8" }}>
+          Select a batch to view its attendance register.
         </div>
       ) : isFetching ? (
         <div className="flex justify-center py-16"><Loader2 className="animate-spin" style={{ color: BRAND }} /></div>
