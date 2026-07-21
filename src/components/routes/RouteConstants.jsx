@@ -163,6 +163,10 @@ export const NOTIFICATIONS = "/dashboard/notifications";
 export const REMINDERS = "/dashboard/reminders";
 export const PORTAL_REMINDERS = "/portal/reminders";
 export const STAFF_REMINDERS = "/staff-portal/reminders";
+// Group chats — one shared page, mounted on all three surfaces.
+export const GROUP_CHATS = "/dashboard/group-chats";
+export const PORTAL_CHATS = "/portal/chats";
+export const STAFF_CHATS = "/staff-portal/chats";
 export const NOTIFICATIONS_LOG = "/dashboard/notifications-log";
 export const NOTIFICATION_SETTINGS = "/dashboard/notification-settings";
 export const MEMBERS = "/dashboard/working-spaces/company/members/add";

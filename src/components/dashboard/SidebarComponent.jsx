@@ -47,6 +47,7 @@ import {
   UserSearch,
   Megaphone,
   MessageCircle,
+  MessagesSquare,
   MessageSquareText,
   UserCheck,
   FileText,
@@ -130,6 +131,7 @@ import {
   NOTIFICATIONS_LOG,
   NOTIFICATION_SETTINGS,
   REMINDERS,
+  GROUP_CHATS,
   RECEPTION_DASHBOARD,
   STUDENT_JOURNEY,
   CERTIFICATE_APPLICATIONS,
@@ -210,6 +212,13 @@ const NAV_SECTIONS = [
         label: "WhatsApp Inbox",
         icon: MessageCircle,
         gate: ["get whatsapp-inbox"],
+      },
+      {
+        // Group chats — no gate: the server decides which groups a user can
+        // see, and ordinary dashboard roles may be members of custom groups.
+        route: GROUP_CHATS,
+        label: "Group Chats",
+        icon: MessagesSquare,
       },
       {
         route: APPLICANTS,

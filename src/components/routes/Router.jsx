@@ -220,6 +220,9 @@ import {
   REMINDERS,
   PORTAL_REMINDERS,
   STAFF_REMINDERS,
+  GROUP_CHATS,
+  PORTAL_CHATS,
+  STAFF_CHATS,
   NOTIFICATIONS_LOG,
   NOTIFICATION_SETTINGS,
   RULES_REGULATIONS,
@@ -431,6 +434,7 @@ const InstitutesListPage = lazy(() => import("../hr/institutes/InstitutesListPag
 const InstituteFormPage = lazy(() => import("../hr/institutes/InstituteFormPage"));
 const BatchesComponent = lazy(() => import("../batches/BatchesComonent"));
 const RemindersPage = lazy(() => import("../reminders/RemindersPage"));
+const GroupChatPage = lazy(() => import("../chat/GroupChatPage"));
 import FinanceGate from "../finance/FinanceGate";
 
 export default function Router() {
@@ -1812,6 +1816,17 @@ export default function Router() {
           ),
         },
         {
+          // Group chats — same page is mounted on the student and staff
+          // portals too; the server decides which groups each user sees.
+          path: GROUP_CHATS,
+          element: (
+            <PrivateRoute
+              element={<GroupChatPage />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
           path: NOTIFICATIONS_LOG,
           element: (
             <PrivateRoute
@@ -2088,6 +2103,7 @@ export default function Router() {
         { path: PORTAL_CAREER, element: <PortalCareerPath /> },
         { path: PORTAL_QUIZ, element: <PortalQuiz /> },
         { path: PORTAL_REMINDERS, element: <RemindersPage /> },
+        { path: PORTAL_CHATS, element: <GroupChatPage /> },
       ],
     },
 
@@ -2114,6 +2130,7 @@ export default function Router() {
         { path: TEACHER_RULES, element: <RulesView endpoint="/core/policies/for-employees" /> },
         { path: TEACHER_ASSESSMENT, element: <TeacherAssessment /> },
         { path: STAFF_REMINDERS, element: <RemindersPage /> },
+        { path: STAFF_CHATS, element: <GroupChatPage /> },
       ],
     },
 

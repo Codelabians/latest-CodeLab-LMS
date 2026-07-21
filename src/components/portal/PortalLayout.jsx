@@ -4,7 +4,7 @@ import { Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
 import {
   LayoutDashboard, CalendarCheck, Wallet, CalendarDays, RefreshCw, FileText, BookOpen,
   Megaphone, Gift, Share2, UserCircle, LogOut, Menu, X, Boxes, ShieldCheck, Sparkles, Brain,
-  MessageSquareWarning, AlarmClock,
+  MessageSquareWarning, AlarmClock, MessagesSquare,
 } from "lucide-react";
 import { clearCredentials } from "../../features/auth/authSlice";
 import { useGetQuery } from "../../api/apiSlice";
@@ -13,7 +13,7 @@ import BrandMark from "../common/BrandMark";
 import FirstLoginTour from "../common/FirstLoginTour";
 import RefreshButton from "../common/RefreshButton";
 import {
-  PORTAL, PORTAL_ATTENDANCE, PORTAL_FEES, PORTAL_ASSETS, PORTAL_LEAVES, PORTAL_MAKEUPS, PORTAL_ASSIGNMENTS, PORTAL_CONTENT, PORTAL_ANNOUNCEMENTS, PORTAL_REWARDS, PORTAL_SHARE_EARN, PORTAL_PROFILE, PORTAL_RULES, PORTAL_CAREER, PORTAL_QUIZ, PORTAL_LOGIN, PORTAL_COMPLAINTS, PORTAL_REMINDERS, TEACHER,
+  PORTAL, PORTAL_ATTENDANCE, PORTAL_FEES, PORTAL_ASSETS, PORTAL_LEAVES, PORTAL_MAKEUPS, PORTAL_ASSIGNMENTS, PORTAL_CONTENT, PORTAL_ANNOUNCEMENTS, PORTAL_REWARDS, PORTAL_SHARE_EARN, PORTAL_PROFILE, PORTAL_RULES, PORTAL_CAREER, PORTAL_QUIZ, PORTAL_LOGIN, PORTAL_COMPLAINTS, PORTAL_REMINDERS, PORTAL_CHATS, TEACHER,
 } from "../routes/RouteConstants";
 
 const BRAND_RED = "#C90606";
@@ -41,6 +41,7 @@ const NAV = [
   { route: PORTAL_SHARE_EARN, label: "Share & Earn", icon: Share2 },
   { route: PORTAL_CAREER, label: "My Career Path", icon: Sparkles },
   { route: PORTAL_QUIZ, label: "Quizzes", icon: Brain },
+  { route: PORTAL_CHATS, label: "Class Chat", icon: MessagesSquare },
   { route: PORTAL_REMINDERS, label: "Reminders", icon: AlarmClock },
   { route: PORTAL_ANNOUNCEMENTS, label: "Announcements", icon: Megaphone },
   { route: PORTAL_RULES, label: "Rules & Regulations", icon: ShieldCheck },
