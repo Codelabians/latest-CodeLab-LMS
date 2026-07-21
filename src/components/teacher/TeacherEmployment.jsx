@@ -933,12 +933,46 @@ const STATUS_COLOR = (s) => {
 
 function AttendanceTab() {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
-  const { data, isLoading } = useGetQuery({ path: "/teacher/me/attendance", params: { month } }, { refetchOnMountOrArgChange: true });
+  const { data, isLoading, refetch } = useGetQuery({ path: "/teacher/me/attendance", params: { month } }, { refetchOnMountOrArgChange: true });
+  const [post, { isLoading: punching }] = usePostMutation();
   const d = data?.data || {};
   const rows = d.rows || [];
   const t = d.totals || {};
+  const today = d.today || {};
+  const onShift = today.checked_in && !today.checked_out;
+
+  const punch = async (action) => {
+    try {
+      const res = await post({ path: `teacher/me/attendance/${action}`, body: {} }).unwrap();
+      showToast(res?.message || "Done.", "success");
+      refetch();
+    } catch (e) { showToast(e?.data?.message || "Could not update attendance.", "error"); }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Daily punch clock — every staff member (Tech School / IT Solutions)
+          marks their own day here. */}
+      <div className="bg-white rounded-xl p-4 flex items-center justify-between flex-wrap gap-3" style={{ border: `1px solid ${BORDER}` }}>
+        <div>
+          <div className="text-[13px] font-bold" style={{ color: "#0F172A" }}>Today</div>
+          <div className="text-[12px]" style={{ color: "#475569" }}>
+            {today.checked_in
+              ? <>In at <b>{String(today.in).slice(11, 16)}</b>{today.checked_out ? <> · out at <b>{String(today.out).slice(11, 16)}</b></> : " · currently checked in"}</>
+              : "Not checked in yet."}
+          </div>
+        </div>
+        <button
+          onClick={() => punch(onShift ? "check-out" : "check-in")}
+          disabled={punching}
+          className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold text-white"
+          style={{ background: onShift ? "#B45309" : "#15803D", opacity: punching ? 0.6 : 1 }}
+        >
+          {punching && <Loader2 size={14} className="animate-spin" />}
+          {onShift ? "Check out" : today.checked_out ? "Check in again" : "Check in"}
+        </button>
+      </div>
+
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-[13px] font-bold" style={{ color: "#0F172A" }}>My attendance</h3>
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="px-3 py-2 rounded-lg text-[12px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
