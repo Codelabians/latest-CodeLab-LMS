@@ -333,7 +333,12 @@ export default function ReferralLeaderboard() {
 }
 
 function DetailModal({ detail, onClose, notify, onChanged }) {
-  const { data, isLoading, refetch } = useGetQuery({ path: `referrals?program_application_id=${detail.id}&per_page=1000` });
+  // Personal referrers (students/employees) have no Referral tracking rows —
+  // their detail comes from stamped inquiries/visitors + rewards.
+  const detailPath = detail.program === "personal"
+    ? `referrals?referrer_user_id=${detail.id}`
+    : `referrals?program_application_id=${detail.id}&per_page=1000`;
+  const { data, isLoading, refetch } = useGetQuery({ path: detailPath });
   const rows = data?.data || [];
   const [convert] = usePostMutation();
 
@@ -403,7 +408,9 @@ function DetailModal({ detail, onClose, notify, onChanged }) {
                       : <span className="text-[12px] font-semibold" style={{ color: "#B45309" }}>Pending</span>}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {r.status === "converted"
+                    {!r.id ? (
+                      <span className="text-[11px]" style={{ color: TEXT_MUTED }}>auto-tracked</span>
+                    ) : r.status === "converted"
                       ? <button onClick={() => mark(r.id, true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_MUTED }}><RotateCcw size={13} /> Revert</button>
                       : <button onClick={() => mark(r.id)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold text-white rounded-lg" style={{ background: "#15803D" }}><CheckCircle2 size={13} /> Mark paid</button>}
                   </td>
