@@ -600,10 +600,20 @@ const BatchesComponent = () => {
                       <span
                         className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[12px] font-semibold rounded-md"
                         style={{ color: "#15803D", background: "#F0FDF4" }}
+                        title="Current students (dropouts excluded)"
                       >
                         <Users size={11} strokeWidth={2.2} />
                         {b.students_count ?? 0}
                       </span>
+                      {(b.dropout_students_count ?? 0) > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 ml-1.5 text-[11px] font-semibold rounded-md"
+                          style={{ color: BRAND_RED, background: BRAND_RED_TINT }}
+                          title="Dropped-out students"
+                        >
+                          {b.dropout_students_count} dropout
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {b.is_merged ? (
