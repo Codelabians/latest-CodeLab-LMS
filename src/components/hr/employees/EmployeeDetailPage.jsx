@@ -554,7 +554,9 @@ const EmployeeDetailPage = () => {
               idLabel: "Employee ID",
               idValue: profile.employee_id,
               roleLine: profile.designation || titleCase(roles.find((r) => r.is_primary)?.name || roles[0]?.name || ""),
-              subLine: profile.brand?.name || departments[0]?.name || "",
+              // Always the full company name — not just the employee's brand
+              // (cards were printing only "IT Solutions" for IT staff).
+              subLine: "CODELAB Tech School & IT Solutions",
               dateLabel: "Joining Date",
               dateValue: profile.joining_date_effective || "",
               phone: profile.user?.contact,
