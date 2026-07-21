@@ -8,6 +8,7 @@ import { useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation } fro
 import BatchTabs from "../ui/BatchTabs";
 import { useExpensePerms, ExpenseHistoryModal } from "./expenseAudit";
 import PaidToField from "./PaidToField";
+import SecureFigure from "./SecureFigure";
 
 /* ---- design tokens (match Finance Stats / dashboards) ---- */
 const BRAND = "#C90606";
@@ -379,6 +380,8 @@ function LedgerTable({ type, category, accent, onBack, openAddOnMount = false })
         <div className="mb-3"><BatchTabs activeBatchTab={batchTab} setActiveBatchTab={(v) => { setBatchTab(v); setPage(1); }} /></div>
       )}
 
+      {/* Entries table — one section-level mask for the whole ledger listing */}
+      <SecureFigure variant="card" maskKey={`ledger.entries.${type}`}>
       <div className="bg-white rounded-xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
         <table className="w-full text-[12.5px]">
           <thead>
@@ -440,6 +443,7 @@ function LedgerTable({ type, category, accent, onBack, openAddOnMount = false })
           )}
         </table>
       </div>
+      </SecureFigure>
 
       {lastPage > 1 && (
         <div className="flex items-center justify-end gap-2 mt-3">

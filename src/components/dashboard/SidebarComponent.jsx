@@ -298,7 +298,6 @@ const NAV_SECTIONS = [
           { route: STUDENT_LEAVES, label: "Leave Requests", icon: CalendarCheck, gate: ["get student-leaves"] },
           { route: STUDENTS_ON_BREAK, label: "On Break", icon: PauseCircle, gate: ["get student"] },
           { route: STUDENT_COMPLAINTS, label: "Complaints", icon: MessageSquareWarning, gate: ["get complaints"] },
-          { route: EMPLOYEE_COMPLAINTS, label: "Employee Complaints", icon: MessageSquareWarning, gate: ["get complaints"] },
           { route: STUDENT_LAPTOPS, label: "Laptops", icon: Boxes, gate: ["get inventory-assign", "update inventory-assign"] },
           { route: BATCH_ATTENDANCE, label: "Batch Attendance", icon: CalendarCheck, gate: ["get student"] },
           { route: ADMIN_MAKEUPS, label: "Makeups", icon: RefreshCw, gate: ["get makeup-classes"] },
@@ -582,6 +581,14 @@ const NAV_SECTIONS = [
             label: "Payroll",
             icon: Wallet,
             gate: ["get payroll-cycles"],
+          },
+          {
+            // Employee complaints inbox — moved here from the Students
+            // section (2026-07-22 per Mamoona): it's an HR concern.
+            route: EMPLOYEE_COMPLAINTS,
+            label: "Employee Complaints",
+            icon: MessageSquareWarning,
+            gate: ["get complaints"],
           },
           {
             // Phase 4 — Leave requests inbox (approve/reject)

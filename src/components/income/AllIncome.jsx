@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, Loader2, ArrowUpCircle, ChevronLeft, ChevronRight, X, Pencil, Trash2, History, Save, Plus, RotateCcw } from "lucide-react";
 import { useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation } from "../../api/apiSlice";
 import { useExpensePerms, ExpenseHistoryModal } from "../finance/expenseAudit";
+import SecureFigure from "../finance/SecureFigure";
 import { showToast } from "../ui/common/ShowToast";
 
 /* ---- design tokens (income = green, mirrors AllExpenses layout) ---- */
@@ -306,7 +307,9 @@ export default function AllIncome() {
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 rounded-xl text-right" style={{ background: TINT, border: `1px solid ${TINT_BORDER}` }}>
             <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: BRAND }}>Total ({PRESETS.find((p) => p.v === preset)?.l || "All"})</div>
-            <div className="text-[17px] font-bold" style={{ color: BRAND }}>{money(periodTotal)}</div>
+            <div className="text-[17px] font-bold" style={{ color: BRAND }}>
+              <SecureFigure variant="inline" maskKey="income.period_total">{money(periodTotal)}</SecureFigure>
+            </div>
             <div className="text-[10px]" style={{ color: TEXT_MUTED }}>{periodCount} entr{periodCount === 1 ? "y" : "ies"}</div>
           </div>
           <button onClick={() => setShowDeleted((v) => !v)} className="inline-flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: showDeleted ? BRAND : TEXT_SECONDARY, background: showDeleted ? TINT : "#fff" }}>
@@ -360,6 +363,8 @@ export default function AllIncome() {
         {isFetching && <Loader2 size={15} className="animate-spin" style={{ color: TEXT_MUTED }} />}
       </div>
 
+      {/* Table — one section-level mask for all transaction rows */}
+      <SecureFigure variant="card" maskKey="income.table">
       <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${BORDER}` }}>
         <table className="w-full text-sm">
           <thead>
@@ -419,6 +424,7 @@ export default function AllIncome() {
           </tbody>
         </table>
       </div>
+      </SecureFigure>
 
       <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
         <div className="flex items-center gap-2 text-[12px]" style={{ color: TEXT_MUTED }}>

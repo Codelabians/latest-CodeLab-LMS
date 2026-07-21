@@ -3,6 +3,7 @@ import { Search, Loader2, ArrowDownCircle, ChevronLeft, ChevronRight, X, Pencil,
 import { useGetQuery, usePostMutation, usePatchMutation, useDeleteMutation } from "../../api/apiSlice";
 import { useExpensePerms, ExpenseHistoryModal } from "../finance/expenseAudit";
 import PaidToField from "../finance/PaidToField";
+import SecureFigure from "../finance/SecureFigure";
 import { showToast } from "../ui/common/ShowToast";
 
 /* ---- design tokens (match Finance pages) ---- */
@@ -302,7 +303,9 @@ export default function AllExpenses() {
         {/* Period total card */}
         <div className="px-4 py-2 rounded-xl text-right" style={{ background: "#FEF2F2", border: "1px solid #FECACA" }}>
           <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: BRAND }}>Total ({PRESETS.find((p) => p.v === preset)?.l || "All"})</div>
-          <div className="text-[17px] font-bold" style={{ color: BRAND }}>{money(periodTotal)}</div>
+          <div className="text-[17px] font-bold" style={{ color: BRAND }}>
+            <SecureFigure variant="inline" maskKey="expenses.period_total">{money(periodTotal)}</SecureFigure>
+          </div>
           <div className="text-[10px]" style={{ color: TEXT_MUTED }}>{periodCount} expense{periodCount === 1 ? "" : "s"}</div>
         </div>
       </div>
@@ -351,7 +354,8 @@ export default function AllExpenses() {
         {isFetching && <Loader2 size={15} className="animate-spin" style={{ color: TEXT_MUTED }} />}
       </div>
 
-      {/* Table */}
+      {/* Table — one section-level mask for all transaction rows */}
+      <SecureFigure variant="card" maskKey="expenses.table">
       <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${BORDER}` }}>
         <table className="w-full text-sm">
           <thead>
@@ -421,6 +425,7 @@ export default function AllExpenses() {
           </tbody>
         </table>
       </div>
+      </SecureFigure>
 
       {/* Pagination */}
       <div className="flex flex-wrap items-center justify-between gap-3 mt-4">

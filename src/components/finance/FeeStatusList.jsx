@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useGetQuery, usePostMutation, useDownloadChallanMutation } from "../../api/apiSlice";
 import { selectCurrentUser } from "../../features/auth/authSlice";
+import SecureFigure from "./SecureFigure";
 import SimplePagination from "../ui/SimplePagination";
 import { CollectModal, AdvanceModal } from "./FeeCollection";
 
@@ -259,7 +260,9 @@ export function FeeRecordModal({ student, canSkipFinance, onClose }) {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <div className="text-[11px]" style={{ color: TEXT_MUTED }}>Outstanding</div>
-              <div className="text-[16px] font-bold" style={{ color: totals.remaining > 0 ? BRAND : "#15803D" }}>{money(totals.remaining)}</div>
+              <div className="text-[16px] font-bold" style={{ color: totals.remaining > 0 ? BRAND : "#15803D" }}>
+                <SecureFigure variant="inline" maskKey="fee_status.modal_outstanding">{money(totals.remaining)}</SecureFigure>
+              </div>
             </div>
             <button onClick={() => setAdvanceOpen(true)} className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white" style={{ background: BRAND }}>Pay months ahead</button>
             <button onClick={onClose}><X size={18} style={{ color: TEXT_MUTED }} /></button>

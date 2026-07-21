@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useGetQuery, usePostMutation, useDownloadChallanMutation } from "../../api/apiSlice";
 import SearchableSelect from "../ui/SearchableSelect";
+import SecureFigure from "./SecureFigure";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 
@@ -236,7 +237,9 @@ export default function FeeCollection() {
             </div>
             <div className="text-right">
               <div className="text-[11px]" style={{ color: TEXT_MUTED }}>Outstanding</div>
-              <div className="text-[18px] font-bold" style={{ color: totals.remaining > 0 ? BRAND : "#15803D" }}>{money(totals.remaining)}</div>
+              <div className="text-[18px] font-bold" style={{ color: totals.remaining > 0 ? BRAND : "#15803D" }}>
+                <SecureFigure variant="inline" maskKey="fee_collection.outstanding">{money(totals.remaining)}</SecureFigure>
+              </div>
             </div>
           </div>
 

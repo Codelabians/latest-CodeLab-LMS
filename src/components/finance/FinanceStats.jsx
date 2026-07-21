@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useGetQuery } from "../../api/apiSlice";
 import FinanceLedger from "./FinanceLedger";
+import SecureFigure from "./SecureFigure";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, Legend, BarChart, Bar, ComposedChart, Line,
@@ -143,10 +144,10 @@ export default function FinanceStats() {
           ) : (
             <>
               <div className="grid gap-3 mb-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card icon={TrendingDown} label={from || to ? "Spent (range)" : "Total spent"} value={fmtMoney(pnl.total_expense)} color="#C2410C" />
-                <Card icon={Wallet} label="Refunds" value={fmtMoney(pnl.total_refund)} color={BRAND} />
+                <SecureFigure variant="card" maskKey="stats.expense_total_spent"><Card icon={TrendingDown} label={from || to ? "Spent (range)" : "Total spent"} value={fmtMoney(pnl.total_expense)} color="#C2410C" /></SecureFigure>
+                <SecureFigure variant="card" maskKey="stats.expense_refunds"><Card icon={Wallet} label="Refunds" value={fmtMoney(pnl.total_refund)} color={BRAND} /></SecureFigure>
                 <Card icon={BarChart3} label="Spend categories" value={expenseByCat.length} color="#7C3AED" />
-                <Card icon={TrendingDown} label="Top category" value={expenseByCat[0]?.name || "—"} color="#1D4ED8" sub={expenseByCat[0] ? fmtMoney(expenseByCat[0].value) : null} />
+                <SecureFigure variant="card" maskKey="stats.expense_top_category"><Card icon={TrendingDown} label="Top category" value={expenseByCat[0]?.name || "—"} color="#1D4ED8" sub={expenseByCat[0] ? fmtMoney(expenseByCat[0].value) : null} /></SecureFigure>
               </div>
 
               <div className="bg-white rounded-xl p-4 mb-4" style={{ border: `1px solid ${BORDER}` }}>
@@ -236,10 +237,10 @@ export default function FinanceStats() {
       ) : tab === "overview" ? (
         <>
           <div className="grid gap-3 mb-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card icon={TrendingUp} label="Total income" value={fmtMoney(pnl.total_income)} color="#15803D" sub={pnlFetching ? "refreshing…" : null} />
-            <Card icon={TrendingDown} label="Total expense" value={fmtMoney(pnl.total_expense)} color="#C2410C" />
-            <Card icon={Wallet} label="Refunds" value={fmtMoney(pnl.total_refund)} color={BRAND} />
-            <Card icon={Coins} label="Net profit" value={fmtMoney(pnl.net_profit)} color={Number(pnl.net_profit) >= 0 ? "#15803D" : BRAND} sub={Number(pnl.net_profit) >= 0 ? "Income − Expense" : "Loss"} />
+            <SecureFigure variant="card" maskKey="stats.total_income"><Card icon={TrendingUp} label="Total income" value={fmtMoney(pnl.total_income)} color="#15803D" sub={pnlFetching ? "refreshing…" : null} /></SecureFigure>
+            <SecureFigure variant="card" maskKey="stats.total_expense"><Card icon={TrendingDown} label="Total expense" value={fmtMoney(pnl.total_expense)} color="#C2410C" /></SecureFigure>
+            <SecureFigure variant="card" maskKey="stats.total_refunds"><Card icon={Wallet} label="Refunds" value={fmtMoney(pnl.total_refund)} color={BRAND} /></SecureFigure>
+            <SecureFigure variant="card" maskKey="stats.net_profit"><Card icon={Coins} label="Net profit" value={fmtMoney(pnl.net_profit)} color={Number(pnl.net_profit) >= 0 ? "#15803D" : BRAND} sub={Number(pnl.net_profit) >= 0 ? "Income − Expense" : "Loss"} /></SecureFigure>
           </div>
 
           <div className="bg-white rounded-xl p-4 mb-4" style={{ border: `1px solid ${BORDER}` }}>
@@ -327,14 +328,14 @@ export default function FinanceStats() {
       ) : (
         <>
           <div className="grid gap-3 mb-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card icon={Wallet} label={from || to ? "Collected (range)" : "Collected (all time)"} value={fmtMoney(from || to ? d.collected : d.collected_all_time)} color="#15803D" sub={from || to ? `All-time: ${fmtMoney(d.collected_all_time)}` : null} />
-            <Card icon={AlertTriangle} label="Outstanding" value={fmtMoney(d.outstanding)} color="#C2410C" sub={`Overdue: ${fmtMoney(d.overdue)}`} />
-            <Card icon={Award} label="Certificate fees" value={fmtMoney(d.certificate_fees)} color="#1D4ED8" />
-            <Card icon={Coins} label="Referral rewards" value={fmtMoney(d.referral_rewards)} color={BRAND} />
+            <SecureFigure variant="card" maskKey="stats.collected"><Card icon={Wallet} label={from || to ? "Collected (range)" : "Collected (all time)"} value={fmtMoney(from || to ? d.collected : d.collected_all_time)} color="#15803D" sub={from || to ? `All-time: ${fmtMoney(d.collected_all_time)}` : null} /></SecureFigure>
+            <SecureFigure variant="card" maskKey="stats.outstanding"><Card icon={AlertTriangle} label="Outstanding" value={fmtMoney(d.outstanding)} color="#C2410C" sub={`Overdue: ${fmtMoney(d.overdue)}`} /></SecureFigure>
+            <SecureFigure variant="card" maskKey="stats.certificate_fees"><Card icon={Award} label="Certificate fees" value={fmtMoney(d.certificate_fees)} color="#1D4ED8" /></SecureFigure>
+            <SecureFigure variant="card" maskKey="stats.referral_rewards"><Card icon={Coins} label="Referral rewards" value={fmtMoney(d.referral_rewards)} color={BRAND} /></SecureFigure>
             <Card icon={Users} label="Enrolled students" value={counts.enrolled_students ?? 0} color="#7C3AED" />
             <Card icon={Home} label="Hostelites" value={counts.hostelites ?? 0} color="#0891B2" />
             <Card icon={Laptop} label="Laptops assigned" value={counts.laptops_assigned ?? 0} color="#B45309" />
-            <Card icon={TrendingUp} label="Billed (all time)" value={fmtMoney(d.billed_all_time)} color="#334155" />
+            <SecureFigure variant="card" maskKey="stats.billed_all_time"><Card icon={TrendingUp} label="Billed (all time)" value={fmtMoney(d.billed_all_time)} color="#334155" /></SecureFigure>
           </div>
 
           <div className="grid gap-4 mb-4 lg:grid-cols-3">

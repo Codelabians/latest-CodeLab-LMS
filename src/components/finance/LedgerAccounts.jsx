@@ -5,6 +5,7 @@ import {
   Download, FileText, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useGetQuery, usePostMutation, API_URL } from "../../api/apiSlice";
+import SecureFigure from "./SecureFigure";
 import { showToast } from "../ui/common/ShowToast";
 import SearchableSelect from "../ui/SearchableSelect";
 import { useSelector } from "react-redux";
@@ -108,7 +109,7 @@ function Section({ title, accounts, onOpen }) {
           const m = KIND_META[a.kind] || KIND_META.other;
           const pos = positionLabel(a);
           return (
-            <button key={a.account_uuid} onClick={() => onOpen(a.account_uuid)} className="text-left bg-white rounded-xl p-4 hover:shadow-sm transition" style={{ border: `1px solid ${BORDER}` }}>
+            <div key={a.account_uuid} role="button" tabIndex={0} onClick={() => onOpen(a.account_uuid)} className="text-left bg-white rounded-xl p-4 hover:shadow-sm transition cursor-pointer" style={{ border: `1px solid ${BORDER}` }}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="grid rounded-lg place-items-center" style={{ width: 30, height: 30, background: `${m.color}14`, color: m.color }}><m.icon size={15} /></span>
                 <div className="flex-1 min-w-0">
@@ -117,11 +118,15 @@ function Section({ title, accounts, onOpen }) {
                 </div>
               </div>
               {a.is_money ? (
-                <div className="text-[17px] font-bold" style={{ color: TEXT_PRIMARY }}>{money(a.current_balance)}</div>
+                <div className="text-[17px] font-bold" style={{ color: TEXT_PRIMARY }}>
+                  <SecureFigure variant="inline" maskKey={`ledger.account.${a.account_uuid}`}>{money(a.current_balance)}</SecureFigure>
+                </div>
               ) : pos ? (
-                <div className="text-[14px] font-bold" style={{ color: pos.color }}>{pos.text}</div>
+                <div className="text-[14px] font-bold" style={{ color: pos.color }}>
+                  <SecureFigure variant="inline" maskKey={`ledger.account.${a.account_uuid}`} maskText="••••••">{pos.text}</SecureFigure>
+                </div>
               ) : null}
-            </button>
+            </div>
           );
         })}
       </div>
@@ -216,7 +221,9 @@ function StatementDrawer({ uuid, onClose, onChanged }) {
             <h2 className="text-[15px] font-bold" style={{ color: TEXT_PRIMARY }}>{acct?.name || "Account"}</h2>
             {acct && (
               <div className="text-[12px]" style={{ color: TEXT_MUTED }}>
-                {acct.is_money ? `Balance ${money(acct.current_balance)}` : (positionLabel(acct)?.text || "")}
+                <SecureFigure variant="inline" maskKey="ledger.statement" maskText="••••••">
+                  {acct.is_money ? `Balance ${money(acct.current_balance)}` : (positionLabel(acct)?.text || "")}
+                </SecureFigure>
               </div>
             )}
           </div>
@@ -256,6 +263,7 @@ function StatementDrawer({ uuid, onClose, onChanged }) {
         {isLoading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin" style={{ color: BRAND }} /></div>
         ) : (
+          <SecureFigure variant="card" maskKey="ledger.statement">
           <table className="w-full text-[12px]">
             <thead>
               <tr style={{ background: SURFACE, color: TEXT_SECONDARY }}>
@@ -297,6 +305,7 @@ function StatementDrawer({ uuid, onClose, onChanged }) {
               ))}
             </tbody>
           </table>
+          </SecureFigure>
         )}
 
         {!isLoading && lastPage > 1 && (

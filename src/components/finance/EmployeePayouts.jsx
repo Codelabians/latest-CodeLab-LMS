@@ -3,6 +3,7 @@ import {
   Fuel, Wallet, Users, ArrowLeft, Loader2, CalendarClock, ListChecks,
 } from "lucide-react";
 import { useGetQuery } from "../../api/apiSlice";
+import SecureFigure from "./SecureFigure";
 
 /* ---- tokens (match Finance Stats) ---- */
 const BRAND = "#C90606";
@@ -56,8 +57,8 @@ function PersonDetail({ person, from, to, onBack }) {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-            <Kpi icon={Wallet} label="Total paid out" value={money(d.total)} color={TEXT_PRIMARY} />
-            <Kpi icon={Fuel} label="Fuel total" value={money(d.fuel_total)} color={ORANGE} tint="#FFF7ED" />
+            <SecureFigure variant="card" maskKey="payouts.person_total"><Kpi icon={Wallet} label="Total paid out" value={money(d.total)} color={TEXT_PRIMARY} /></SecureFigure>
+            <SecureFigure variant="card" maskKey="payouts.person_fuel_total"><Kpi icon={Fuel} label="Fuel total" value={money(d.fuel_total)} color={ORANGE} tint="#FFF7ED" /></SecureFigure>
             <Kpi icon={ListChecks} label="Categories" value={byCat.length} color={BLUE} tint="#EFF6FF" />
           </div>
 
@@ -152,7 +153,7 @@ export default function EmployeePayouts() {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-            <Kpi icon={Wallet} label={`Total ${catLabel}`} value={money(d.total)} color={ORANGE} tint="#FFF7ED" />
+            <SecureFigure variant="card" maskKey="payouts.category_total"><Kpi icon={Wallet} label={`Total ${catLabel}`} value={money(d.total)} color={ORANGE} tint="#FFF7ED" /></SecureFigure>
             <Kpi icon={Users} label="People paid" value={rows.length} color={BLUE} tint="#EFF6FF" />
           </div>
 
