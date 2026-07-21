@@ -190,6 +190,7 @@ const VisitorsComponent = () => {
   const [fromDate, setFromDate] = useState(remembered.fromDate ?? "");
   const [toDate, setToDate] = useState(remembered.toDate ?? "");
   const [followUpRequired, setFollowUpRequired] = useState(remembered.followUpRequired ?? "");
+  const [unattended, setUnattended] = useState(remembered.unattended ?? ""); // "" | "true" — no note AND no reminder
   const [reminderOn, setReminderOn] = useState(remembered.reminderOn ?? ""); // YYYY-MM-DD
 
   // modals / dialogs
@@ -247,22 +248,23 @@ const VisitorsComponent = () => {
     // follow-up" = no reminder. Uses the repo's has_reminder filter so it
     // matches the bell/reminder system rather than the legacy boolean.
     if (followUpRequired !== "") p["filters[has_reminder]"] = followUpRequired;
+    if (unattended !== "") p["filters[unattended]"] = unattended; // nobody engaged yet
     if (reminderOn) p["filters[reminder_on]"] = reminderOn;
     // F4b universal filters
     if (section)  p["filters[section]"] = section;
     if (status)   p["filters[status]"]  = status;
     if (sourceFilter) p["filters[referral_source]"] = sourceFilter;
     return p;
-  }, [page, perPage, debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn]);
+  }, [page, perPage, debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired, unattended, reminderOn]);
 
   // reset to page 1 when filters/search change
-  useEffect(() => { setPage(1); }, [debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, section, status, sourceFilter, fromDate, toDate, followUpRequired, unattended, reminderOn]);
 
   useEffect(() => {
     saveRememberedFilters("visitors", rememberFilters, {
-      search, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn, sort, perPage,
+      search, section, status, sourceFilter, fromDate, toDate, followUpRequired, unattended, reminderOn, sort, perPage,
     });
-  }, [rememberFilters, search, section, status, sourceFilter, fromDate, toDate, followUpRequired, reminderOn, sort, perPage]);
+  }, [rememberFilters, search, section, status, sourceFilter, fromDate, toDate, followUpRequired, unattended, reminderOn, sort, perPage]);
 
   const { data, error, isLoading, isFetching, refetch } = useGetQuery(
     { path: "/student/visitors", params: queryParams },
@@ -441,10 +443,10 @@ const VisitorsComponent = () => {
 
 
   const [reportOpen, setReportOpen] = useState(false);
-  const hasActiveFilters = !!(section || status || fromDate || toDate || followUpRequired !== "" || reminderOn || debouncedSearch);
+  const hasActiveFilters = !!(section || status || fromDate || toDate || followUpRequired !== "" || unattended || reminderOn || debouncedSearch);
   const clearFilters = () => {
     setSection(""); setStatus(""); setSourceFilter(""); setFromDate(""); setToDate("");
-    setFollowUpRequired(""); setReminderOn(""); setSearch("");
+    setFollowUpRequired(""); setUnattended(""); setReminderOn(""); setSearch("");
   };
 
   const isEmpty = !isLoading && !error && rows.length === 0;
@@ -583,6 +585,15 @@ const VisitorsComponent = () => {
             >{o.l}</button>
           ))}
         </div>
+
+        {/* Unattended — nobody added a note or set a reminder yet */}
+        <button type="button" onClick={() => setUnattended(unattended === "true" ? "" : "true")}
+          title="Visitors nobody has engaged yet — no note added and no reminder set"
+          className="px-3 py-1.5 text-xs font-semibold transition rounded-lg"
+          style={unattended === "true"
+            ? { color: "#fff", background: "#B45309", border: "1px solid #B45309" }
+            : { color: TEXT_SECONDARY, background: "transparent", border: `1px solid ${BORDER}` }}
+        >⚠ Unattended</button>
 
         {/* Reminder set for a specific date (e.g. today) */}
         <div className="inline-flex items-center gap-1.5">

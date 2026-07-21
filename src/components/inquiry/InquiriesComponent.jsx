@@ -171,6 +171,7 @@ const InquiriesComponent = () => {
   const [fromDate, setFromDate] = useState(remembered.fromDate ?? "");
   const [toDate, setToDate] = useState(remembered.toDate ?? "");
   const [followUp, setFollowUp] = useState(remembered.followUp ?? ""); // "" | "true" | "false" → has_reminder
+  const [unattended, setUnattended] = useState(remembered.unattended ?? ""); // "" | "true" — no note AND no reminder
   const [reminderOn, setReminderOn] = useState(remembered.reminderOn ?? ""); // YYYY-MM-DD
 
   // dialogs (modal-based) — add/edit moved to a dedicated /create + /:id/edit page.
@@ -212,20 +213,21 @@ const InquiriesComponent = () => {
     if (shift)           p["filters[shift]"] = shift;
     if (source)          p["filters[source]"] = source;
     if (followUp !== "") p["filters[has_reminder]"] = followUp; // needs / no follow-up
+    if (unattended !== "") p["filters[unattended]"] = unattended; // nobody engaged yet
     if (reminderOn) p["filters[reminder_on]"] = reminderOn;
     if (fromDate)        p["filters[created_from]"] = fromDate;
     if (toDate)          p["filters[created_to]"] = toDate;
     return p;
-  }, [page, perPage, debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
+  }, [page, perPage, debouncedSearch, courseId, status, shift, source, followUp, unattended, fromDate, toDate, reminderOn]);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, courseId, status, shift, source, followUp, fromDate, toDate, reminderOn]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, courseId, status, shift, source, followUp, unattended, fromDate, toDate, reminderOn]);
 
   // Persist filters when "Remember filters" is on (cleared when turned off).
   useEffect(() => {
     saveRememberedFilters("inquiries", rememberFilters, {
-      search, courseId, status, shift, source, fromDate, toDate, followUp, reminderOn, sort, perPage,
+      search, courseId, status, shift, source, fromDate, toDate, followUp, unattended, reminderOn, sort, perPage,
     });
-  }, [rememberFilters, search, courseId, status, shift, source, fromDate, toDate, followUp, reminderOn, sort, perPage]);
+  }, [rememberFilters, search, courseId, status, shift, source, fromDate, toDate, followUp, unattended, reminderOn, sort, perPage]);
 
   const { data, error, isLoading, isFetching, refetch } = useGetQuery(
     { path: "/student/inquiry", params: queryParams },
@@ -402,9 +404,9 @@ const InquiriesComponent = () => {
   );
 
   const [reportOpen, setReportOpen] = useState(false);
-  const hasActiveFilters = !!(courseId || status || shift || source || followUp || fromDate || toDate || reminderOn || debouncedSearch);
+  const hasActiveFilters = !!(courseId || status || shift || source || followUp || unattended || fromDate || toDate || reminderOn || debouncedSearch);
   const clearFilters = () => {
-    setCourseId(""); setStatus(""); setShift(""); setSource(""); setFollowUp(""); setFromDate(""); setToDate(""); setReminderOn(""); setSearch("");
+    setCourseId(""); setStatus(""); setShift(""); setSource(""); setFollowUp(""); setUnattended(""); setFromDate(""); setToDate(""); setReminderOn(""); setSearch("");
   };
 
   const isEmpty = !isLoading && !error && rows.length === 0;
@@ -550,6 +552,15 @@ const InquiriesComponent = () => {
             >{o.l}</button>
           ))}
         </div>
+
+        {/* Unattended — nobody added a note or set a reminder yet */}
+        <button type="button" onClick={() => setUnattended(unattended === "true" ? "" : "true")}
+          title="Leads nobody has engaged yet — no note added and no reminder set"
+          className="px-3 py-1.5 text-xs font-semibold transition rounded-lg"
+          style={unattended === "true"
+            ? { color: "#fff", background: "#B45309", border: "1px solid #B45309" }
+            : { color: TEXT_SECONDARY, background: "transparent", border: `1px solid ${BORDER}` }}
+        >⚠ Unattended</button>
 
         {/* Reminder set for a specific date (e.g. today) */}
         <div className="inline-flex items-center gap-1.5">
