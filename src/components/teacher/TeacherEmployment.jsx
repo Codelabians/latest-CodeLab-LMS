@@ -788,8 +788,13 @@ function StpTab() {
   const offices = d.offices || [];
   const recent = d.recent || [];
   const today = new Date().toISOString().slice(0, 10);
-  const [form, setForm] = useState({ attendance_date: today, in_time: "", out_time: "", office_id: "", note: "" });
+  const [form, setForm] = useState({ attendance_date: today, office_id: "", note: "" });
+  // Multiple visits in one day (e.g. 9–12 at the STP, back again 15–18).
+  const [sessions, setSessions] = useState([{ in: "", out: "" }]);
   const upd = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const updSession = (i, k) => (e) => setSessions((list) => list.map((s, j) => (j === i ? { ...s, [k]: e.target.value } : s)));
+  const addSession = () => setSessions((list) => (list.length >= 4 ? list : [...list, { in: "", out: "" }]));
+  const removeSession = (i) => setSessions((list) => list.filter((_, j) => j !== i));
 
   if (isLoading) return <Spinner />;
   if (!d.has_stp_office) {
@@ -801,9 +806,20 @@ function StpTab() {
 
   const submit = async () => {
     if (!form.attendance_date) { showToast("Pick a date.", "error"); return; }
+    const filled = sessions.filter((s) => s.in && s.out);
+    const partial = sessions.some((s) => (s.in && !s.out) || (!s.in && s.out));
+    if (partial) { showToast("Each session needs both an in and an out time.", "error"); return; }
     const body = { attendance_date: form.attendance_date };
-    if (form.in_time) body.in_time = `${form.attendance_date} ${form.in_time}`;
-    if (form.out_time) body.out_time = `${form.attendance_date} ${form.out_time}`;
+    if (filled.length === 1) {
+      // Single visit — same payload as before.
+      body.in_time = `${form.attendance_date} ${filled[0].in}`;
+      body.out_time = `${form.attendance_date} ${filled[0].out}`;
+    } else if (filled.length > 1) {
+      body.sessions = filled.map((s) => ({
+        in: `${form.attendance_date} ${s.in}`,
+        out: `${form.attendance_date} ${s.out}`,
+      }));
+    }
     if (form.office_id) body.office_id = Number(form.office_id);
     if (form.note) body.note = form.note;
     try {
@@ -837,13 +853,28 @@ function StpTab() {
               {offices.map((o) => <option key={o.id} value={o.id}>{o.name}{o.city ? ` · ${o.city}` : ""}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>In time</label>
-            <input type="time" value={form.in_time} onChange={upd("in_time")} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Out time</label>
-            <input type="time" value={form.out_time} onChange={upd("out_time")} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
+          <div className="md:col-span-2 space-y-2">
+            <label className="block text-[11px] font-semibold" style={{ color: "#475569" }}>
+              Sessions (add one per visit — e.g. 9–12 then 15–18)
+            </label>
+            {sessions.map((s, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold w-16 flex-shrink-0" style={{ color: "#94A3B8" }}>Visit {i + 1}</span>
+                <input type="time" value={s.in} onChange={updSession(i, "in")} className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
+                <span className="text-[11px]" style={{ color: "#94A3B8" }}>to</span>
+                <input type="time" value={s.out} onChange={updSession(i, "out")} className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
+                {sessions.length > 1 && (
+                  <button type="button" onClick={() => removeSession(i)} title="Remove this session" className="p-1.5 rounded-lg" style={{ border: `1px solid ${BORDER}`, color: BRAND }}>
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {sessions.length < 4 && (
+              <button type="button" onClick={addSession} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: "#1D4ED8" }}>
+                <Plus size={12} /> Add another session
+              </button>
+            )}
           </div>
           <div className="md:col-span-2">
             <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Note (optional)</label>
@@ -864,16 +895,21 @@ function StpTab() {
         ) : (
           <div className="bg-white rounded-xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
             <table className="w-full text-[12px]">
-              <thead><tr style={{ background: "#F8FAFC", color: "#475569" }}>{["Date", "In", "Out", "Status"].map((h, i) => <th key={i} className="px-3 py-2 text-left font-semibold text-[11px]">{h}</th>)}</tr></thead>
+              <thead><tr style={{ background: "#F8FAFC", color: "#475569" }}>{["Date", "Sessions (in – out)", "Status"].map((h, i) => <th key={i} className="px-3 py-2 text-left font-semibold text-[11px]">{h}</th>)}</tr></thead>
               <tbody>
-                {recent.map((r, i) => (
-                  <tr key={i} style={{ borderTop: `1px solid ${BORDER}` }}>
-                    <td className="px-3 py-2 font-semibold" style={{ color: "#0F172A" }}>{String(r.date).slice(0, 10)}</td>
-                    <td className="px-3 py-2" style={{ color: "#475569" }}>{r.in ? String(r.in).slice(11, 16) : "—"}</td>
-                    <td className="px-3 py-2" style={{ color: "#475569" }}>{r.out ? String(r.out).slice(11, 16) : "—"}</td>
-                    <td className="px-3 py-2 capitalize" style={{ color: r.status === "at_stp" ? "#1D4ED8" : "#475569" }}>{String(r.status || "").replace(/_/g, " ")}</td>
-                  </tr>
-                ))}
+                {recent.map((r, i) => {
+                  const t = (v) => (v ? String(v).slice(11, 16) : "—");
+                  const sess = (r.sessions || []).length
+                    ? r.sessions.map((s) => `${t(s.in)} – ${t(s.out)}`).join(" · ")
+                    : `${t(r.in)} – ${t(r.out)}`;
+                  return (
+                    <tr key={i} style={{ borderTop: `1px solid ${BORDER}` }}>
+                      <td className="px-3 py-2 font-semibold" style={{ color: "#0F172A" }}>{String(r.date).slice(0, 10)}</td>
+                      <td className="px-3 py-2" style={{ color: "#475569" }}>{sess}</td>
+                      <td className="px-3 py-2 capitalize" style={{ color: r.status === "at_stp" ? "#1D4ED8" : "#475569" }}>{String(r.status || "").replace(/_/g, " ")}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

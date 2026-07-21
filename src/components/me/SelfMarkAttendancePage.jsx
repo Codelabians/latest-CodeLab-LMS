@@ -60,12 +60,15 @@ export default function SelfMarkAttendancePage() {
   const { data: officesResp } = useGetQuery({ path: "employee/offices" });
   const offices = officesResp?.data || [];
 
-  // Self-mark form state.
+  // Self-mark form state. Sessions = one row per visit (e.g. 9–12 then
+  // 15–18 for people who go to the STP twice in a day).
   const [date, setDate]     = useState(today);
-  const [inTime, setInTime] = useState(`${today}T09:00`);
-  const [outTime, setOutTime] = useState(`${today}T18:00`);
+  const [sessions, setSessions] = useState([{ in: "09:00", out: "18:00" }]);
   const [officeId, setOfficeId] = useState("");
   const [note, setNote] = useState("");
+  const updSession = (i, k) => (e) => setSessions((l) => l.map((s, j) => (j === i ? { ...s, [k]: e.target.value } : s)));
+  const addSession = () => setSessions((l) => (l.length >= 4 ? l : [...l, { in: "", out: "" }]));
+  const removeSession = (i) => setSessions((l) => l.filter((_, j) => j !== i));
 
   // Recent self-marks — read the monthly attendance for the employee's profile.
   // my-summary doesn't include profile_uuid, so look it up by email.
@@ -87,17 +90,24 @@ export default function SelfMarkAttendancePage() {
   const [postMut, postState] = usePostMutation();
 
   const submit = async () => {
+    const filled = sessions.filter((s) => s.in && s.out);
+    if (sessions.some((s) => (s.in && !s.out) || (!s.in && s.out))) {
+      showToast("Each session needs both an in and an out time.", "error");
+      return;
+    }
+    const body = {
+      attendance_date: date,
+      office_id: officeId ? Number(officeId) : null,
+      note: note || null,
+    };
+    if (filled.length === 1) {
+      body.in_time  = `${date} ${filled[0].in}:00`;
+      body.out_time = `${date} ${filled[0].out}:00`;
+    } else if (filled.length > 1) {
+      body.sessions = filled.map((s) => ({ in: `${date} ${s.in}:00`, out: `${date} ${s.out}:00` }));
+    }
     try {
-      await postMut({
-        path: "employee/me/attendance/at-stp",
-        body: {
-          attendance_date: date,
-          in_time:  inTime  ? inTime.replace("T", " ") + ":00"  : null,
-          out_time: outTime ? outTime.replace("T", " ") + ":00" : null,
-          office_id: officeId ? Number(officeId) : null,
-          note: note || null,
-        },
-      }).unwrap();
+      await postMut({ path: "employee/me/attendance/at-stp", body }).unwrap();
       showToast("Marked at STP successfully.", "success");
       setNote("");
       refetchAtt();
@@ -159,14 +169,32 @@ export default function SelfMarkAttendancePage() {
                   ))}
                 </select>
               </Field>
-              <Field label="In time">
-                <input type="datetime-local" className="px-2 py-1 text-xs border rounded-md w-full" style={{ borderColor: BORDER }}
-                  value={inTime} onChange={(e) => setInTime(e.target.value)} />
-              </Field>
-              <Field label="Out time">
-                <input type="datetime-local" className="px-2 py-1 text-xs border rounded-md w-full" style={{ borderColor: BORDER }}
-                  value={outTime} onChange={(e) => setOutTime(e.target.value)} />
-              </Field>
+              <div className="md:col-span-2 flex flex-col gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: TEXT_MUTED }}>
+                  Sessions — one per visit (e.g. 9–12 then 15–18)
+                </span>
+                {sessions.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold w-12 flex-shrink-0" style={{ color: TEXT_MUTED }}>Visit {i + 1}</span>
+                    <input type="time" className="px-2 py-1 text-xs border rounded-md flex-1" style={{ borderColor: BORDER }}
+                      value={s.in} onChange={updSession(i, "in")} />
+                    <span className="text-[11px]" style={{ color: TEXT_MUTED }}>to</span>
+                    <input type="time" className="px-2 py-1 text-xs border rounded-md flex-1" style={{ borderColor: BORDER }}
+                      value={s.out} onChange={updSession(i, "out")} />
+                    {sessions.length > 1 && (
+                      <button type="button" onClick={() => removeSession(i)} title="Remove"
+                        className="px-2 py-1 text-xs rounded-md" style={{ border: `1px solid ${BORDER}`, color: BRAND_RED }}>✕</button>
+                    )}
+                  </div>
+                ))}
+                {sessions.length < 4 && (
+                  <button type="button" onClick={addSession}
+                    className="self-start px-2.5 py-1 text-[11px] font-semibold rounded-md"
+                    style={{ border: `1px solid ${BORDER}`, color: "#1D4ED8" }}>
+                    + Add another session
+                  </button>
+                )}
+              </div>
               <Field label="Note (optional)">
                 <input type="text" className="px-2 py-1 text-xs border rounded-md w-full" style={{ borderColor: BORDER }}
                   value={note} onChange={(e) => setNote(e.target.value)}
