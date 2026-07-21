@@ -111,6 +111,15 @@ export default function StudentDetailPage() {
     } catch (e) { notify(e?.data?.message || "Could not download the combined challan (the student may have no pending dues).", false); }
     finally { setChallanBusy(null); }
   };
+  // …and send that same combined challan straight to the student's WhatsApp.
+  const whatsappPendingChallan = async () => {
+    setChallanBusy("wa-pending");
+    try {
+      const res = await post({ path: `finance/students/${id}/pending-challan/whatsapp`, body: {} }).unwrap();
+      notify(res?.message || "Combined pending challan sent on WhatsApp.");
+    } catch (e) { notify(e?.data?.message || "Could not send on WhatsApp.", false); }
+    finally { setChallanBusy(null); }
+  };
   const sendChallanFor = async (uuid, channel) => {
     setChallanBusy(`${channel}-${uuid}`);
     try {
@@ -584,6 +593,15 @@ export default function StudentDetailPage() {
                       title="Download ONE challan covering every pending installment of this student"
                     >
                       {challanBusy === "dl-pending" ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} All pending (1 challan)
+                    </button>
+                    <button
+                      onClick={whatsappPendingChallan}
+                      disabled={challanBusy === "wa-pending"}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold"
+                      style={{ border: `1px solid ${BORDER}`, color: "#059669" }}
+                      title="Send the combined all-pending challan to the student's WhatsApp"
+                    >
+                      {challanBusy === "wa-pending" ? <Loader2 size={12} className="animate-spin" /> : <MessageCircle size={12} />} WhatsApp all pending
                     </button>
                     {e.student_batch_uuid && (
                       <button

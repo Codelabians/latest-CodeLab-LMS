@@ -1,10 +1,12 @@
 // Navbar.js
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Bell, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProfileDetailsDropdown from "./ProfileDetailsDropdown";
 import { useGetQuery } from "../../api/apiSlice"; // Import your RTK Query hook
 import RefreshButton from "../common/RefreshButton";
+import { armNotifySounds, playNotificationSound, playWhatsAppSound } from "../../utils/notifySounds";
+import { showToast } from "../ui/common/ShowToast";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -12,10 +14,31 @@ const Navbar = () => {
   // Poll the lightweight unread-count endpoint for the bell badge.
   const { data: unreadResponse, isLoading } = useGetQuery(
     { path: "communication/notifications/unread-count" },
-    { pollingInterval: 30000, refetchOnMountOrArgChange: true },
+    { pollingInterval: 15000, refetchOnMountOrArgChange: true },
   );
 
   const unreadCount = unreadResponse?.data?.unread || 0;
+  const waUnreadCount = unreadResponse?.data?.whatsapp_unread || 0;
+
+  // Audible alerts while the portal is open: general notifications get one
+  // chime, WhatsApp messages a distinct one. Sounds unlock on first click.
+  useEffect(() => { armNotifySounds(); }, []);
+  const prevCounts = useRef(null);
+  useEffect(() => {
+    if (!unreadResponse) return;
+    const prev = prevCounts.current;
+    if (prev) {
+      if (waUnreadCount > prev.wa) {
+        playWhatsAppSound();
+        showToast("New WhatsApp message received.", "info");
+      }
+      if (unreadCount > prev.unread) {
+        playNotificationSound();
+        showToast("You have a new notification.", "info");
+      }
+    }
+    prevCounts.current = { unread: unreadCount, wa: waUnreadCount };
+  }, [unreadResponse, unreadCount, waUnreadCount]);
 
   const toggleNotification = () => {
     navigate("/dashboard/notifications");
