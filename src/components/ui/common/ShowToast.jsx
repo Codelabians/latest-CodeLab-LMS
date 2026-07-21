@@ -24,6 +24,11 @@ export const showToast = (a, b) => {
 
   if (status === "success") {
     toast.success(message, options);
+  } else if (status === "info") {
+    // Informational (e.g. "new notification" alert) — blue, not error-red.
+    toast.info(message, options);
+  } else if (status === "warning" || status === "warn") {
+    toast.warn(message, options);
   } else {
     toast.error(message, options);
   }
