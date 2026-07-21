@@ -17,6 +17,7 @@ import SearchableSelect from "../ui/SearchableSelect";
 import PhoneActions from "../ui/PhoneActions";
 import RecordPaymentModal from "./studentDetailsPages/RecordPaymentModal";
 import StudentLaptopCard from "./StudentLaptopCard";
+import SendMessageModal from "./SendMessageModal";
 
 const BRAND_RED = "#C90606";
 const BRAND_RED_TINT = "#FEF2F2";
@@ -55,6 +56,7 @@ export default function StudentDetailPage() {
   const [showAssign, setShowAssign] = useState(false);
   const [recordTarget, setRecordTarget] = useState(null);
   const [showMakeBA, setShowMakeBA] = useState(false);
+  const [showSendMessage, setShowSendMessage] = useState(false);
   const [dueDateTarget, setDueDateTarget] = useState(null);
   const [shiftTarget, setShiftTarget] = useState(null);
   const [openRows, setOpenRows] = useState({});
@@ -65,6 +67,7 @@ export default function StudentDetailPage() {
   const notify = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 2800); };
   const currentUser = useSelector(selectCurrentUser);
   const canManageRecords = currentUser?.role === "admin" || (currentUser?.permissions || []).includes("record historical-payment");
+  const canSendMessage = currentUser?.role === "admin" || (currentUser?.permissions || []).includes("send whatsapp-reply");
 
   const resetInstallment = async (uuid) => {
     if (!window.confirm("Undo all payments on this installment and set it back to pending? Any finance income/ledger for it is reversed.")) return;
@@ -305,6 +308,9 @@ export default function StudentDetailPage() {
               profileUrl: s.uuid ? `${window.location.origin}/u/${s.uuid}` : (s.registration_no || s.name),
             }}
           />
+          {canSendMessage && (
+            <button onClick={() => setShowSendMessage(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#15803D" }} title="Send a WhatsApp message to the student or their guardian"><MessageCircle size={14} /> Send Message</button>
+          )}
           <button onClick={() => setShowSwitch(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }}><ArrowRightLeft size={14} /> Switch / Add batch</button>
           <button onClick={() => setShowAssign(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }} title="Set who referred this student"><UserPlus size={14} /> Set referrer</button>
           <button disabled={posting} onClick={resendLogin} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#1D4ED8" }} title="Reset password and email login details to the student"><Send size={14} /> Send login details</button>
@@ -894,6 +900,7 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
+      {showSendMessage && <SendMessageModal student={s} onClose={() => setShowSendMessage(false)} />}
       {showSwitch && <SwitchBatchModal studentUuid={id} onClose={() => setShowSwitch(false)} onDone={(m) => { notify(m); setShowSwitch(false); refetch(); }} onError={(m) => notify(m, false)} />}
       {showAssign && <AssignAmbassadorModal studentUuid={id} onClose={() => setShowAssign(false)} onDone={(m) => { notify(m); setShowAssign(false); refetch(); }} onError={(m) => notify(m, false)} />}
       {showMakeBA && <MakeAmbassadorModal studentUuid={id} onClose={() => setShowMakeBA(false)} onDone={(m) => { notify(m); setShowMakeBA(false); refetch(); }} onError={(m) => notify(m, false)} />}

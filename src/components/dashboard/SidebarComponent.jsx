@@ -50,6 +50,7 @@ import {
   UserCheck,
   FileText,
   Bell,
+  AlarmClock,
   Activity,
   Landmark,
   HeartHandshake,
@@ -126,6 +127,7 @@ import {
   APPLICANTS,
   NOTIFICATIONS_LOG,
   NOTIFICATION_SETTINGS,
+  REMINDERS,
   RECEPTION_DASHBOARD,
   STUDENT_JOURNEY,
   CERTIFICATE_APPLICATIONS,
@@ -218,6 +220,13 @@ const NAV_SECTIONS = [
         label: "Notifications Log",
         icon: Activity,
         gate: ["get notification"],
+      },
+      {
+        // Personal reminders — every role with dashboard access can use
+        // them, so no gate.
+        route: REMINDERS,
+        label: "Reminders",
+        icon: AlarmClock,
       },
       {
         route: NOTIFICATION_SETTINGS,

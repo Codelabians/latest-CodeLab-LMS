@@ -215,6 +215,9 @@ import {
   MEMBERS,
   NEWPASSWORD,
   NOTIFICATIONS,
+  REMINDERS,
+  PORTAL_REMINDERS,
+  STAFF_REMINDERS,
   NOTIFICATIONS_LOG,
   NOTIFICATION_SETTINGS,
   RULES_REGULATIONS,
@@ -425,6 +428,8 @@ const DesignationFormPage = lazy(() => import("../hr/designations/DesignationFor
 const InstitutesListPage = lazy(() => import("../hr/institutes/InstitutesListPage"));
 const InstituteFormPage = lazy(() => import("../hr/institutes/InstituteFormPage"));
 const BatchesComponent = lazy(() => import("../batches/BatchesComonent"));
+const RemindersPage = lazy(() => import("../reminders/RemindersPage"));
+import FinanceGate from "../finance/FinanceGate";
 
 export default function Router() {
   const routes = useRoutes([
@@ -1369,7 +1374,7 @@ export default function Router() {
           path: EXPENSES,
           element: (
             <PrivateRoute
-              element={<WsExpenses />}
+              element={<FinanceGate><WsExpenses /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1378,7 +1383,7 @@ export default function Router() {
           path: INCOME,
           element: (
             <PrivateRoute
-              element={<CoursesExpenses />}
+              element={<FinanceGate><CoursesExpenses /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1387,7 +1392,7 @@ export default function Router() {
           path: REFUND,
           element: (
             <PrivateRoute
-              element={<Refund />}
+              element={<FinanceGate><Refund /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1396,7 +1401,7 @@ export default function Router() {
           path: WS_EXPENSE_DETAILS,
           element: (
             <PrivateRoute
-              element={<ExpenseDetails type="workspace" />}
+              element={<FinanceGate><ExpenseDetails type="workspace" /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1405,7 +1410,7 @@ export default function Router() {
           path: Course_EXPENSE_DETAILS,
           element: (
             <PrivateRoute
-              element={<ExpenseDetails type="course" />}
+              element={<FinanceGate><ExpenseDetails type="course" /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1591,7 +1596,7 @@ export default function Router() {
           path: FINANCE_STATS,
           element: (
             <PrivateRoute
-              element={<FinanceStats />}
+              element={<FinanceGate><FinanceStats /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1600,7 +1605,7 @@ export default function Router() {
           path: EMPLOYEE_PAYOUTS,
           element: (
             <PrivateRoute
-              element={<EmployeePayouts />}
+              element={<FinanceGate><EmployeePayouts /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1609,7 +1614,7 @@ export default function Router() {
           path: PAYMENT_ACCOUNTS,
           element: (
             <PrivateRoute
-              element={<PaymentAccounts />}
+              element={<FinanceGate><PaymentAccounts /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1618,7 +1623,7 @@ export default function Router() {
           path: SCHOLARSHIP_PROGRAMS,
           element: (
             <PrivateRoute
-              element={<ScholarshipPrograms />}
+              element={<FinanceGate><ScholarshipPrograms /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1627,7 +1632,7 @@ export default function Router() {
           path: FEE_STATUS,
           element: (
             <PrivateRoute
-              element={<FeeStatusList />}
+              element={<FinanceGate><FeeStatusList /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1645,7 +1650,7 @@ export default function Router() {
           path: STUDENT_LOANS,
           element: (
             <PrivateRoute
-              element={<StudentLoans />}
+              element={<FinanceGate><StudentLoans /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1654,7 +1659,7 @@ export default function Router() {
           path: LEDGER_ACCOUNTS,
           element: (
             <PrivateRoute
-              element={<LedgerAccounts />}
+              element={<FinanceGate><LedgerAccounts /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1663,7 +1668,7 @@ export default function Router() {
           path: COMMISSIONS,
           element: (
             <PrivateRoute
-              element={<Commissions />}
+              element={<FinanceGate><Commissions /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1672,7 +1677,7 @@ export default function Router() {
           path: ALL_EXPENSES,
           element: (
             <PrivateRoute
-              element={<AllExpenses />}
+              element={<FinanceGate><AllExpenses /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1681,7 +1686,7 @@ export default function Router() {
           path: ALL_INCOME,
           element: (
             <PrivateRoute
-              element={<AllIncome />}
+              element={<FinanceGate><AllIncome /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1690,7 +1695,7 @@ export default function Router() {
           path: DELETED_EXPENSES,
           element: (
             <PrivateRoute
-              element={<DeletedExpenses />}
+              element={<FinanceGate><DeletedExpenses /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1717,7 +1722,7 @@ export default function Router() {
           path: FEE_COLLECTION,
           element: (
             <PrivateRoute
-              element={<FeeCollection />}
+              element={<FinanceGate><FeeCollection /></FinanceGate>}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -1780,6 +1785,17 @@ export default function Router() {
           element: (
             <PrivateRoute
               element={<NotificationPage />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          // Personal reminders — same page is mounted on the student and
+          // staff portals too.
+          path: REMINDERS,
+          element: (
+            <PrivateRoute
+              element={<RemindersPage />}
               isAuthenticated={useCheckAuthToken}
             />
           ),
@@ -2060,6 +2076,7 @@ export default function Router() {
         { path: PORTAL_RULES, element: <RulesView endpoint="/core/policies/for-students" /> },
         { path: PORTAL_CAREER, element: <PortalCareerPath /> },
         { path: PORTAL_QUIZ, element: <PortalQuiz /> },
+        { path: PORTAL_REMINDERS, element: <RemindersPage /> },
       ],
     },
 
@@ -2085,6 +2102,7 @@ export default function Router() {
         { path: TEACHER_COMPLAINTS, element: <TeacherComplaints /> },
         { path: TEACHER_RULES, element: <RulesView endpoint="/core/policies/for-employees" /> },
         { path: TEACHER_ASSESSMENT, element: <TeacherAssessment /> },
+        { path: STAFF_REMINDERS, element: <RemindersPage /> },
       ],
     },
 

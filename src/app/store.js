@@ -12,6 +12,7 @@ import adminProfileReducer from "../features/adminProfile/adminProfileSlice";
 import { persistReducer, persistStore } from "redux-persist";
 import { thunk } from "redux-thunk";
 import globalReducer from "../features/global/globalSlice";
+import financeGateReducer from "../features/financeGate/financeGateSlice";
 // Define persist configurations for each slice
 const authPersistConfig = {
   key: "auth",
@@ -31,13 +32,16 @@ const rootReducer = combineReducers({
   students: studentsReducer,
   adminProfile: adminProfileReducer,
   global: globalReducer,
+  financeGate: financeGateReducer,
   [apiSlice.reducerPath]: apiSlice.reducer,
 });
 
 const persistConfig = {
   key: "root",
   storage,
-  blacklist: [apiSlice.reducerPath], // do not persist API slice
+  // Do not persist the API slice, and keep the finance unlock in-memory
+  // only — a full page refresh must re-lock the finance area.
+  blacklist: [apiSlice.reducerPath, "financeGate"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

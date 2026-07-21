@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
-  Users, Search, Loader2, Plus, Home, Laptop, Eye, ChevronDown, Download, UserX, X, Trash2, AlertTriangle, StickyNote,
+  Users, Search, Loader2, Plus, Home, Laptop, Eye, ChevronDown, Download, UserX, X, Trash2, AlertTriangle, StickyNote, MessageCircle,
 } from "lucide-react";
 import { useGetQuery, useLazyGetQuery, usePostMutation, useDeleteMutation } from "../../api/apiSlice";
 import { selectCurrentUser } from "../../features/auth/authSlice";
@@ -11,6 +11,7 @@ import SimplePagination from "../ui/SimplePagination";
 import PhoneActions from "../ui/PhoneActions";
 import SearchableSelect from "../ui/SearchableSelect";
 import LeadNotesModal from "../ui/LeadNotesModal";
+import SendMessageModal from "./SendMessageModal";
 import { loadRememberedFilters, loadRememberFlag, saveRememberedFilters } from "../../hooks/useRememberFilters";
 import { STUDENT_ADD, STUDENT } from "../routes/RouteConstants";
 
@@ -54,6 +55,8 @@ export default function StudentsList() {
   const navigate = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
   const canPurge = hasPermission(currentUser, "purge student");
+  const canSendMessage = hasPermission(currentUser, "send whatsapp-reply");
+  const [msgTarget, setMsgTarget] = useState(null); // student row for SendMessageModal
   const remembered = loadRememberedFilters("students") || {};
   const [rememberFilters, setRememberFilters] = useState(() => loadRememberFlag("students"));
   const [search, setSearch] = useState(remembered.search ?? "");
@@ -347,6 +350,10 @@ export default function StudentsList() {
                   <td className="px-4 py-3 text-[12px] capitalize" style={{ color: TEXT_SECONDARY }}>{(r.status || "").replace(/_/g, " ")}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-1.5">
+                      {canSendMessage && (
+                        <button onClick={() => setMsgTarget(r)} title="Message student or guardian"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#15803D" }}><MessageCircle size={14} /></button>
+                      )}
                       <button onClick={() => setNotesModal({ open: true, id: r.id, name: r.name })} title="Notes & reminders"
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-semibold rounded-lg" style={{ border: `1px solid ${BORDER}`, color: "#B45309" }}><StickyNote size={14} /></button>
                       <button onClick={() => navigate(`${STUDENT}/${r.uuid}`)} title="View student"
@@ -441,6 +448,7 @@ export default function StudentsList() {
         </div>
       )}
       <LeadNotesModal open={notesModal.open} type="student" id={notesModal.id} name={notesModal.name} onClose={() => setNotesModal({ open: false, id: null, name: "" })} />
+      {msgTarget && <SendMessageModal student={msgTarget} onClose={() => setMsgTarget(null)} />}
 
       {photoPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 cursor-zoom-out" style={{ background: "rgba(15,23,42,0.85)" }} onClick={() => setPhotoPreview(null)}>

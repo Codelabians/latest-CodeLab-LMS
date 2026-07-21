@@ -158,6 +158,10 @@ export const BANKS = "/dashboard/locations/banks";
 export const CLASS_STUDENTS = "/dashboard/classes/:classUuid";
 export const CLASS_STUDENT_EDIT = "/dashboard/classes/student/edit/:uuid?";
 export const NOTIFICATIONS = "/dashboard/notifications";
+// Reminders — one shared page, mounted on all three surfaces.
+export const REMINDERS = "/dashboard/reminders";
+export const PORTAL_REMINDERS = "/portal/reminders";
+export const STAFF_REMINDERS = "/staff-portal/reminders";
 export const NOTIFICATIONS_LOG = "/dashboard/notifications-log";
 export const NOTIFICATION_SETTINGS = "/dashboard/notification-settings";
 export const MEMBERS = "/dashboard/working-spaces/company/members/add";
