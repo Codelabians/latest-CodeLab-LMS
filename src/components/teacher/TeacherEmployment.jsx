@@ -823,8 +823,8 @@ function StpTab() {
     if (form.office_id) body.office_id = Number(form.office_id);
     if (form.note) body.note = form.note;
     try {
-      await post({ path: "teacher/me/stp", body }).unwrap();
-      showToast("STP attendance marked.", "success");
+      const res = await post({ path: "teacher/me/stp", body }).unwrap();
+      showToast(res?.message || "STP attendance marked.", "success");
       refetch();
     } catch (e) { showToast(e?.data?.message || "Could not mark attendance.", "error"); }
   };
@@ -844,7 +844,10 @@ function StpTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Date</label>
-            <input type="date" value={form.attendance_date} onChange={upd("attendance_date")} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
+            <input type="date" value={form.attendance_date} max={today} onChange={upd("attendance_date")} className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}` }} />
+            {form.attendance_date && form.attendance_date < today && (
+              <p className="text-[10.5px] mt-1" style={{ color: "#B45309" }}>Previous day — will only count after HR approves it.</p>
+            )}
           </div>
           <div>
             <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>Site</label>

@@ -107,8 +107,8 @@ export default function SelfMarkAttendancePage() {
       body.sessions = filled.map((s) => ({ in: `${date} ${s.in}:00`, out: `${date} ${s.out}:00` }));
     }
     try {
-      await postMut({ path: "employee/me/attendance/at-stp", body }).unwrap();
-      showToast("Marked at STP successfully.", "success");
+      const res = await postMut({ path: "employee/me/attendance/at-stp", body }).unwrap();
+      showToast(res?.message || "Marked at STP successfully.", "success");
       setNote("");
       refetchAtt();
     } catch (e) {
@@ -154,11 +154,10 @@ export default function SelfMarkAttendancePage() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <Field label="Date">
                 <input type="date" className="px-2 py-1 text-xs border rounded-md w-full" style={{ borderColor: BORDER }}
-                  value={date} onChange={(e) => {
-                    setDate(e.target.value);
-                    setInTime(`${e.target.value}T${inTime.slice(11) || "09:00"}`);
-                    setOutTime(`${e.target.value}T${outTime.slice(11) || "18:00"}`);
-                  }} />
+                  value={date} max={today} onChange={(e) => setDate(e.target.value)} />
+                {date && date < today && (
+                  <span className="text-[10px]" style={{ color: "#B45309" }}>Previous day — will only count after HR approves it.</span>
+                )}
               </Field>
               <Field label="Office (optional)">
                 <select className="px-2 py-1 text-xs border rounded-md w-full" style={{ borderColor: BORDER, color: TEXT_PRIMARY }}
