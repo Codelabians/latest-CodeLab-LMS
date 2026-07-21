@@ -151,6 +151,7 @@ export const EMPLOYEES_EDIT = "/dashboard/employees/edit/:uuid";
 export const COURSE_CLASS = "/dashboard/courses/:courseUuid/classes";
 export const COURSE_DETAIL = "/dashboard/courses/:uuid";
 export const VISITORS = "/dashboard/visitors";
+export const WHATSAPP_INQUIRIES = "/dashboard/whatsapp-inquiries";
 export const VISIT_PURPOSES = "/dashboard/visit-purposes";
 export const PROVINCES = "/dashboard/locations/provinces";
 export const CITIES = "/dashboard/locations/cities";

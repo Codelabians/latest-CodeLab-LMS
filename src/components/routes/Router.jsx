@@ -71,6 +71,7 @@ const CategoriesComponent = lazy(() => import("../categories/CategoriesComponent
 const CourseSummary = lazy(() => import("../courses/CourseSummary"));
 const CoursesComponent = lazy(() => import("../courses/CoursesComponent"));
 const VisitorsComponent = lazy(() => import("../visitors/VisitorsComponent"));
+const WhatsAppInquiriesComponent = lazy(() => import("../whatsappInquiry/WhatsAppInquiriesComponent"));
 const CourseDetail = lazy(() => import("../courses/CourseDetail"));
 import DashboardLayout from "../dashboard/DashboardLayout";
 const EmployeeSummary = lazy(() => import("../employees/EmployeeSummary"));
@@ -185,6 +186,7 @@ import {
   COURSE_CLASS,
   COURSE_DETAIL,
   VISITORS,
+  WHATSAPP_INQUIRIES,
   VISIT_PURPOSES,
   Course_EXPENSE_DETAILS,
   COURSE_SUMMARY,
@@ -605,6 +607,15 @@ export default function Router() {
           element: (
             <PrivateRoute
               element={<VisitorsComponent />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
+          path: WHATSAPP_INQUIRIES,
+          element: (
+            <PrivateRoute
+              element={<WhatsAppInquiriesComponent />}
               isAuthenticated={useCheckAuthToken}
             />
           ),

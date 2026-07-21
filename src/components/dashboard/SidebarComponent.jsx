@@ -47,6 +47,7 @@ import {
   UserSearch,
   Megaphone,
   MessageCircle,
+  MessageSquareText,
   UserCheck,
   FileText,
   Bell,
@@ -119,6 +120,7 @@ import {
   TRAINING_INQUIRY,
   USER_MANAGEMENT,
   VISITORS,
+  WHATSAPP_INQUIRIES,
   VISIT_PURPOSES,
   PROVINCES,
   CITIES,
@@ -323,6 +325,15 @@ const NAV_SECTIONS = [
         label: "Visitors",
         icon: UserSearch,
         gate: ["get visitors"],
+      },
+      // Inquiries that arrived over WhatsApp/phone — reception logs the
+      // number + optional chat screenshot and drives the same follow-up
+      // lifecycle as regular inquiries.
+      {
+        route: WHATSAPP_INQUIRIES,
+        label: "WhatsApp Inquiries",
+        icon: MessageSquareText,
+        gate: ["get whatsapp-inquiries"],
       },
       // Admin-managed catalog of WHY a person walked in. Feeds the
       // visitor form's purpose dropdown.
