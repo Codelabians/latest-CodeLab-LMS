@@ -853,19 +853,30 @@ const UnreadBadge = ({ route }) => {
     { path: "communication/notifications/unread-count" },
     { pollingInterval: 15000 },
   );
+  const d = data?.data || {};
   const count =
-    route === WHATSAPP_INBOX ? data?.data?.whatsapp_unread || 0
-    : route === NOTIFICATIONS_LOG ? data?.data?.unread || 0
-    : route === STUDENT_LEAVES ? data?.data?.pending_student_leaves || 0
-    : route === HR_LEAVE_REQUESTS ? data?.data?.pending_leave_requests || 0
+    route === WHATSAPP_INBOX ? d.whatsapp_unread || 0
+    : route === NOTIFICATIONS_LOG ? d.unread || 0
+    : route === STUDENT_LEAVES ? d.pending_student_leaves || 0
+    : route === HR_LEAVE_REQUESTS ? d.pending_leave_requests || 0
+    : route === TRAINING_INQUIRY ? d.unattended_inquiries || 0
+    : route === VISITORS ? d.unattended_visitors || 0
+    : route === STUDENT_COMPLAINTS ? d.pending_student_complaints || 0
+    : route === EMPLOYEE_COMPLAINTS ? d.pending_employee_complaints || 0
+    : route === BRAND_AMBASSADORS ? d.pending_ambassadors || 0
+    : route === CERTIFICATE_APPLICATIONS ? d.pending_certificates || 0
+    : route === SHARE_EARN_ADMIN ? d.pending_share_proofs || 0
+    : route === NEWSLETTER_SUBSCRIBERS ? d.newsletter_due_days || 0
     : 0;
+  const isDue = route === NEWSLETTER_SUBSCRIBERS;
   if (!count) return null;
   return (
     <span
       className="flex items-center justify-center flex-shrink-0 text-white font-bold rounded-full"
-      style={{ minWidth: 18, height: 18, padding: "0 5px", fontSize: 10, background: BRAND_RED }}
+      style={{ minWidth: 18, height: 18, padding: "0 5px", fontSize: 10, background: isDue ? "#B45309" : BRAND_RED }}
+      title={isDue ? `No newsletter sent for ${count} day(s) — subscribers are waiting` : undefined}
     >
-      {count > 99 ? "99+" : count}
+      {isDue ? `${count}d` : count > 99 ? "99+" : count}
     </span>
   );
 };
