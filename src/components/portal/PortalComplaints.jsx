@@ -50,17 +50,27 @@ function AttachmentList({ items }) {
   );
 }
 
-export default function PortalComplaints() {
-  const { data, isLoading, refetch } = useGetQuery({ path: "/student-portal/complaints" }, { refetchOnMountOrArgChange: true });
+/**
+ * Complaint thread UI. Defaults to the STUDENT portal; the staff portal
+ * reuses it with its own basePath + employee grievance categories
+ * (see teacher/TeacherComplaints.jsx).
+ */
+export default function PortalComplaints({
+  basePath = "/student-portal/complaints",
+  categories = CATEGORIES,
+  intro = "Raise an issue about an instructor, a topic, the environment, management and more. You can attach screenshots and submit anonymously.",
+}) {
+  const { data, isLoading, refetch } = useGetQuery({ path: basePath }, { refetchOnMountOrArgChange: true });
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
 
   const complaints = data?.data || [];
+  const catLabel = (v) => categories.find((c) => c.value === v)?.label || CATEGORY_LABEL[v] || v;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-[12px]" style={{ color: "#94A3B8" }}>Raise an issue about an instructor, a topic, the environment, management and more. You can attach screenshots and submit anonymously.</p>
+        <p className="text-[12px]" style={{ color: "#94A3B8" }}>{intro}</p>
         <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ background: BRAND }}><Plus size={14} /> New complaint</button>
       </div>
 
@@ -81,7 +91,7 @@ export default function PortalComplaints() {
                       {r.subject}
                       {r.satisfaction_rating ? <span className="ml-1.5 inline-flex items-center gap-0.5 text-[11px]" style={{ color: "#D97706" }}><Star size={11} fill="#D97706" /> {r.satisfaction_rating}</span> : null}
                     </td>
-                    <td className="px-4 py-2.5" style={{ color: "#475569" }}>{CATEGORY_LABEL[r.category] || r.category}</td>
+                    <td className="px-4 py-2.5" style={{ color: "#475569" }}>{catLabel(r.category)}</td>
                     <td className="px-4 py-2.5" style={{ color: "#475569" }}>{(r.created_at || "").slice(0, 10)}</td>
                     <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: st.bg, color: st.fg }}>{st.label}</span></td>
                     <td className="px-4 py-2.5 text-right"><button onClick={(e) => { e.stopPropagation(); setDetail(r.id); }} className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style={{ border: `1px solid ${BORDER}`, color: BRAND }}>View</button></td>
@@ -93,8 +103,8 @@ export default function PortalComplaints() {
         )}
       </div>
 
-      {open && <NewComplaintModal onClose={() => setOpen(false)} onDone={() => { setOpen(false); refetch(); }} />}
-      {detail && <ComplaintDetailModal id={detail} onClose={() => setDetail(null)} onChanged={() => refetch()} />}
+      {open && <NewComplaintModal basePath={basePath} categories={categories} onClose={() => setOpen(false)} onDone={() => { setOpen(false); refetch(); }} />}
+      {detail && <ComplaintDetailModal basePath={basePath} categories={categories} id={detail} onClose={() => setDetail(null)} onChanged={() => refetch()} />}
     </div>
   );
 }
@@ -120,9 +130,9 @@ function FilePicker({ files, setFiles }) {
   );
 }
 
-function NewComplaintModal({ onClose, onDone }) {
+function NewComplaintModal({ basePath, categories = CATEGORIES, onClose, onDone }) {
   const [post, { isLoading }] = usePostMutation();
-  const [f, setF] = useState({ category: "instructor", subject: "", description: "", is_anonymous: false });
+  const [f, setF] = useState({ category: categories[0]?.value || "other", subject: "", description: "", is_anonymous: false });
   const [files, setFiles] = useState([]);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
 
@@ -130,7 +140,7 @@ function NewComplaintModal({ onClose, onDone }) {
     if (!f.subject.trim() || !f.description.trim()) { showToast("Add a subject and description.", "error"); return; }
     try {
       const body = buildFormData({ category: f.category, subject: f.subject, description: f.description, is_anonymous: f.is_anonymous }, files);
-      await post({ path: "/student-portal/complaints", body }).unwrap();
+      await post({ path: basePath, body }).unwrap();
       showToast("Your complaint has been submitted.", "success");
       onDone();
     } catch (e) { showToast(e?.data?.message || e?.data?.errors?.subject?.[0] || "Could not submit.", "error"); }
@@ -148,7 +158,7 @@ function NewComplaintModal({ onClose, onDone }) {
           <div>
             <label className="block text-[11px] font-semibold mb-1" style={{ color: "#475569" }}>What is this about?</label>
             <select value={f.category} onChange={(e) => set("category", e.target.value)} className="w-full px-3 py-2 rounded-lg text-[12px] outline-none" style={cell}>
-              {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
           <div>
@@ -189,8 +199,9 @@ function StarRating({ value, onChange, readOnly }) {
   );
 }
 
-function ComplaintDetailModal({ id, onClose, onChanged }) {
-  const { data, isLoading, refetch } = useGetQuery({ path: `/student-portal/complaints/${id}` }, { refetchOnMountOrArgChange: true });
+function ComplaintDetailModal({ basePath, categories = CATEGORIES, id, onClose, onChanged }) {
+  const catLabel = (v) => categories.find((c) => c.value === v)?.label || CATEGORY_LABEL[v] || v;
+  const { data, isLoading, refetch } = useGetQuery({ path: `${basePath}/${id}` }, { refetchOnMountOrArgChange: true });
   const [post, { isLoading: posting }] = usePostMutation();
   const [reply, setReply] = useState("");
   const [files, setFiles] = useState([]);
@@ -208,7 +219,7 @@ function ComplaintDetailModal({ id, onClose, onChanged }) {
     if (!reply.trim() && files.length === 0) return;
     try {
       const body = buildFormData({ body: reply || " " }, files);
-      await post({ path: `/student-portal/complaints/${id}/reply`, body }).unwrap();
+      await post({ path: `${basePath}/${id}/reply`, body }).unwrap();
       setReply(""); setFiles([]); refresh();
     } catch (e) { showToast(e?.data?.message || "Could not post reply.", "error"); }
   };
@@ -216,14 +227,14 @@ function ComplaintDetailModal({ id, onClose, onChanged }) {
   const submitRating = async () => {
     if (!rating) { showToast("Pick a star rating.", "error"); return; }
     try {
-      await post({ path: `/student-portal/complaints/${id}/rate`, body: { rating, comment: ratingComment || undefined } }).unwrap();
+      await post({ path: `${basePath}/${id}/rate`, body: { rating, comment: ratingComment || undefined } }).unwrap();
       showToast("Thanks for your feedback.", "success"); refresh();
     } catch (e) { showToast(e?.data?.message || "Could not submit rating.", "error"); }
   };
 
   const reopen = async () => {
     try {
-      await post({ path: `/student-portal/complaints/${id}/reopen`, body: {} }).unwrap();
+      await post({ path: `${basePath}/${id}/reopen`, body: {} }).unwrap();
       showToast("Complaint reopened.", "success"); refresh();
     } catch (e) { showToast(e?.data?.message || "Could not reopen.", "error"); }
   };
@@ -245,7 +256,7 @@ function ComplaintDetailModal({ id, onClose, onChanged }) {
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: st.bg, color: st.fg }}>{st.label}</span>
                 {c.reopen_count > 0 && <span className="text-[11px]" style={{ color: "#94A3B8" }}>reopened {c.reopen_count}×</span>}
               </div>
-              <div className="text-[12px]" style={{ color: "#94A3B8" }}>{CATEGORY_LABEL[c.category] || c.category} · {c.created_at}{c.is_anonymous ? " · Anonymous" : ""}</div>
+              <div className="text-[12px]" style={{ color: "#94A3B8" }}>{catLabel(c.category)} · {c.created_at}{c.is_anonymous ? " · Anonymous" : ""}</div>
               <p className="mt-2 text-[13px] whitespace-pre-wrap" style={{ color: "#475569" }}>{c.description}</p>
               <AttachmentList items={c.attachments} />
             </div>

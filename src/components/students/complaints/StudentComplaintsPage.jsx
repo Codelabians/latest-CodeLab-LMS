@@ -81,12 +81,17 @@ function StaffStars({ value }) {
   );
 }
 
-export default function StudentComplaintsPage() {
+/**
+ * Admin complaints inbox. channel="student" (default) shows student
+ * complaints; channel="employee" shows staff grievances (same endpoints,
+ * separated server-side by the channel column).
+ */
+export default function StudentComplaintsPage({ channel = "student", title = "Student Complaints" }) {
   const [filter, setFilter] = useState("open");
   const [selected, setSelected] = useState(null);
 
   const { data, isLoading, refetch } = useGetQuery(
-    { path: "/student/complaints", params: { per_page: 200, sort: "-created_at" } },
+    { path: "/student/complaints", params: { per_page: 200, sort: "-created_at", channel } },
     { refetchOnMountOrArgChange: true },
   );
 
@@ -99,7 +104,7 @@ export default function StudentComplaintsPage() {
     <div className="w-full px-6 py-6" style={{ fontFamily: "'Montserrat', sans-serif", background: "#FAFBFC", minHeight: "calc(100vh - 4rem)" }}>
       <div className="flex items-center gap-2 mb-4">
         <MessageSquareWarning size={20} style={{ color: BRAND }} />
-        <h1 className="text-[18px] font-bold" style={{ color: TEXT_PRIMARY }}>Student Complaints</h1>
+        <h1 className="text-[18px] font-bold" style={{ color: TEXT_PRIMARY }}>{title}</h1>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">

@@ -230,6 +230,7 @@ import {
   STUDENT_SUMMARY,
   STUDENT_LEAVES,
   STUDENT_COMPLAINTS,
+  EMPLOYEE_COMPLAINTS,
   STUDENT_LAPTOPS,
   BATCH_ATTENDANCE,
   ADMIN_MAKEUPS,
@@ -262,6 +263,7 @@ import {
   TEACHER_EMPLOYMENT,
   TEACHER_RULES,
   TEACHER_ASSESSMENT,
+  TEACHER_COMPLAINTS,
   STUDENTS,
   STUDENTS_EDIT,
   TRAINING_INQUIRY,
@@ -366,6 +368,7 @@ const PortalCareerPath = lazy(() => import("../portal/PortalCareerPath"));
 const PortalQuiz = lazy(() => import("../portal/PortalQuiz"));
 const QuizAnalyticsPage = lazy(() => import("../quizzes/QuizAnalyticsPage"));
 const TeacherAssessment = lazy(() => import("../teacher/TeacherAssessment"));
+const TeacherComplaints = lazy(() => import("../teacher/TeacherComplaints"));
 const EmployeeAssessmentAnalytics = lazy(() => import("../assessments/EmployeeAssessmentAnalytics"));
 const CompanySettingsPage = lazy(() => import("../hr/companySettings/CompanySettingsPage"));
 const BrandsListPage = lazy(() => import("../hr/companyBrands/BrandsListPage"));
@@ -1818,6 +1821,15 @@ export default function Router() {
           ),
         },
         {
+          path: EMPLOYEE_COMPLAINTS,
+          element: (
+            <PrivateRoute
+              element={<StudentComplaintsPage channel="employee" title="Employee Complaints" />}
+              isAuthenticated={useCheckAuthToken}
+            />
+          ),
+        },
+        {
           path: STUDENT_LAPTOPS,
           element: (
             <PrivateRoute
@@ -2050,6 +2062,7 @@ export default function Router() {
         { path: TEACHER_REWARDS, element: <TeacherRewards /> },
         { path: TEACHER_EMPLOYMENT, element: <TeacherEmployment /> },
         { path: TEACHER_EMPLOYMENT + "/:section", element: <TeacherEmployment /> },
+        { path: TEACHER_COMPLAINTS, element: <TeacherComplaints /> },
         { path: TEACHER_RULES, element: <RulesView endpoint="/core/policies/for-employees" /> },
         { path: TEACHER_ASSESSMENT, element: <TeacherAssessment /> },
       ],
