@@ -922,7 +922,7 @@ function SwitchBatchModal({ studentUuid, onClose, onDone, onError }) {
           note: note || undefined,
         },
       }).unwrap();
-      onDone("Student transferred.");
+      onDone(action === "promote" ? "Student promoted — previous course marked completed." : "Student transferred.");
     } catch (e) { onError(e?.data?.message || "Transfer failed."); }
   };
 
@@ -945,8 +945,15 @@ function SwitchBatchModal({ studentUuid, onClose, onDone, onError }) {
             <div className="flex gap-2 flex-wrap">
               <Seg id="switch_batch" label="Switch batch" val={action} set={setAction} />
               <Seg id="switch_course" label="Switch course" val={action} set={setAction} />
+              <Seg id="promote" label="Promote 🎓" val={action} set={setAction} />
               <Seg id="add" label="Add (keep current)" val={action} set={setAction} />
             </div>
+            {action === "promote" && (
+              <p className="text-[11px] mt-1.5" style={{ color: "#15803D" }}>
+                The current course is marked <b>completed</b> and the student moves up to the new course
+                (e.g. Web Designing → Frontend Development).
+              </p>
+            )}
           </div>
           <SearchableSelect options={batchOptions} value={batchUuid} onChange={setBatchUuid} placeholder="Search destination batch…" label="Destination batch" />
           <div>
