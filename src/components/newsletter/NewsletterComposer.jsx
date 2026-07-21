@@ -21,6 +21,7 @@ export default function NewsletterComposer({ open, onClose, total = 0 }) {
   const [tone, setTone] = useState("friendly and professional");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [htmlMode, setHtmlMode] = useState(false); // raw HTML paste mode
   const [confirming, setConfirming] = useState(false);
 
   const [post, { isLoading: posting }] = usePostMutation();
@@ -111,17 +112,37 @@ export default function NewsletterComposer({ open, onClose, total = 0 }) {
               className="w-full px-3 py-2 text-[13px] rounded-lg outline-none" style={{ border: `1px solid ${BORDER}`, color: T1 }} />
           </div>
 
-          {/* Body — shared rich-text editor */}
+          {/* Body — shared rich-text editor with an HTML source toggle so
+              ready-made HTML emails can be pasted directly. */}
           <div>
-            <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T2 }}>Body</label>
-            <RichTextEditor
-              value={body}
-              onChange={setBody}
-              onImageUpload={uploadImage}
-              minHeight={300}
-              placeholder="Write your newsletter… use the toolbar to format, add links and images."
-            />
-            <p className="text-[11px] mt-1" style={{ color: TM }}>Tip: type <code>{"{name}"}</code> to insert the subscriber's first name.</p>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[12px] font-semibold" style={{ color: T2 }}>Body</label>
+              <button type="button" onClick={() => setHtmlMode(!htmlMode)}
+                className="px-2.5 py-1 text-[11px] font-semibold rounded-md"
+                style={htmlMode ? { background: "#0F172A", color: "#fff" } : { border: `1px solid ${BORDER}`, color: T2 }}>
+                {"</>"} {htmlMode ? "Back to editor" : "Edit HTML"}
+              </button>
+            </div>
+            {htmlMode ? (
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                rows={16}
+                spellCheck={false}
+                placeholder="Paste your newsletter HTML here…"
+                className="w-full px-3 py-2 rounded-lg text-[12px] outline-none font-mono"
+                style={{ border: `1px solid ${BORDER}`, color: T1, background: "#F8FAFC", minHeight: 300 }}
+              />
+            ) : (
+              <RichTextEditor
+                value={body}
+                onChange={setBody}
+                onImageUpload={uploadImage}
+                minHeight={300}
+                placeholder="Write your newsletter… use the toolbar to format, add links and images."
+              />
+            )}
+            <p className="text-[11px] mt-1" style={{ color: TM }}>Tip: type <code>{"{name}"}</code> to insert the subscriber's first name. Use {"</>"} Edit HTML to paste a ready-made HTML email.</p>
           </div>
         </div>
 
