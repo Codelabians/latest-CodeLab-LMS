@@ -113,12 +113,15 @@ export default function Composer({ groupUuid, onSent }) {
         500,
       );
     } catch (e) {
-      showToast(
+      // Surface the underlying failure — "denied" vs "no device" vs anything
+      // else — so remote troubleshooting doesn't have to guess.
+      const msg =
         e?.name === "NotAllowedError"
-          ? "Microphone access was denied. Allow it in your browser settings to record voice notes."
-          : "Could not access the microphone.",
-        "error",
-      );
+          ? "Microphone access was denied. Allow it for this site (and for the browser in System Settings), then reload the page."
+          : e?.name === "NotFoundError"
+            ? "No microphone was found on this device."
+            : `Could not access the microphone (${e?.name || "unknown"}: ${e?.message || "no detail"}).`;
+      showToast(msg, "error");
     }
   };
 
