@@ -46,23 +46,23 @@ export function RevealPrompt({ onClose, onVerified }) {
     e?.preventDefault();
     setError(null);
     if (!password) {
-      setError("Please enter your password.");
+      setError("Please enter your finance password.");
       return;
     }
     try {
-      const res = await verify({ path: "user/verify-password", body: { password } }).unwrap();
+      const res = await verify({ path: "user/verify-finance-password", body: { password } }).unwrap();
       if (res?.data?.verified || res?.verified) {
         setPassword("");
         onVerified();
       } else {
-        setError(res?.message || "Password could not be verified.");
+        setError(res?.message || "Finance password could not be verified.");
       }
     } catch (err) {
       const fieldErr = err?.data?.errors?.password;
       setError(
         (Array.isArray(fieldErr) ? fieldErr[0] : fieldErr) ||
           err?.data?.message ||
-          "Incorrect password.",
+          "Incorrect finance password.",
       );
     }
   };
@@ -86,7 +86,7 @@ export function RevealPrompt({ onClose, onVerified }) {
             </span>
             <div>
               <div className="text-[13px] font-bold" style={{ color: TEXT_PRIMARY }}>Reveal figure</div>
-              <div className="text-[10.5px]" style={{ color: TEXT_MUTED }}>Confirm your password to show it</div>
+              <div className="text-[10.5px]" style={{ color: TEXT_MUTED }}>Enter your finance password to show it</div>
             </div>
           </div>
           <button type="button" onClick={onClose} className="p-1 rounded-lg" style={{ color: TEXT_MUTED }}>
@@ -99,7 +99,7 @@ export function RevealPrompt({ onClose, onVerified }) {
             type="password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(null); }}
-            placeholder="Your password"
+            placeholder="Your finance password"
             autoComplete="current-password"
             className="w-full px-3 py-2 text-sm rounded-lg outline-none"
             style={{ background: SURFACE_HOVER, border: `1px solid ${error ? BRAND_RED : BORDER}`, color: TEXT_PRIMARY }}
@@ -107,6 +107,11 @@ export function RevealPrompt({ onClose, onVerified }) {
           {error && (
             <div className="mt-2 px-2.5 py-1.5 text-[11.5px] font-semibold rounded-lg" style={{ background: BRAND_RED_TINT, color: BRAND_RED }}>
               {error}
+              {/no finance password set/i.test(error) && (
+                <div className="mt-1 font-normal" style={{ color: TEXT_SECONDARY }}>
+                  Set it from the finance lock screen.
+                </div>
+              )}
             </div>
           )}
           <button
