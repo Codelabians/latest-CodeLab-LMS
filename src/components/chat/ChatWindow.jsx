@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { useGetQuery, useLazyGetQuery, usePostMutation, useDeleteMutation } from "../../api/apiSlice";
 import { showToast } from "../ui/common/ShowToast";
+import { playChatSound } from "../../utils/notifySounds";
 import Composer from "./Composer";
 import MembersPanel from "./MembersPanel";
 import {
@@ -140,6 +141,8 @@ export default function ChatWindow({ group, user, isStaffGlobal, onBack, onRead 
         if (list.length) {
           const stick = nearBottomRef.current;
           appendNew(list);
+          // Chime for new messages from others (never for my own sends).
+          if (list.some((m) => m.sender_id !== user?.id)) playChatSound();
           if (stick) requestAnimationFrame(() => scrollToBottom());
         }
       } catch { /* transient — next tick retries */ }

@@ -12,6 +12,7 @@ import ForcePasswordReset from "./ForcePasswordReset";
 import BrandMark from "../common/BrandMark";
 import FirstLoginTour from "../common/FirstLoginTour";
 import RefreshButton from "../common/RefreshButton";
+import useChatChime from "../../hooks/useChatChime";
 import {
   PORTAL, PORTAL_ATTENDANCE, PORTAL_FEES, PORTAL_ASSETS, PORTAL_LEAVES, PORTAL_MAKEUPS, PORTAL_ASSIGNMENTS, PORTAL_CONTENT, PORTAL_ANNOUNCEMENTS, PORTAL_REWARDS, PORTAL_SHARE_EARN, PORTAL_PROFILE, PORTAL_RULES, PORTAL_CAREER, PORTAL_QUIZ, PORTAL_LOGIN, PORTAL_COMPLAINTS, PORTAL_REMINDERS, PORTAL_CHATS, TEACHER,
 } from "../routes/RouteConstants";
@@ -48,7 +49,7 @@ const NAV = [
   { route: PORTAL_PROFILE, label: "My Profile", icon: UserCircle },
 ];
 
-function NavItem({ item, active, collapsed, onClick }) {
+function NavItem({ item, active, collapsed, onClick, badge = 0 }) {
   const Icon = item.icon;
   return (
     <button
@@ -74,6 +75,16 @@ function NavItem({ item, active, collapsed, onClick }) {
       {!collapsed && (
         <span className="flex-1 text-left text-[13px] truncate" style={{ color: active ? BRAND_RED : TEXT_PRIMARY, fontWeight: active ? 600 : 500, letterSpacing: "-0.005em" }}>
           {item.label}
+        </span>
+      )}
+      {badge > 0 && (
+        <span
+          className="flex items-center justify-center flex-shrink-0 text-white font-bold rounded-full"
+          style={collapsed
+            ? { position: "absolute", top: 2, right: 2, minWidth: 14, height: 14, fontSize: 9, background: BRAND_RED, padding: "0 3px" }
+            : { minWidth: 18, height: 18, fontSize: 10, background: BRAND_RED, padding: "0 5px" }}
+        >
+          {badge > 99 ? "99+" : badge}
         </span>
       )}
     </button>
@@ -110,6 +121,9 @@ export default function PortalLayout() {
   // Refresh-safe profile fetch (auth state only persists the token, not the
   // user) so the force-reset gate still fires after a page reload.
   const { data: me } = useGetQuery({ path: "/user/get-user" }, { skip: !token });
+
+  // Chime on new chat messages while anywhere in the portal + badge count.
+  const chatUnread = useChatChime({ skip: !token });
 
   if (!token) return <Navigate to={PORTAL_LOGIN} replace />;
 
@@ -208,7 +222,7 @@ export default function PortalLayout() {
           )}
           <div className="space-y-0.5">
             {NAV.map((item) => (
-              <NavItem key={item.route} item={item} active={isActive(item)} collapsed={collapsed} onClick={(r) => navigate(r)} />
+              <NavItem key={item.route} item={item} active={isActive(item)} collapsed={collapsed} onClick={(r) => navigate(r)} badge={item.route === PORTAL_CHATS ? chatUnread : 0} />
             ))}
           </div>
         </nav>

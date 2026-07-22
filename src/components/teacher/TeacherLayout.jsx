@@ -11,6 +11,7 @@ import BrandMark from "../common/BrandMark";
 import FirstLoginTour from "../common/FirstLoginTour";
 import RefreshButton from "../common/RefreshButton";
 import { EMPLOYMENT_SECTIONS } from "./employmentSections";
+import useChatChime from "../../hooks/useChatChime";
 import { firstAccessibleRoute } from "../dashboard/SidebarComponent";
 import {
   TEACHER, TEACHER_ATTENDANCE, TEACHER_MAKEUPS, TEACHER_STUDENTS, TEACHER_ASSIGNMENTS, TEACHER_CONTENT, TEACHER_PERFORMANCE, TEACHER_ANNOUNCEMENTS, TEACHER_REWARDS, TEACHER_EMPLOYMENT, TEACHER_RULES, TEACHER_ASSESSMENT, TEACHER_COMPLAINTS, TEACHER_SHARE_EARN, TEACHER_STUDENT_LEAVES, TEACHER_LOGIN,
@@ -51,7 +52,7 @@ const NAV = [
 // Nav items every staff member sees (the rest are teaching-only).
 const GENERAL_ROUTES = [TEACHER_REWARDS, STAFF_REMINDERS, STAFF_CHATS, TEACHER_ANNOUNCEMENTS, TEACHER_ASSESSMENT, TEACHER_RULES, TEACHER_COMPLAINTS, TEACHER_SHARE_EARN];
 
-function NavItem({ item, active, collapsed, onClick }) {
+function NavItem({ item, active, collapsed, onClick, badge = 0 }) {
   const Icon = item.icon;
   return (
     <button type="button" data-tour={item.route} onClick={() => onClick(item.route)} title={collapsed ? item.label : undefined}
@@ -63,6 +64,16 @@ function NavItem({ item, active, collapsed, onClick }) {
         <Icon size={16} strokeWidth={1.75} />
       </span>
       {!collapsed && <span className="flex-1 text-left text-[13px] truncate" style={{ color: active ? BRAND_RED : TEXT_PRIMARY, fontWeight: active ? 600 : 500 }}>{item.label}</span>}
+      {badge > 0 && (
+        <span
+          className="flex items-center justify-center flex-shrink-0 text-white font-bold rounded-full"
+          style={collapsed
+            ? { position: "absolute", top: 2, right: 2, minWidth: 14, height: 14, fontSize: 9, background: BRAND_RED, padding: "0 3px" }
+            : { minWidth: 18, height: 18, fontSize: 10, background: BRAND_RED, padding: "0 5px" }}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </button>
   );
 }
@@ -104,6 +115,8 @@ export default function TeacherLayout() {
   );
   // Unified Staff Portal context: drives teaching vs employee-only nav.
   const { data: ctx } = useGetQuery({ path: "/teacher/me/context" }, { skip: !token });
+  // Chime on new chat messages while anywhere in the portal + badge count.
+  const chatUnread = useChatChime({ skip: !token });
 
   if (!token) return <Navigate to={TEACHER_LOGIN} replace />;
 
@@ -222,7 +235,7 @@ export default function TeacherLayout() {
           )}
           {!collapsed && <div className="px-2 mb-1.5" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: TEXT_MUTED, textTransform: "uppercase" }}>Teaching</div>}
           <div className="space-y-0.5">
-            {navItems.map((item) => <NavItem key={item.route} item={item} active={isActive(item)} collapsed={collapsed} onClick={(r) => navigate(r)} />)}
+            {navItems.map((item) => <NavItem key={item.route} item={item} active={isActive(item)} collapsed={collapsed} onClick={(r) => navigate(r)} badge={item.route === STAFF_CHATS ? chatUnread : 0} />)}
           </div>
 
           {/* Collapsible My Employment group */}

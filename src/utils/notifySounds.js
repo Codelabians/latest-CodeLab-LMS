@@ -62,8 +62,15 @@ export function playWhatsAppSound() {
   chime([[520, 0.1], [780, 0.1], [1040, 0.18]], "triangle", 0.14);
 }
 
-/** Demo both chimes (used by the header toggle so users can verify). */
+/** Chat message — quick ascending two-note "pop-up" so it's distinct from both. */
+export function playChatSound() {
+  if (!soundsEnabled()) return;
+  chime([[587, 0.09], [880, 0.16]], "sine", 0.14);
+}
+
+/** Demo the chimes (used by the header toggle so users can verify). */
 export function playTestSounds() {
   chime([[880, 0.16], [660, 0.22]]);
   setTimeout(() => chime([[520, 0.1], [780, 0.1], [1040, 0.18]], "triangle", 0.14), 700);
+  setTimeout(() => chime([[587, 0.09], [880, 0.16]], "sine", 0.14), 1400);
 }
