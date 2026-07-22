@@ -14,6 +14,13 @@
     RewriteRule ^ index.html [L]
 </IfModule>
 
+# The hosting layer injects "permissions-policy: microphone=()" which blocks
+# chat voice notes in every browser no matter what the user allows. Override:
+# microphone allowed for our own pages only; camera/geolocation stay off.
+<IfModule mod_headers.c>
+    Header always set Permissions-Policy "geolocation=(), microphone=(self), camera=()"
+</IfModule>
+
 # Sensible caching for hashed assets (safe — Vite fingerprints filenames).
 <IfModule mod_headers.c>
     <FilesMatch "\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
